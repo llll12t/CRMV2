@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Scanner - ยืนยันการแลกของรางวัล</title>
-    <!-- Config File -->
+    <!-- 1. เรียกใช้ config-scan.js -->
     <script src="config-admin.js"></script>
     <!-- DaisyUI & TailwindCSS -->
     <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet" type="text/css" />
@@ -42,10 +42,7 @@
         <!-- Scanner Section -->
         <section class="card bg-base-100 shadow-xl mb-8 qr-reader-container">
             <div class="card-body items-center text-center">
-                <!-- Camera Viewfinder -->
-                <div id="qr-reader" class="w-full h-64 overflow-hidden"></div>
-                
-                <!-- Action Buttons -->
+                <div id="qr-reader" class="w-full h-64"></div>
                 <div class="card-actions w-full mt-4">
                     <button id="startScanBtn" class="btn btn-primary w-full">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h-1m-1-6l.707.707M4 12H3m1-6l-.707.707M12 20v-1m6-11h1M13 6l-.707-.707M6 13l-.707-.707M12 4a8 8 0 100 16 8 8 0 000-16z" /></svg>
@@ -53,9 +50,7 @@
                     </button>
                     <button id="stopScanBtn" class="btn btn-ghost w-full hidden">หยุดสแกน</button>
                 </div>
-                
-                <!-- Scan Result Display -->
-                <div id="scan-result" class="mt-4 text-lg font-semibold h-16"></div>
+                <div id="scan-result" class="mt-4 text-lg font-semibold h-8"></div>
             </div>
         </section>
 
@@ -68,7 +63,6 @@
                      รีเฟรช
                  </button>
             </div>
-           
             <div class="overflow-x-auto bg-base-100 rounded-lg shadow-md">
                 <table class="table w-full">
                     <thead>
@@ -81,7 +75,6 @@
                         </tr>
                     </thead>
                     <tbody id="historyTableBody">
-                        <!-- History rows will be inserted here -->
                         <tr><td colspan="5" class="text-center p-4">กำลังโหลดประวัติ...</td></tr>
                     </tbody>
                 </table>
@@ -95,7 +88,7 @@
             <h3 id="alert-title" class="font-bold text-lg"></h3>
             <p id="alert-message" class="py-4"></p>
             <div class="modal-action">
-                <button id="alert-ok-btn" class="btn btn-primary w-full">ตกลง</button>
+                <form method="dialog"><button class="btn btn-primary w-full">ตกลง</button></form>
             </div>
         </div>
     </dialog>
@@ -112,25 +105,24 @@
 
         let html5QrCode = null;
         let lastScanTime = 0;
-        const SCAN_COOLDOWN = 3000; // 3 วินาที
+        const SCAN_COOLDOWN = 3000; // 3 seconds cooldown to prevent multiple scans
 
         // --- Helper Functions ---
         const showAlert = (title, message) => {
             document.getElementById('alert-title').textContent = title;
             document.getElementById('alert-message').textContent = message;
-            const dialog = document.getElementById('alert-dialog');
-            dialog.showModal();
-            document.getElementById('alert-ok-btn').onclick = () => dialog.close();
+            document.getElementById('alert-dialog').showModal();
         };
 
         const postData = async (action, data) => {
              try {
+                // 2. ใช้ CONFIG.GAS_URL ที่มาจาก config-scan.js
                 const r = await fetch(CONFIG.GAS_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action, ...data })
                 });
-                if (!r.ok) throw new Error(await r.text());
+                if (!r.ok) throw new Error(`Server error (${r.status}): ${await r.text()}`);
                 return await r.text();
             } catch (e) {
                 showAlert('API Error', `Post request failed: ${e.message}`);
@@ -139,12 +131,13 @@
         };
 
         const fetchData = async (action, params = {}) => {
+            // 3. ใช้ CONFIG.GAS_URL ที่มาจาก config-scan.js
             const url = new URL(CONFIG.GAS_URL);
             url.searchParams.append('action', action);
             for (const k in params) if (params[k]) url.searchParams.append(k, params[k]);
             try {
                 const r = await fetch(url);
-                if (!r.ok) throw new Error(await r.text());
+                if (!r.ok) throw new Error(`Server error (${r.status}): ${await r.text()}`);
                 return await r.json();
             } catch (e) {
                 showAlert('API Error', `Fetch request failed: ${e.message}`);
@@ -153,10 +146,10 @@
         };
 
         // --- Core Functions ---
-
         const loadHistory = async () => {
             historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4"><span class="loading loading-dots loading-md"></span></td></tr>`;
             try {
+                // ดึงเฉพาะรายการที่ยืนยันแล้ว และแสดงแค่ 10 รายการล่าสุด
                 const items = await fetchData('getWarehouseItems', { status: 'claimed' });
                 if (!items || items.length === 0) {
                      historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">ยังไม่มีประวัติการยืนยัน</td></tr>`;
@@ -178,10 +171,7 @@
 
         const onScanSuccess = async (decodedText, decodedResult) => {
             const now = Date.now();
-            if (now - lastScanTime < SCAN_COOLDOWN) {
-                console.log("Scan ignored due to cooldown.");
-                return;
-            }
+            if (now - lastScanTime < SCAN_COOLDOWN) return;
             lastScanTime = now;
             
             await stopScanning();
@@ -196,19 +186,15 @@
                 
                 if (responseText.includes('สำเร็จ')) {
                     resultElement.innerHTML = `✅ ยืนยันสำเร็จ`;
-                    resultElement.className += ' scan-success';
-                    await loadHistory(); // รีเฟรชประวัติเมื่อสำเร็จ
-                } else if (responseText.includes('แล้ว')) {
-                     resultElement.innerHTML = `⚠️ ใช้ไปแล้ว`;
-                     resultElement.className += ' scan-warning';
+                    resultElement.className = 'mt-4 text-lg font-semibold h-8 scan-success';
+                    await loadHistory();
                 } else {
-                     resultElement.innerHTML = `❌ ไม่สำเร็จ`;
-                     resultElement.className += ' scan-error';
+                     resultElement.innerHTML = `⚠️ ${responseText.includes('แล้ว') ? 'ใช้ไปแล้ว' : 'ไม่สำเร็จ'}`;
+                     resultElement.className = `mt-4 text-lg font-semibold h-8 ${responseText.includes('แล้ว') ? 'scan-warning' : 'scan-error'}`;
                 }
-
             } catch (error) {
                 resultElement.innerHTML = `❌ เกิดข้อผิดพลาด`;
-                resultElement.className += ' scan-error';
+                resultElement.className = 'mt-4 text-lg font-semibold h-8 scan-error';
             }
         };
 
@@ -227,7 +213,7 @@
                     resultElement.className = 'mt-4 text-lg font-semibold h-8 text-gray-500';
                 })
                 .catch(err => {
-                    showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบการอนุญาตให้ใช้กล้องใน Browser ของคุณ");
+                    showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบการอนุญาตให้ใช้กล้องใน Browser");
                 });
         };
 
@@ -237,9 +223,7 @@
                     await html5QrCode.stop();
                     startBtn.classList.remove('hidden');
                     stopBtn.classList.add('hidden');
-                } catch (err) {
-                    console.error("Failed to stop scanning.", err);
-                }
+                } catch (err) { console.error("Failed to stop scanning.", err); }
             }
         };
 
