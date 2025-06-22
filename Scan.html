@@ -117,8 +117,8 @@
 
         const postData = async (action, data) => {
              try {
-                // 2. ใช้ CONFIG.GAS_URL ที่มาจาก config-scan.js
-                const r = await fetch(CONFIG.GAS_URL, {
+                // 2. ใช้ CONFIG.GAS_URL_ADMIN ที่มาจาก config-scan.js
+                const r = await fetch(CONFIG.GAS_URL_ADMIN, {
                     method: 'POST',
                     body: JSON.stringify({ action, ...data })
                 });
@@ -131,8 +131,8 @@
         };
 
         const fetchData = async (action, params = {}) => {
-            // 3. ใช้ CONFIG.GAS_URL ที่มาจาก config-scan.js
-            const url = new URL(CONFIG.GAS_URL);
+            // 3. ใช้ CONFIG.GAS_URL_ADMIN ที่มาจาก config-scan.js
+            const url = new URL(CONFIG.GAS_URL_ADMIN);
             url.searchParams.append('action', action);
             for (const k in params) if (params[k]) url.searchParams.append(k, params[k]);
             try {
