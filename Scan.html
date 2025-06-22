@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Scanner - ยืนยันการแลกของรางวัล</title>
+    <!-- Config File -->
+    <script src="config-scan.js"></script>
+    <!-- DaisyUI & TailwindCSS -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QR Code Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <style>
+        body { background-color: #f0f2f5; }
+        .qr-reader-container {
+            max-width: 500px;
+            margin: auto;
+        }
+        #qr-reader {
+            border: 2px dashed #9ca3af;
+            border-radius: 0.5rem;
+            background-color: #e5e7eb;
+        }
+        .scan-success { color: #16a34a; }
+        .scan-warning { color: #f59e0b; }
+        .scan-error { color: #dc2626; }
+    </style>
+</head>
+
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">จุดสแกนรับของรางวัล</h1>
+            <p class="text-gray-600">สำหรับพนักงาน: กรุณาสแกน QR Code ของลูกค้าเพื่อยืนยัน</p>
+        </header>
+
+        <!-- Scanner Section -->
+        <section class="card bg-base-100 shadow-xl mb-8 qr-reader-container">
+            <div class="card-body items-center text-center">
+                <!-- Camera Viewfinder -->
+                <div id="qr-reader" class="w-full h-64"></div>
+                
+                <!-- Action Buttons -->
+                <div class="card-actions w-full mt-4">
+                    <button id="startScanBtn" class="btn btn-primary w-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h-1m-1-6l.707.707M4 12H3m1-6l-.707.707M12 20v-1m6-11h1M13 6l-.707-.707M6 13l-.707-.707M12 4a8 8 0 100 16 8 8 0 000-16z" /></svg>
+                        เริ่มสแกน
+                    </button>
+                    <button id="stopScanBtn" class="btn btn-ghost w-full hidden">หยุดสแกน</button>
+                </div>
+                
+                <!-- Scan Result Display -->
+                <div id="scan-result" class="mt-4 text-lg font-semibold h-8"></div>
+            </div>
+        </section>
+
+        <!-- History Section -->
+        <section>
+            <div class="flex justify-between items-center mb-4">
+                 <h2 class="text-xl font-bold text-gray-700">ประวัติการสแกนล่าสุด</h2>
+                 <button id="refreshHistoryBtn" class="btn btn-sm btn-ghost">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M20 4h-5v5M4 20h5v-5" /></svg>
+                     รีเฟรช
+                 </button>
+            </div>
+           
+            <div class="overflow-x-auto bg-base-100 rounded-lg shadow-md">
+                <table class="table w-full">
+                    <thead>
+                        <tr>
+                            <th>ของรางวัล</th>
+                            <th>ผู้รับ (Line ID)</th>
+                            <th>สถานะ</th>
+                            <th>วันที่แลก</th>
+                            <th>วันที่ยืนยัน</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <!-- History rows will be inserted here -->
+                        <tr><td colspan="5" class="text-center p-4">กำลังโหลดประวัติ...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Alert Dialog -->
+    <dialog id="alert-dialog" class="modal">
+        <div class="modal-box text-center">
+            <h3 id="alert-title" class="font-bold text-lg"></h3>
+            <p id="alert-message" class="py-4"></p>
+            <div class="modal-action">
+                <button id="alert-ok-btn" class="btn btn-primary w-full">ตกลง</button>
+            </div>
+        </div>
+    </dialog>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Elements ---
+        const readerElement = document.getElementById('qr-reader');
+        const startBtn = document.getElementById('startScanBtn');
+        const stopBtn = document.getElementById('stopScanBtn');
+        const resultElement = document.getElementById('scan-result');
+        const historyTableBody = document.getElementById('historyTableBody');
+        const refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
+
+        let html5QrCode = null;
+        let lastScanTime = 0;
+        const SCAN_COOLDOWN = 3000; // 3 วินาที
+
+        // --- Helper Functions ---
+        const showAlert = (title, message) => {
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = message;
+            const dialog = document.getElementById('alert-dialog');
+            dialog.showModal();
+            document.getElementById('alert-ok-btn').onclick = () => dialog.close();
+        };
+
+        const postData = async (action, data) => {
+             try {
+                const r = await fetch(CONFIG.GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action, ...data })
+                });
+                if (!r.ok) throw new Error(await r.text());
+                return await r.text();
+            } catch (e) {
+                showAlert('API Error', `Post request failed: ${e.message}`);
+                throw e;
+            }
+        };
+
+        const fetchData = async (action, params = {}) => {
+            const url = new URL(CONFIG.GAS_URL);
+            url.searchParams.append('action', action);
+            for (const k in params) if (params[k]) url.searchParams.append(k, params[k]);
+            try {
+                const r = await fetch(url);
+                if (!r.ok) throw new Error(await r.text());
+                return await r.json();
+            } catch (e) {
+                showAlert('API Error', `Fetch request failed: ${e.message}`);
+                throw e;
+            }
+        };
+
+        // --- Core Functions ---
+
+        const loadHistory = async () => {
+            historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4"><span class="loading loading-dots loading-md"></span></td></tr>`;
+            try {
+                const items = await fetchData('getWarehouseItems', { status: 'claimed' });
+                if (!items || items.length === 0) {
+                     historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">ยังไม่มีประวัติการยืนยัน</td></tr>`;
+                     return;
+                }
+                historyTableBody.innerHTML = items.slice(0, 10).map(item => `
+                    <tr>
+                        <td><strong>${item.itemName}</strong></td>
+                        <td class="font-mono text-xs">${item.lineId}</td>
+                        <td><span class="badge badge-success">${item.status}</span></td>
+                        <td>${item.redeemDate}</td>
+                        <td>${item.claimDate}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                 historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-error">ไม่สามารถโหลดประวัติได้</td></tr>`;
+            }
+        };
+
+        const onScanSuccess = async (decodedText, decodedResult) => {
+            const now = Date.now();
+            if (now - lastScanTime < SCAN_COOLDOWN) {
+                console.log("Scan ignored due to cooldown.");
+                return;
+            }
+            lastScanTime = now;
+            
+            await stopScanning();
+            
+            resultElement.innerHTML = `<span class="loading loading-spinner loading-sm"></span> กำลังตรวจสอบ...`;
+            resultElement.className = 'mt-4 text-lg font-semibold h-8';
+
+            try {
+                const responseText = await postData('claimItemByUniqueId', { uniqueId: decodedText });
+                
+                showAlert('ผลการยืนยัน', responseText);
+                
+                if (responseText.includes('สำเร็จ')) {
+                    resultElement.innerHTML = `✅ ยืนยันสำเร็จ`;
+                    resultElement.className += ' scan-success';
+                    await loadHistory(); // รีเฟรชประวัติเมื่อสำเร็จ
+                } else if (responseText.includes('แล้ว')) {
+                     resultElement.innerHTML = `⚠️ ใช้ไปแล้ว`;
+                     resultElement.className += ' scan-warning';
+                } else {
+                     resultElement.innerHTML = `❌ ไม่สำเร็จ`;
+                     resultElement.className += ' scan-error';
+                }
+
+            } catch (error) {
+                resultElement.innerHTML = `❌ เกิดข้อผิดพลาด`;
+                resultElement.className += ' scan-error';
+            }
+        };
+
+        const startScanning = () => {
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("qr-reader");
+            }
+            
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            
+            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, (error) => {})
+                .then(() => {
+                    startBtn.classList.add('hidden');
+                    stopBtn.classList.remove('hidden');
+                    resultElement.textContent = 'กรุณาหันกล้องไปที่ QR Code';
+                    resultElement.className = 'mt-4 text-lg font-semibold h-8 text-gray-500';
+                })
+                .catch(err => {
+                    showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบการอนุญาตให้ใช้กล้องใน Browser ของคุณ");
+                });
+        };
+
+        const stopScanning = async () => {
+            if (html5QrCode && html5QrCode.isScanning) {
+                try {
+                    await html5QrCode.stop();
+                    startBtn.classList.remove('hidden');
+                    stopBtn.classList.add('hidden');
+                } catch (err) {
+                    console.error("Failed to stop scanning.", err);
+                }
+            }
+        };
+
+        // --- Event Listeners ---
+        startBtn.onclick = startScanning;
+        stopBtn.onclick = stopScanning;
+        refreshHistoryBtn.onclick = loadHistory;
+
+        // --- Initial Load ---
+        loadHistory();
+    });
+</script>
+
+</body>
+</html>
