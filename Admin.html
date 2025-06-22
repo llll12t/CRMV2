@@ -280,16 +280,400 @@
       async function claimItem(id) { if (await showConfirm('Confirm', `ยืนยันการรับ/จัดส่งสำหรับรายการ ${id}?`)) { try { await postData('claimWarehouseItemAdmin', { warehouseId: id }); showAlert('Success', 'Item status updated', () => loadWarehouseItems()); } catch (e) { } } }
     }
 
-    async function initEvents() { /* Omitted for brevity */ }
-    async function initCodes() { /* Omitted for brevity */ }
-    async function initHistory() { /* Omitted for brevity */ }
-    async function initSettings() { /* Omitted for brevity */ }
+  // --- Event Management ---
+    async function initEvents() {
+      const tableBody = document.getElementById('eventTableBody');
+      const addEventBtn = document.getElementById('addEventBtn');
 
-    // --- App Start ---
+      addEventBtn.onclick = () => showEventFormModal();
+      await loadEvents();
+
+      async function loadEvents() {
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4"><div class="loading-spinner mx-auto"></div> กำลังโหลดข้อมูล...</td></tr>`;
+        try {
+          const events = await fetchData('getEvents');
+          renderEventTable(events);
+        } catch (error) {
+          tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-error">ไม่สามารถโหลดข้อมูลกิจกรรมได้</td></tr>`;
+        }
+      }
+
+      function renderEventTable(events) {
+        if (events.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-base-content text-opacity-50">ไม่พบกิจกรรม</td></tr>`;
+          return;
+        }
+        tableBody.innerHTML = events.map(event => `
+          <tr>
+            <td class="font-mono text-xs">${event.id}</td>
+            <td>${event.title}</td>
+            <td>${event.point}</td>
+            <td>
+              ${(event.allowedLevels && event.allowedLevels.length > 0) ? event.allowedLevels.map(level => `<span class="badge ${level === 'SUPER' ? 'badge-neutral' : level === 'VIP' ? 'badge-secondary' : 'badge-ghost'} badge-outline mr-1">${level}</span>`).join('') : '<span class="text-base-content text-opacity-50">ทุกคน</span>'}
+            </td>
+            <td class="max-w-xs  text-ellipsis whitespace-nowrap">${event.desc || '-'}</td>
+            <td>
+              ${event.image ? `<img src="${event.image}" alt="${event.title}" class="w-16 h-16 object-cover rounded-md border border-base-300">` : '-'}
+            </td>
+            <td class="whitespace-nowrap">
+              <button class="btn btn-sm btn-info btn-square text-white mr-2 edit-event-btn" data-id="${event.id}" aria-label="แก้ไข">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                  <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <button class="btn btn-sm btn-error btn-square text-white delete-event-btn" data-id="${event.id}" aria-label="ลบ">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 01-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+        tableBody.querySelectorAll('.edit-event-btn').forEach(btn => {
+          btn.onclick = () => showEventFormModal(events.find(e => e.id === btn.dataset.id));
+        });
+        tableBody.querySelectorAll('.delete-event-btn').forEach(btn => {
+          btn.onclick = () => deleteEvent(btn.dataset.id);
+        });
+      }
+
+      function showEventFormModal(event = null) {
+        currentEditItem = event;
+        dataFormModalTitle.textContent = event ? 'แก้ไขกิจกรรม' : 'เพิ่มกิจกรรมใหม่';
+
+        const checkedLevelsHtml = USER_LEVELS.map(level => `
+          <div class="form-control">
+            <label class="label cursor-pointer justify-start gap-2">
+              <input type="checkbox" id="level_${level}" name="allowedLevels" value="${level}" class="checkbox checkbox-neutral"
+                ${event && event.allowedLevels && event.allowedLevels.includes(level) ? 'checked' : ''}>
+              <span class="label-text">${level}</span>
+            </label>
+          </div>
+        `).join('');
+
+        formFieldsContainer.innerHTML = `
+          <div class="form-control">
+            <label class="label"><span class="label-text">ID (ไม่สามารถแก้ไขได้หากมีข้อมูลแล้ว, เว้นว่างเพื่อสร้างอัตโนมัติ)</span></label>
+            <input type="text" id="formEventId" placeholder="Auto-generated if empty" class="input input-bordered w-full" ${event ? 'readonly' : ''} value="${event ? event.id : ''}" />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">ชื่อกิจกรรม</span></label>
+            <input type="text" id="formEventTitle" placeholder="ชื่อกิจกรรม" class="input input-bordered w-full" value="${event ? event.title : ''}" required />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">พ้อยต์ที่จะได้รับ</span></label>
+            <input type="number" id="formEventPoint" placeholder="0" class="input input-bordered w-full" value="${event ? event.point : 0}" required />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">ระดับที่เข้าร่วมได้</span></label>
+            <div class="flex flex-wrap gap-x-4">
+              ${checkedLevelsHtml}
+            </div>
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">รายละเอียดกิจกรรม</span></label>
+            <textarea id="formEventDesc" placeholder="รายละเอียด" class="textarea textarea-bordered h-24 w-full">${event ? event.desc : ''}</textarea>
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">URL รูปภาพ (Banner)</span></label>
+            <input type="url" id="formEventImage" placeholder="https://example.com/event_banner.png" class="input input-bordered w-full" value="${event ? event.image : ''}" />
+          </div>
+        `;
+        dataFormModal.showModal();
+
+        formSaveBtn.onclick = () => saveEvent(event);
+        formCancelBtn.onclick = () => dataFormModal.close();
+      }
+
+      async function saveEvent(originalEvent) {
+        const id = document.getElementById('formEventId').value.trim();
+        const title = document.getElementById('formEventTitle').value.trim();
+        const point = parseInt(document.getElementById('formEventPoint').value, 10);
+        const desc = document.getElementById('formEventDesc').value.trim();
+        const image = document.getElementById('formEventImage').value.trim();
+
+        const allowedLevels = Array.from(document.querySelectorAll('input[name="allowedLevels"]:checked'))
+          .map(cb => cb.value);
+
+        if (!title || isNaN(point) || point < 0) {
+          showAlert('ข้อผิดพลาด', 'กรุณากรอกชื่อกิจกรรมและพ้อยต์ให้ถูกต้อง');
+          return;
+        }
+
+        formSaveBtn.disabled = true;
+        try {
+          let message;
+          if (originalEvent) {
+            message = await postData('updateEvent', { id: originalEvent.id, title, point, desc, image, allowedLevels });
+          } else {
+            message = await postData('addEvent', { id: id || undefined, title, point, desc, image, allowedLevels });
+          }
+          showAlert('สำเร็จ', message, () => {
+            dataFormModal.close();
+            loadEvents();
+          });
+        } catch (error) {
+          // Error handled by postData
+        } finally {
+          formSaveBtn.disabled = false;
+        }
+      }
+
+      async function deleteEvent(id) {
+        const confirmed = await showConfirm('ยืนยันการลบ', `คุณแน่ใจหรือไม่ที่จะลบกิจกรรม ID: ${id}?`);
+        if (!confirmed) return;
+
+        try {
+          const message = await postData('deleteEvent', { id });
+          showAlert('สำเร็จ', message, () => loadEvents());
+        } catch (error) {
+          // Error handled by postData
+        }
+      }
+    }
+
+    // --- Code Management ---
+    async function initCodes() {
+      const tableBody = document.getElementById('codeTableBody');
+      const addCodeBtn = document.getElementById('addCodeBtn');
+
+      addCodeBtn.onclick = () => showCodeFormModal();
+      await loadCodes();
+
+      async function loadCodes() {
+        tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4"><div class="loading-spinner mx-auto"></div> กำลังโหลดข้อมูล...</td></tr>`;
+        try {
+          const codes = await fetchData('getCodes');
+          renderCodeTable(codes);
+        } catch (error) {
+          tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-error">ไม่สามารถโหลดข้อมูลโค้ดได้</td></tr>`;
+        }
+      }
+
+      function renderCodeTable(codes) {
+        if (codes.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-base-content text-opacity-50">ไม่พบโค้ด</td></tr>`;
+          return;
+        }
+        tableBody.innerHTML = codes.map(code => `
+          <tr>
+            <td class="font-mono text-xs">${code.id}</td>
+            <td>${code.title}</td>
+            <td>${code.point}</td>
+            <td class="max-w-xs  text-ellipsis whitespace-nowrap">${code.desc || '-'}</td>
+            <td class="whitespace-nowrap">
+              <button class="btn btn-sm btn-info btn-square text-white mr-2 edit-code-btn" data-id="${code.id}" aria-label="แก้ไข">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                  <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <button class="btn btn-sm btn-error btn-square text-white delete-code-btn" data-id="${code.id}" aria-label="ลบ">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 01-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+        tableBody.querySelectorAll('.edit-code-btn').forEach(btn => {
+          btn.onclick = () => showCodeFormModal(codes.find(c => c.id === btn.dataset.id));
+        });
+        tableBody.querySelectorAll('.delete-code-btn').forEach(btn => {
+          btn.onclick = () => deleteCode(btn.dataset.id);
+        });
+      }
+
+      function showCodeFormModal(code = null) {
+        currentEditItem = code;
+        dataFormModalTitle.textContent = code ? 'แก้ไขโค้ด' : 'เพิ่มโค้ดใหม่';
+        formFieldsContainer.innerHTML = `
+          <div class="form-control">
+            <label class="label"><span class="label-text">ID (ค่า QR Code / รหัสโค้ด, ไม่สามารถแก้ไขได้)</span></label>
+            <input type="text" id="formCodeId" placeholder="ID สำหรับ QR Code / รหัส" class="input input-bordered w-full" ${code ? 'readonly' : 'required'} value="${code ? code.id : ''}" />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">ชื่อโค้ด</span></label>
+            <input type="text" id="formCodeTitle" placeholder="ชื่อโค้ด (เช่น โค้ดรับพ้อยต์จากงาน)" class="input input-bordered w-full" value="${code ? code.title : ''}" required />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">พ้อยต์ที่จะได้รับ</span></label>
+            <input type="number" id="formCodePoint" placeholder="0" class="input input-bordered w-full" value="${code ? code.point : 0}" required />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">รายละเอียดโค้ด</span></label>
+            <textarea id="formCodeDesc" placeholder="รายละเอียด" class="textarea textarea-bordered h-24 w-full">${code ? code.desc : ''}</textarea>
+          </div>
+        `;
+        dataFormModal.showModal();
+
+        formSaveBtn.onclick = () => saveCode(code);
+        formCancelBtn.onclick = () => dataFormModal.close();
+      }
+
+      async function saveCode(originalCode) {
+        const id = document.getElementById('formCodeId').value.trim();
+        const title = document.getElementById('formCodeTitle').value.trim();
+        const point = parseInt(document.getElementById('formCodePoint').value, 10);
+        const desc = document.getElementById('formCodeDesc').value.trim();
+
+        if (!id || !title || isNaN(point) || point < 0) {
+          showAlert('ข้อผิดพลาด', 'กรุณากรอก ID, ชื่อโค้ด และพ้อยต์ให้ถูกต้อง');
+          return;
+        }
+
+        formSaveBtn.disabled = true;
+        try {
+          let message;
+          if (originalCode) {
+            message = await postData('updateCode', { id: originalCode.id, title, point, desc });
+          } else {
+            message = await postData('addCode', { id, title, point, desc });
+          }
+          showAlert('สำเร็จ', message, () => {
+            dataFormModal.close();
+            loadCodes();
+          });
+        } catch (error) {
+          // Error handled by postData
+        } finally {
+          formSaveBtn.disabled = false;
+        }
+      }
+
+      async function deleteCode(id) {
+        const confirmed = await showConfirm('ยืนยันการลบ', `คุณแน่ใจหรือไม่ที่จะลบโค้ด ID: ${id}?`);
+        if (!confirmed) return;
+
+        try {
+          const message = await postData('deleteCode', { id });
+          showAlert('สำเร็จ', message, () => loadCodes());
+        } catch (error) {
+          // Error handled by postData
+        }
+      }
+    }
+
+    // --- History View ---
+    async function initHistory() {
+      const tableBody = document.getElementById('historyTableBody');
+      const filterLineIdInput = document.getElementById('historySearchLineId');
+      const filterTypeSelect = document.getElementById('historyFilterType');
+      const filterStartDateInput = document.getElementById('historyStartDate');
+      const filterEndDateInput = document.getElementById('historyEndDate');
+      const filterBtn = document.getElementById('historyFilterBtn');
+      const resetBtn = document.getElementById('historyResetBtn');
+
+      filterBtn.onclick = () => loadHistory();
+      resetBtn.onclick = () => {
+        filterLineIdInput.value = '';
+        filterTypeSelect.value = '';
+        filterStartDateInput.value = '';
+        filterEndDateInput.value = '';
+        loadHistory();
+      };
+
+      await loadHistory();
+
+      async function loadHistory() {
+        tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4"><div class="loading-spinner mx-auto"></div> กำลังโหลดข้อมูล...</td></tr>`;
+        try {
+          const filters = {
+            lineId: filterLineIdInput.value.trim(),
+            type: filterTypeSelect.value,
+            startDate: filterStartDateInput.value,
+            endDate: filterEndDateInput.value
+          };
+          const history = await fetchData('getAllHistory', filters);
+          renderHistoryTable(history);
+        } catch (error) {
+          tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-error">ไม่สามารถโหลดประวัติได้</td></tr>`;
+        }
+      }
+
+      function renderHistoryTable(history) {
+        if (history.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-base-content text-opacity-50">ไม่พบประวัติการทำรายการ</td></tr>`;
+          return;
+        }
+        tableBody.innerHTML = history.map(record => `
+          <tr>
+            <td class="font-mono text-xs">${record.lineId}</td>
+            <td>${record.type}</td>
+            <td>${record.detail}</td>
+            <td class="${record.amount < 0 ? 'text-error' : 'text-success'} font-bold">${record.amount > 0 ? '+' : ''}${record.amount}</td>
+            <td>${record.date}</td>
+            <td>${record.refId || '-'}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // --- Settings View ---
+    async function initSettings() {
+      const vipPointsInput = document.getElementById('vipPoints');
+      const superPointsInput = document.getElementById('superPoints');
+      const saveLevelSettingsBtn = document.getElementById('saveLevelSettingsBtn');
+      const levelSettingsForm = document.getElementById('levelSettingsForm');
+
+      // Load current settings
+      try {
+        const config = await fetchData('getLevelConfig');
+        if (config) {
+          vipPointsInput.value = parseInt(config.VIP_points || 0, 10);
+          superPointsInput.value = parseInt(config.SUPER_points || 0, 10);
+          levelConfig = {
+            VIP_points: parseInt(config.VIP_points || 0, 10),
+            SUPER_points: parseInt(config.SUPER_points || 0, 10),
+          };
+        }
+      } catch (error) {
+        console.error("Error loading level settings:", error);
+        showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดการตั้งค่าระดับได้');
+      }
+
+      // Save settings
+      levelSettingsForm.onsubmit = async (e) => {
+        e.preventDefault();
+        saveLevelSettingsBtn.disabled = true;
+
+        const vipPoints = parseInt(vipPointsInput.value, 10);
+        const superPoints = parseInt(superPointsInput.value, 10);
+
+        if (isNaN(vipPoints) || vipPoints < 0 || isNaN(superPoints) || superPoints < 0) {
+          showAlert('ข้อผิดพลาด', 'กรุณากรอกจำนวนแต้มให้ถูกต้อง (ตัวเลขที่ไม่ติดลบ)');
+          saveLevelSettingsBtn.disabled = false;
+          return;
+        }
+        if (vipPoints >= superPoints && superPoints !== 0) { // Allow SUPER=0 if VIP=0
+          showAlert('ข้อผิดพลาด', 'แต้มสำหรับระดับ SUPER ต้องมากกว่าแต้มสำหรับระดับ VIP');
+          saveLevelSettingsBtn.disabled = false;
+          return;
+        }
+
+
+        try {
+          const message = await postData('setLevelConfig', { VIP_points: vipPoints, SUPER_points: superPoints });
+          showAlert('สำเร็จ', message, () => {
+            // Update global levelConfig after successful save
+            levelConfig = { VIP_points: vipPoints, SUPER_points: superPoints };
+          });
+        } catch (error) {
+          // Error handled by postData
+        } finally {
+          saveLevelSettingsBtn.disabled = false;
+        }
+      };
+    }
+    // --- Initialize App ---
     document.addEventListener('DOMContentLoaded', () => {
-      handleLogin();
       window.addEventListener('hashchange', router);
+      router(); // Initial route load
     });
+  
   </script>
 </body>
 </html>
