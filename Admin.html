@@ -166,7 +166,8 @@
     </form></div></div>
   </template>
 
-  <script>
+
+<script>
     // --- Globals ---
     const mainApp = document.getElementById('main-app');
     const appContainer = document.getElementById('app-container');
@@ -175,29 +176,190 @@
     let levelConfig = { VIP_points: 100, SUPER_points: 500 };
 
     // --- Helpers (Alert, Confirm, API) ---
-    function showAlert(title, message, cb) { document.getElementById('customAlertTitle').textContent = title; document.getElementById('customAlertMessage').textContent = message; const dialog = document.getElementById('customAlertDialog'); dialog.showModal(); const btn = document.getElementById('customAlertButton'); const handler = () => { dialog.close(); btn.removeEventListener('click', handler); cb && cb(); }; btn.addEventListener('click', handler); }
-    function showConfirm(title, message) { return new Promise(res => { document.getElementById('customConfirmTitle').textContent = title; document.getElementById('customConfirmMessage').textContent = message; const dialog = document.getElementById('customConfirmDialog'); dialog.showModal(); const ok = document.getElementById('customConfirmConfirmButton'), no = document.getElementById('customConfirmCancelButton'); const onOk = () => { cleanup(); res(true); }; const onNo = () => { cleanup(); res(false); }; function cleanup() { dialog.close(); ok.removeEventListener('click', onOk); no.removeEventListener('click', onNo); } ok.addEventListener('click', onOk); no.addEventListener('click', onNo); }); }
-    async function fetchData(action, params = {}) { const url = new URL(CONFIG.GAS_URL_ADMIN_GET); url.searchParams.append('action', action); for (const k in params) if (params[k]) url.searchParams.append(k, params[k]); try { const r = await fetch(url); if (!r.ok) throw new Error(await r.text()); return await r.json(); } catch (e) { showAlert('Error', `Fetch failed: ${e.message}`); throw e; } }
-    async function postData(action, data) { try { const r = await fetch(CONFIG.GAS_URL_ADMIN_POST, { method: 'POST', body: JSON.stringify({ action, ...data }) }); if (!r.ok) throw new Error(await r.text()); return await r.text(); } catch (e) { showAlert('Error', `Post failed: ${e.message}`); throw e; } }
+    function showAlert(title, message, cb) {
+        const dialog = document.getElementById('customAlertDialog');
+        document.getElementById('customAlertTitle').textContent = title;
+        document.getElementById('customAlertMessage').textContent = message;
+        dialog.showModal();
+        const btn = document.getElementById('customAlertButton');
+        const handler = () => { dialog.close(); btn.removeEventListener('click', handler); cb && cb(); };
+        btn.addEventListener('click', handler);
+    }
+
+    function showConfirm(title, message) {
+        return new Promise(res => {
+            const dialog = document.getElementById('customConfirmDialog');
+            document.getElementById('customConfirmTitle').textContent = title;
+            document.getElementById('customConfirmMessage').textContent = message;
+            dialog.showModal();
+            const ok = document.getElementById('customConfirmConfirmButton'), no = document.getElementById('customConfirmCancelButton');
+            const onOk = () => { cleanup(); res(true); };
+            const onNo = () => { cleanup(); res(false); };
+            function cleanup() { dialog.close(); ok.removeEventListener('click', onOk); no.removeEventListener('click', onNo); }
+            ok.addEventListener('click', onOk);
+            no.addEventListener('click', onNo);
+        });
+    }
+
+    async function fetchData(action, params = {}) {
+        const url = new URL(CONFIG.GAS_URL_ADMIN); // ใช้ URL จาก config
+        url.searchParams.append('action', action);
+        for (const k in params) {
+            if (params[k]) url.searchParams.append(k, params[k]);
+        }
+        console.log(`Fetching data for action: ${action} with params:`, params);
+        try {
+            const r = await fetch(url);
+            if (!r.ok) {
+                const errorText = await r.text();
+                console.error(`Fetch Error ${r.status}:`, errorText);
+                throw new Error(`Server responded with ${r.status}`);
+            }
+            return await r.json();
+        } catch (e) {
+            showAlert('API GET Error', `Failed to fetch data for '${action}'. Check console for details.`);
+            throw e;
+        }
+    }
+
+    async function postData(action, data) {
+        console.log(`Posting data for action: ${action}`, data);
+        try {
+            const r = await fetch(CONFIG.GAS_URL_ADMIN, { // ใช้ URL จาก config
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // GAS post expects plain text
+                body: JSON.stringify({ action, ...data })
+            });
+            if (!r.ok) {
+                const errorText = await r.text();
+                console.error(`Post Error ${r.status}:`, errorText);
+                throw new Error(`Server responded with ${r.status}`);
+            }
+            return await r.text();
+        } catch (e) {
+            showAlert('API POST Error', `Failed to post data for '${action}'. Check console for details.`);
+            throw e;
+        }
+    }
 
     // --- Router ---
     const routes = {
-      '': { tpl: 'view-dashboard', init: initDashboard }, '#dashboard': { tpl: 'view-dashboard', init: initDashboard }, '#users': { tpl: 'view-users', init: initUsers }, '#items': { tpl: 'view-items', init: initItems }, '#warehouse': { tpl: 'view-warehouse', init: initWarehouse }, '#events': { tpl: 'view-events', init: initEvents }, '#codes': { tpl: 'view-codes', init: initCodes }, '#history': { tpl: 'view-history', init: initHistory }, '#settings': { tpl: 'view-settings', init: initSettings },
+        '': { tpl: 'view-dashboard', init: initDashboard },
+        '#dashboard': { tpl: 'view-dashboard', init: initDashboard },
+        '#users': { tpl: 'view-users', init: initUsers },
+        '#items': { tpl: 'view-items', init: initItems },
+        '#warehouse': { tpl: 'view-warehouse', init: initWarehouse },
+        '#events': { tpl: 'view-events', init: initEvents },
+        '#codes': { tpl: 'view-codes', init: initCodes },
+        '#history': { tpl: 'view-history', init: initHistory },
+        '#settings': { tpl: 'view-settings', init: initSettings },
     };
-    function setActiveNavLink() { const hash = window.location.hash || '#dashboard'; document.querySelectorAll('.nav-link').forEach(l => { l.classList.toggle('active', l.getAttribute('href') === hash); }); if (drawerToggle.checked) drawerToggle.checked = false; }
+
+    function setActiveNavLink() {
+        const hash = window.location.hash || '#dashboard';
+        document.querySelectorAll('.nav-link').forEach(l => {
+            l.classList.toggle('active', l.getAttribute('href') === hash);
+        });
+        if (drawerToggle && drawerToggle.checked) {
+            drawerToggle.checked = false;
+        }
+    }
+
     async function router() {
-      if (!sessionStorage.getItem('isLoggedIn')) return;
-      try { const config = await fetchData('getLevelConfig'); if (config) levelConfig = { VIP_points: parseInt(config.VIP_points), SUPER_points: parseInt(config.SUPER_points) }; } catch (e) { console.warn("Using default level config."); }
-      setActiveNavLink();
-      const hash = window.location.hash || '#dashboard'; const route = routes[hash] || routes[''];
-      appContainer.innerHTML = `<div class="text-center py-8"><div class="loading-spinner mx-auto"></div></div>`;
-      const template = document.getElementById(route.tpl);
-      if (template) { appContainer.innerHTML = ''; appContainer.appendChild(template.content.cloneNode(true)); try { await route.init(); } catch (e) { appContainer.innerHTML = `<p class="text-error text-center">Error loading page: ${e.message}</p>`; }
-      } else { appContainer.innerHTML = `<p class="text-error text-center">Page not found</p>`; }
+        if (!sessionStorage.getItem('isLoggedIn')) {
+            console.log("Not logged in, skipping router.");
+            return;
+        }
+        console.log("Router starting...");
+        
+        try {
+            const config = await fetchData('getLevelConfig');
+            if (config) {
+                levelConfig = { VIP_points: parseInt(config.VIP_points), SUPER_points: parseInt(config.SUPER_points) };
+                console.log("Level config loaded:", levelConfig);
+            }
+        } catch (e) {
+            console.warn("Could not load level config. Using defaults.", e);
+        }
+
+        setActiveNavLink();
+        const hash = window.location.hash || '#dashboard';
+        const route = routes[hash] || routes[''];
+        
+        appContainer.innerHTML = `<div class="text-center py-8"><div class="loading-spinner mx-auto"></div><p>Loading ${hash}...</p></div>`;
+        const template = document.getElementById(route.tpl);
+        
+        if (template) {
+            appContainer.innerHTML = '';
+            appContainer.appendChild(template.content.cloneNode(true));
+            try {
+                console.log(`Initializing page: ${hash}`);
+                await route.init();
+                console.log(`Page ${hash} initialized successfully.`);
+            } catch (e) {
+                console.error(`Error initializing page ${hash}:`, e);
+                appContainer.innerHTML = `<div class="text-error text-center p-4">Error loading page content: ${e.message}</div>`;
+            }
+        } else {
+            appContainer.innerHTML = `<div class="text-error text-center p-4">Page template for "${hash}" not found.</div>`;
+        }
     }
 
     // --- Authentication ---
-    function handleLogin() { const loginOverlay = document.getElementById('login-overlay'); const loginBtn = document.getElementById('loginBtn'); const userInput = document.getElementById('username'); const passInput = document.getElementById('password'); const loginError = document.getElementById('login-error'); loginBtn.onclick = async () => { loginBtn.classList.add('loading'); loginError.classList.add('hidden'); try { const res = await postData('login', { username: userInput.value, password: passInput.value }); const data = JSON.parse(res); if (data.success) { sessionStorage.setItem('isLoggedIn', 'true'); loginOverlay.classList.add('hidden'); mainApp.classList.remove('hidden'); router(); } else { loginError.textContent = data.message; loginError.classList.remove('hidden'); } } catch (e) { loginError.textContent = 'Login failed.'; loginError.classList.remove('hidden'); } finally { loginBtn.classList.remove('loading'); } }; document.getElementById('logoutBtn').onclick = () => { sessionStorage.removeItem('isLoggedIn'); location.reload(); }; if (sessionStorage.getItem('isLoggedIn')) { loginOverlay.classList.add('hidden'); mainApp.classList.remove('hidden'); } }
+    function handleLogin() {
+        const loginOverlay = document.getElementById('login-overlay');
+        const loginBtn = document.getElementById('loginBtn');
+        const userInput = document.getElementById('username');
+        const passInput = document.getElementById('password');
+        const loginError = document.getElementById('login-error');
+
+        async function attemptLogin() {
+            loginBtn.classList.add('loading');
+            loginError.classList.add('hidden');
+            try {
+                // Login action doesn't really need a server call if it's hardcoded, but this matches the original code
+                const res = await postData('login', { username: userInput.value, password: passInput.value });
+                const data = JSON.parse(res); // assuming response is JSON string
+                if (data.success) {
+                    console.log("Login successful!");
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    loginOverlay.classList.add('hidden');
+                    mainApp.classList.remove('hidden');
+                    // Manually call router for the first time after login
+                    await router(); 
+                } else {
+                    loginError.textContent = data.message || "Invalid credentials";
+                    loginError.classList.remove('hidden');
+                }
+            } catch (e) {
+                loginError.textContent = 'Login request failed. Check console.';
+                loginError.classList.remove('hidden');
+            } finally {
+                loginBtn.classList.remove('loading');
+            }
+        }
+        
+        loginBtn.onclick = attemptLogin;
+        passInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') attemptLogin();
+        });
+
+        document.getElementById('logoutBtn').onclick = () => {
+            sessionStorage.removeItem('isLoggedIn');
+            location.reload();
+        };
+
+        // Check login status on page load
+        if (sessionStorage.getItem('isLoggedIn') === 'true') {
+            console.log("Already logged in. Initializing app.");
+            loginOverlay.classList.add('hidden');
+            mainApp.classList.remove('hidden');
+            // Initial call to router
+            router();
+        } else {
+             console.log("Not logged in. Showing login form.");
+        }
+    }
 
     // --- Page Initializers ---
     async function initDashboard() {
@@ -668,12 +830,84 @@
         }
       };
     }
-    // --- Initialize App ---
+
+
+    async function initWarehouse() {
+      const tableBody = document.getElementById('warehouseTableBody');
+      const searchInput = document.getElementById('warehouseSearchInput');
+      const statusFilter = document.getElementById('warehouseStatusFilter');
+      const searchBtn = document.getElementById('warehouseSearchBtn');
+
+      searchBtn.onclick = () => loadWarehouseItems();
+      searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') searchBtn.click();
+      });
+      statusFilter.onchange = () => loadWarehouseItems();
+
+      await loadWarehouseItems();
+
+      async function loadWarehouseItems() {
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4"><div class="loading-spinner mx-auto"></div></td></tr>`;
+        try {
+          const items = await fetchData('getWarehouseItems', { 
+              query: searchInput.value.trim(), 
+              status: statusFilter.value 
+          });
+          renderWarehouseTable(items);
+        } catch (error) {
+          tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-error">Failed to load warehouse items.</td></tr>`;
+        }
+      }
+
+      function renderWarehouseTable(items) {
+        if (!items || items.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4">No items found.</td></tr>`;
+          return;
+        }
+        tableBody.innerHTML = items.map(item => {
+          const shippingInfo = item.shippingName 
+            ? `<div class="text-xs"><strong>${item.shippingName}</strong><br>${item.shippingPhone}<br><div class="whitespace-normal">${item.shippingAddress}</div></div>` 
+            : '-';
+          const actionBtn = item.status === 'claimed'
+            ? `<div class="text-xs text-success font-semibold">ยืนยันแล้ว<br>${item.claimDate}</div>`
+            : `<button class="btn btn-xs btn-success claim-item-btn" data-id="${item.warehouseId}">ยืนยัน</button>`;
+          
+          return `
+            <tr>
+              <td class="font-mono text-xs">${item.warehouseId}</td>
+              <td>${item.itemName}</td>
+              <td class="font-mono text-xs">${item.lineId}</td>
+              <td>${shippingInfo}</td>
+              <td>${item.redeemDate}</td>
+              <td><span class="badge ${item.status === 'claimed' ? 'badge-success' : 'badge-warning'}">${item.status.replace('_', ' ')}</span></td>
+              <td>${actionBtn}</td>
+            </tr>`;
+        }).join('');
+
+        tableBody.querySelectorAll('.claim-item-btn').forEach(b => {
+          b.onclick = () => claimItem(b.dataset.id);
+        });
+      }
+
+      async function claimItem(id) {
+        if (await showConfirm('Confirm Action', `ยืนยันการรับ/จัดส่งสำหรับรายการ ${id}?`)) {
+          try {
+            await postData('claimWarehouseItemAdmin', { warehouseId: id });
+            showAlert('Success', 'Item status updated successfully!', () => loadWarehouseItems());
+          } catch (e) { /* Error is already handled by postData */ }
+        }
+      }
+    }
+
+
+    // --- App Start ---
     document.addEventListener('DOMContentLoaded', () => {
+      handleLogin();
       window.addEventListener('hashchange', router);
-      router(); // Initial route load
     });
-  
-  </script>
+
+</script>
+
+
 </body>
 </html>
