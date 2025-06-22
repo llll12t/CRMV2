@@ -13,297 +13,1516 @@
   <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet" type="text/css" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    .hidden { display: none !important; }
-    .glass-white { background: rgba(255, 255, 255, 0.15); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); backdrop-filter: blur(8.1px); -webkit-backdrop-filter: blur(8.1px); border: 1px solid rgba(255, 255, 255, 0.3); }
-    .neon-text { color: #fff; text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e; animation: glow 1.5s infinite alternate; }
-    @keyframes glow { from { text-shadow: 0 0 5px #ff005e; } to { text-shadow: 0 0 10px #00d4ff, 0 0 20px #00d4ff; } }
-    @keyframes pulse-opacity { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
-    .loading-card-animation { animation: pulse-opacity 1.5s infinite ease-in-out; }
+    .hidden {
+      display: none !important;
+    }
+
+    @keyframes pulseCustom {
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.02);
+        opacity: 0.6;
+      }
+    }
+    .neon-text {
+    color: #fff;
+    text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e, 0 0 40px #ff005e, 0 0 80px #ff005e;
+    animation: glow 1.5s infinite alternate;
+}
+
+@keyframes glow {
+    0% {
+        text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e, 0 0 40px #ff005e, 0 0 80px #ff005e;
+    }
+    100% {
+        text-shadow: 0 0 10px #00d4ff, 0 0 20px #00d4ff, 0 0 40px #00d4ff, 0 0 80px #00d4ff, 0 0 160px #00d4ff;
+    }
+}
+    .pulse-custom {
+      animation: pulseCustom 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-opacity {
+      0%,
+      100% {
+        opacity: 0.5;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+
+    .loading-card-animation {
+      animation: pulse-opacity 1.5s infinite ease-in-out;
+    }
+
+    .glass-white {
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(8.1px);
+      -webkit-backdrop-filter: blur(8.1px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .glass-black {
+      background: rgba(0, 0, 0, 0.29);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(8.1px);
+      -webkit-backdrop-filter: blur(8.1px);
+      border: 1px solid rgba(0, 0, 0, 0.3);
+    }
   </style>
 </head>
 
 <body class="bg-gradient-to-b from-neutral via-white to-white min-h-screen relative bg-fixed p-6">
-  <!-- Header Section -->
   <div class="flex justify-between items-center mb-6">
     <h2 id="pageTitle" class="text-xl font-bold text-white">กำลังโหลด...</h2>
     <div class="glass-white rounded-full flex items-center p-1 space-x-2">
+<!--       <div class="w-8 h-8 bg-yellow-400 p-1 rounded-full pulse-custom">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#ffffff" fill="none">
+          <path
+            d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
+            stroke="currentColor" stroke-width="1.5"></path>
+          <path
+            d="M9 12H13.2M9 12V9.2963C9 8.82489 9 8.58919 9.14645 8.44274C9.29289 8.2963 9.52860 8.2963 10 8.2963H13.2C14.1941 8.2963 15 9.1254 15 10.1481C15 11.1709 14.1941 12 13.2 12M9 12V14.7037C9 15.1751 9 15.4108 9.14645 15.5572C9.29289 15.7037 9.52860 15.7037 10 15.7037H13.2C14.1941 15.7037 15 14.8746 15 13.8518C15 12.8291 14.1941 12 13.2 12M10.4938 8.2963V7M10.4938 17V15.7037M12.8982 8.2963V7M12.8982 17V15.7037"
+            stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+        </svg>
+      </div> -->
+      <!-- Header: แสดงเฉพาะคะแนนและรูปโปรไฟล์เท่านั้น -->
       <div id="pointVal" class="font-bold neon-text text-lg px-2">0</div>
-      <img id="lineDisplayPicture" class="mask mask-circle w-10 h-10 rounded-full object-cover border border-black" src="https://via.placeholder.com/150" alt="Profile Picture" />
+      <img id="lineDisplayPicture" class="mask mask-circle w-10 h-10 rounded-full object-cover border border-black "
+        src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" />
     </div>
   </div>
+  <div id="app">
+    <div class="text-center text-gray-100 py-8">กำลังโหลดเนื้อหา...</div>
+  </div>
+  <dialog id="customAlertDialog" class="modal">
+    <div class="modal-box text-center">
+      <h3 id="customAlertTitle" class="font-bold text-lg mb-3"></h3>
+      <p id="customAlertMessage" class="py-4 whitespace-pre-line"></p>
+      <div class="modal-action justify-center">
+        <button id="customAlertButton" class="btn btn-neutral w-full">ตกลง</button>
+      </div>
+    </div>
+  </dialog>
+  <dialog id="customConfirmDialog" class="modal">
+    <div class="modal-box text-center">
+      <h3 id="customConfirmTitle" class="font-bold text-lg mb-3"></h3>
+      <p id="customConfirmMessage" class="py-4"></p>
+      <div class="modal-action justify-around">
+        <button id="customConfirmCancelButton" class="btn btn-outline btn-neutral">ยกเลิก</button>
+        <button id="customConfirmConfirmButton" class="btn btn-neutral">ยืนยัน</button>
+      </div>
+    </div>
+  </dialog>
 
-  <!-- Main App Container -->
-  <div id="app"><div class="text-center text-gray-100 py-8">กำลังเริ่มต้นแอปพลิเคชัน...</div></div>
-
-  <!-- Dialogs -->
-  <dialog id="customAlertDialog" class="modal"><div class="modal-box text-center"><h3 id="customAlertTitle" class="font-bold text-lg mb-3"></h3><div id="customAlertMessage" class="py-4 whitespace-pre-line"></div><div class="modal-action justify-center"><button id="customAlertButton" class="btn btn-neutral w-full">ตกลง</button></div></div></dialog>
-  <dialog id="customConfirmDialog" class="modal"><div class="modal-box text-center"><h3 id="customConfirmTitle" class="font-bold text-lg mb-3"></h3><p id="customConfirmMessage" class="py-4"></p><div class="modal-action justify-around"><button id="customConfirmCancelButton" class="btn btn-outline btn-neutral">ยกเลิก</button><button id="customConfirmConfirmButton" class="btn btn-neutral">ยืนยัน</button></div></div></dialog>
-
-  <!-- Templates for each view -->
+  <!-- Template: Dashboard (Main Menu) -->
   <template id="view-dashboard">
     <div class="glass-white rounded p-4 grid grid-cols-3 gap-3 text-center text-sm font-medium mb-6">
-      <a href="#event" class="bg-white text-black p-3 rounded flex flex-col items-center justify-center space-y-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg><span>กิจกรรม</span></a>
-      <a href="#warehouse" class="bg-white text-black p-3 rounded flex flex-col items-center justify-center space-y-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg><span>คลัง</span></a>
-      <a href="#addpoint" class="bg-white text-black p-3 rounded flex flex-col items-center justify-center space-y-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none"><path d="M2.5 8.18677C2.60406 6.08705 2.91537 4.77792 3.84664 3.84664C4.77792 2.91537 6.08705 2.60406 8.18677 2.5M21.5 8.18677C21.3959 6.08705 21.0846 4.77792 20.1534 3.84664C19.2221 2.91537 17.9129 2.60406 15.8132 2.5M15.8132 21.5C17.9129 21.3959 19.2221 21.0846 20.1534 20.1534C21.0846 19.2221 21.3959 17.9129 21.5 15.8132M8.18676 21.5C6.08705 21.3959 4.77792 21.0846 3.84664 20.1534C2.91537 19.2221 2.60406 17.9129 2.5 15.8132" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M2.49986 12H21.4999" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M6 12C6 8.68629 8.68629 6 12 6C12 7.65685 13.3431 9 15 9C15.6755 9 16.2989 8.77672 16.8004 8.39993C17.5536 9.40273 18 10.6492 18 12M17.1973 15C16.1599 16.7934 14.2208 18 12 18C9.77915 18 7.84012 16.7934 6.80269 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>สแกนรับ</span></a>
-      <a href="#transfer" class="bg-white text-black p-3 rounded flex flex-col items-center justify-center space-y-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg><span>โอนพ้อย</span></a>
-      <a href="#redeem" class="bg-white text-black p-3 rounded flex flex-col items-center justify-center space-y-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg><span>แลกพ้อย</span></a>
-      <a href="#profile" class="bg-white text-black p-3 rounded flex flex-col items-center justify-center space-y-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg><span>บัญชี</span></a>
+      <a href="#event"
+        class="bg-white text-black p-3 rounded flex flex-col items-center justify-center space-y-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
+        <span>กิจกรรม</span>
+      </a>
+      <a href="#warehouse"
+        class="bg-white text-black p-3 rounded flex flex-col items-center justify-center space-y-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+        </svg>
+        <span>คลัง</span>
+      </a>
+      <a href="#addpoint"
+        class="bg-white text-black p-3 rounded flex flex-col items-center justify-center space-y-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none">
+          <path
+            d="M2.5 8.18677C2.60406 6.08705 2.91537 4.77792 3.84664 3.84664C4.77792 2.91537 6.08705 2.60406 8.18677 2.5M21.5 8.18677C21.3959 6.08705 21.0846 4.77792 20.1534 3.84664C19.2221 2.91537 17.9129 2.60406 15.8132 2.5M15.8132 21.5C17.9129 21.3959 19.2221 21.0846 20.1534 20.1534C21.0846 19.2221 21.3959 17.9129 21.5 15.8132M8.18676 21.5C6.08705 21.3959 4.77792 21.0846 3.84664 20.1534C2.91537 19.2221 2.60406 17.9129 2.5 15.8132"
+            stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+          <path d="M2.49986 12H21.4999" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+          <path
+            d="M6 12C6 8.68629 8.68629 6 12 6C12 7.65685 13.3431 9 15 9C15.6755 9 16.2989 8.77672 16.8004 8.39993C17.5536 9.40273 18 10.6492 18 12M17.1973 15C16.1599 16.7934 14.2208 18 12 18C9.77915 18 7.84012 16.7934 6.80269 15"
+            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <span>สแกนรับ</span>
+      </a>
+      <a href="#transfer"
+        class="bg-white text-black p-3 rounded flex flex-col items-center justify-center space-y-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+        <span>โอนพ้อย</span>
+      </a>
+      <a href="#redeem"
+        class="bg-white text-black p-3 rounded flex flex-col items-center justify-center space-y-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+        </svg>
+        <span>แลกพ้อย</span>
+      </a>
+      <a href="#profile"
+        class="bg-white text-black p-3 rounded flex flex-col items-center justify-center space-y-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        <span>บัญชี</span>
+      </a>
     </div>
-    <div id="checkinBox" class="flex items-center justify-between mb-8 hidden"><div class="bg-gray-100 rounded-full px-4 py-2 flex items-center space-x-2 text-gray-700"><span class="text-sm">วันที่</span><span id="todayDate" class="font-bold text-md">00</span></div><div class="bg-yellow-400 rounded-full w-10 h-10 flex items-center justify-center text-white font-bold text-sm">+1</div><button id="checkinBtn" class="btn btn-neutral btn-sm">เช็คอิน</button></div>
-    <div><div class="flex justify-between items-center mb-4"><div class="font-bold text-lg">รายการล่าสุด</div><div class="text-xs text-gray-400 font-medium">POINT</div></div><ul id="historyList" class="space-y-4"></ul></div>
+
+    <!-- Check-in Section -->
+    <div id="checkinBox" class="flex items-center justify-between mb-8 hidden">
+      <div class="bg-gray-100 rounded-full px-4 py-2 flex items-center space-x-2 text-gray-700">
+        <span class="text-sm">วันที่</span>
+        <span id="todayDate" class="font-bold text-md">00</span>
+      </div>
+      <div class="bg-yellow-400 rounded-full w-10 h-10 flex items-center justify-center text-white font-bold text-sm">
+        +1
+      </div>
+      <button id="checkinBtn" class="btn btn-neutral btn-sm">
+        เช็คอิน
+      </button>
+    </div>
+
+    <!-- History Section -->
+    <div>
+      <div class="flex justify-between items-center mb-4">
+        <div class="font-bold text-lg">รายการล่าสุด</div>
+        <div class="text-xs text-gray-400 font-medium">POINT</div>
+      </div>
+      <ul id="historyList" class="space-y-4">
+        <!-- skeleton loader -->
+      </ul>
+    </div>
   </template>
-  <template id="view-event"><div id="eventList" class="space-y-3"></div></template>
-  <template id="view-event-detail"><div id="cardWrapper"><div id="cardSkeleton" class="bg-white p-6 rounded shadow-md mb-6 animate-pulse"><div class="h-6 bg-gray-200 rounded w-1/3 mb-4"></div><div class="h-4 bg-gray-200 rounded w-1/4 mb-2"></div><div class="h-3 bg-gray-200 rounded w-full mb-6"></div><div class="h-12 bg-gray-200 rounded-full w-full"></div></div><div id="card" class="bg-white p-6 rounded shadow-md text-gray-800 mb-6 hidden"><div class="flex justify-between items-start mb-3"><div class="font-bold text-lg" id="eventDetailTitle">–</div><div class="bg-yellow-400 text-black font-bold text-md px-3 py-1 rounded-full" id="eventPoint">0+</div></div><div class="text-sm text-gray-700 mb-6 leading-relaxed" id="eventDetailDesc">...</div><button id="joinBtn" class="btn btn-neutral w-full">เข้าร่วม</button></div></div></template>
-  <template id="view-profile"><div class="space-y-4"><div class="glass-white p-6 rounded-lg text-center shadow-md"><div class="relative w-24 h-24 mx-auto mb-4"><img id="profileDisplayPicture" class="mask mask-circle w-24 h-24 rounded-full object-cover border-4 border-black" src="https://via.placeholder.com/150" alt="รูปโปรไฟล์" /><button id="editProfileBtn" class="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md hover:scale-110 transition-transform"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.389-8.389-2.828-2.828z" /></svg></button></div><div class="text-2xl font-bold mb-2" id="profileDisplayName">กำลังโหลด...</div><div class="flex items-center justify-center space-x-2 mb-2"><span id="profileLevelBadge" class="badge badge-lg"></span><span id="profileCustomTagBadge" class="badge badge-lg"></span></div><progress id="profileProgressBar" class="progress progress-warning w-full" value="0" max="100"></progress><div id="profilePointsToNextLevel" class="text-sm text-gray-700 mt-1"></div><div class="font-bold text-xl mt-4">รวมพ้อยต์: <span id="profileTotalPoints">0</span></div></div><div id="profileFormContainer" class="bg-white p-6 rounded-lg shadow-md space-y-4 hidden"><div><label class="block text-sm font-medium text-gray-700 mb-1">LINE ID</label><input id="profileLineId" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div><div><label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ</label><input id="profileName" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div><div><label class="block text-sm font-medium text-gray-700 mb-1">เบอร์โทรศัพท์</label><input id="profilePhone" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div><div><label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label><input id="profileEmail" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div><div><label class="block text-sm font-medium text-gray-700 mb-1">ที่อยู่</label><input id="profileAddress" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div><div><label class="block text-sm font-medium text-gray-700 mb-1">หมายเหตุ</label><input id="profileNote" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div><div id="profileEditButtons" class="flex space-x-2 hidden"><button id="saveProfileBtn" class="btn btn-neutral flex-1">บันทึก</button><button id="cancelEditBtn" class="btn btn-outline btn-neutral flex-1">ยกเลิก</button></div></div></div></template>
-  <template id="view-redeem"><div class="p-0"><ul id="redeemList" class="grid grid-cols-2 gap-4"></ul></div></template>
-  <template id="view-transfer"><div class="space-y-4 mb-6"><input id="transferTo" placeholder="LINE ID เพื่อน / เบอร์โทรปลายทาง" type="text" class="input input-bordered input-neutral w-full"><input id="transferAmount" placeholder="จำนวนพ้อยที่ต้องการโอน" type="number" class="input input-bordered input-neutral w-full"><button id="transferBtn" class="btn btn-neutral w-full">โอนพ้อย</button></div></template>
-  <template id="view-warehouse"><ul id="warehouseList" class="space-y-3"></ul></template>
-  <template id="view-addpoint"><div id="scanContainer" class="space-y-4 mb-6"><button id="scanBtn" class="btn btn-neutral w-full">สแกน QR Code</button><div class="flex space-x-2"><input id="manualCode" type="text" placeholder="กรอกโค้ดที่นี่" class="input input-bordered input-neutral flex-1"><button id="enterBtn" class="btn btn-neutral">รับโค้ด</button></div></div></template>
+
+  <!-- Template: Event List -->
+  <template id="view-event">
+    <!-- Event List -->
+    <div id="eventList" class="space-y-3">
+      <div class="bg-white rounded p-4 flex justify-between items-center shadow-sm animate-pulse">
+        <div class="space-y-2 w-3/4">
+          <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+        </div>
+        <div class="h-6 w-20 bg-gray-200 rounded-full"></div>
+      </div>
+    </div>
+  </template>
+
+  <!-- Template: Event Detail -->
+  <template id="view-event-detail">
+    <div id="cardWrapper">
+      <div id="cardSkeleton" class="bg-white p-6 rounded shadow-md mb-6 animate-pulse">
+        <div class="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+        <div class="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+        <div class="h-3 bg-gray-200 rounded w-full mb-6"></div>
+        <div class="h-12 bg-gray-200 rounded-full w-full"></div>
+      </div>
+      <div id="card" class="bg-white p-6 rounded shadow-md text-gray-800 mb-6 hidden">
+        <div class="flex justify-between items-start mb-3">
+          <div class="font-bold text-lg" id="eventDetailTitle">–</div>
+          <div class="bg-yellow-400 text-black font-bold text-md px-3 py-1 rounded-full" id="eventPoint">0+</div>
+        </div>
+        <div class="text-sm text-gray-700 mb-6 leading-relaxed" id="eventDetailDesc">...</div>
+        <button id="joinBtn" class="btn btn-neutral w-full">
+          เข้าร่วม
+        </button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Template: Profile -->
+  <template id="view-profile">
+    <div class="space-y-4">
+      <div class="glass-white p-6 rounded-lg text-center shadow-md">
+        <div class="relative w-24 h-24 mx-auto mb-4">
+          <img id="profileDisplayPicture"
+            class="mask mask-circle w-24 h-24 rounded-full object-cover border-4 border-black"
+            src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" alt="รูปโปรไฟล์" />
+          <!-- ปุ่มแก้ไข (ดินสอ) -->
+          <button id="editProfileBtn"
+            class="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md hover:scale-110 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20"
+              fill="currentColor">
+              <path
+                d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.389-8.389-2.828-2.828z" />
+            </svg>
+          </button>
+        </div>
+        <div class="text-2xl font-bold mb-2" id="profileDisplayName">กำลังโหลด...</div>
+        <!-- แสดง Level Badge และ Custom Tag เฉพาะในหน้า Profile -->
+        <div class="flex items-center justify-center space-x-2 mb-2">
+          <span id="profileLevelBadge" class="badge badge-lg"></span>
+          <span id="profileCustomTagBadge" class="badge badge-lg"></span>
+        </div>
+        <progress id="profileProgressBar" class="progress progress-warning w-full" value="0" max="100"></progress>
+        <div id="profilePointsToNextLevel" class="text-sm text-gray-700 mt-1"></div>
+        <div class="font-bold text-xl mt-4">รวมพ้อยต์: <span id="profileTotalPoints">0</span></div>
+      </div>
+
+      <!-- ฟอร์มข้อมูลผู้ใช้ - ซ่อนไว้ตอนเริ่มต้น -->
+      <div id="profileFormContainer" class="bg-white p-6 rounded-lg shadow-md space-y-4 hidden">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">LINE ID</label>
+          <input id="profileLineId" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ</label>
+          <input id="profileName" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">เบอร์โทรศัพท์</label>
+          <input id="profilePhone" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+          <input id="profileEmail" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">ที่อยู่</label>
+          <input id="profileAddress" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">หมายเหตุ</label>
+          <input id="profileNote" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" />
+        </div>
+        <!-- ปุ่มบันทึกและยกเลิก - ซ่อนไว้ตอนเริ่มต้น -->
+        <div id="profileEditButtons" class="flex space-x-2 hidden">
+          <button id="saveProfileBtn" class="btn btn-neutral flex-1">
+            บันทึกข้อมูล
+          </button>
+          <button id="cancelEditBtn" class="btn btn-outline btn-neutral flex-1">
+            ยกเลิก
+          </button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+
+  <!-- Template: Redeem -->
+  <template id="view-redeem">
+    <div class="p-0">
+      <ul id="redeemList" class="grid grid-cols-2 gap-4">
+      </ul>
+    </div>
+  </template>
+
+  <!-- Template: Transfer -->
+  <template id="view-transfer">
+    <!-- Form -->
+    <div class="space-y-4 mb-6">
+      <input id="transferTo" placeholder="LINE ID เพื่อน / เบอร์โทรปลายทาง" type="text"
+        class="input input-bordered input-neutral w-full">
+      <input id="transferAmount" placeholder="จำนวนพ้อยที่ต้องการโอน" type="number"
+        class="input input-bordered input-neutral w-full">
+      <button id="transferBtn" class="btn btn-neutral w-full">
+        โอนพ้อย
+      </button>
+    </div>
+  </template>
+
+  <!-- Template: Warehouse -->
+  <template id="view-warehouse">
+    <ul id="warehouseList" class="space-y-3">
+      <li class="bg-white rounded p-4 shadow-sm loading-card-animation flex justify-between items-center">
+        <div class="space-y-2 flex-1">
+          <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div class="h-3 bg-gray-200 rounded w-1/3"></div>
+        </div>
+        <div class="h-6 w-12 bg-gray-200 rounded-full"></div>
+      </li>
+    </ul>
+  </template>
+
+  <!-- Template: Add Points (Scan/Manual Code) -->
+  <template id="view-addpoint">
+    <div id="scanContainer" class="space-y-4 mb-6">
+      <button id="scanBtn" class="btn btn-neutral w-full">
+        สแกน QR Code
+      </button>
+      <div class="flex space-x-2">
+        <input id="manualCode" type="text" placeholder="กรอกโค้ดที่นี่"
+          class="input input-bordered input-neutral flex-1">
+        <button id="enterBtn" class="btn btn-neutral">
+          รับโค้ด
+        </button>
+      </div>
+    </div>
+  </template>
+
 
   <script>
-    // --- Global State & Elements ---
+    // Global LIFF status and user info
     let liffInitialized = false;
-    const userState = { profile: null, lineId: "", points: 0, pointsChanged: false, level: "Member", customTag: "" };
-    const dataCache = { events: null, redeemItems: null, eventDetails: {}, userProfileFull: null, history: null, levelSettings: null };
-    const alertDialog = document.getElementById('customAlertDialog'), alertT = document.getElementById('customAlertTitle'), alertM = document.getElementById('customAlertMessage'), alertBtn = document.getElementById('customAlertButton');
-    const confirmDialog = document.getElementById('customConfirmDialog'), confT = document.getElementById('customConfirmTitle'), confM = document.getElementById('customConfirmMessage'), okBtn = document.getElementById('customConfirmConfirmButton'), noBtn = document.getElementById('customConfirmCancelButton');
-    const pageTitleEl = document.getElementById('pageTitle'), pointValEl = document.getElementById('pointVal'), dpEl = document.getElementById('lineDisplayPicture');
-    const LEVEL_STYLES = { 'Member': { text: 'Member', class: 'badge-info badge-outline' }, 'VIP': { text: 'VIP', class: 'badge-primary badge-outline' }, 'Super': { text: 'Super', class: 'badge-success badge-outline' } };
-    const CUSTOM_TAG_STYLES = { 'newuser': { class: 'badge-warning', text: 'สมาชิกใหม่' }, 'ceo': { class: 'badge-accent', text: 'CEO' }, 'admin': { class: 'badge-error', text: 'ผู้ดูแล' }, 'tester': { class: 'badge-secondary', text: 'ผู้ทดสอบ' }, 'default': { class: 'badge-neutral', text: '' } };
+    const userState = {
+      profile: null, // LIFF profile (userId, displayName, pictureUrl)
+      lineId: "",
+      points: 0,
+      pointsChanged: false, // Flag to indicate if points have changed since last render
+      level: "Member", // เพิ่ม field สำหรับเก็บระดับ
+      customTag: ""    // NEW: เพิ่ม field สำหรับเก็บ custom tag
+    };
+
+    // Global Data Cache for frequently accessed data
+    const dataCache = {
+      events: null, // For getEvents (initEvent)
+      redeemItems: null, // For getItems (initRedeem)
+      eventDetails: {}, // For initEventDetail, stores {eventId: eventData}
+      userProfileFull: null, // For getUserInfo full CRM profile (initProfile)
+      history: null, // For getHistory (dashboard, event detail, warehouse, addpoint)
+      levelSettings: null, // NEW: Cache for level settings
+    };
+
+    // Common Alert & Confirm Dialogs (references to elements are global now)
+    const alertDialog = document.getElementById('customAlertDialog');
+    const alertT = document.getElementById('customAlertTitle');
+    const alertM = document.getElementById('customAlertMessage');
+    const alertBtn = document.getElementById('customAlertButton');
+
+    const confirmDialog = document.getElementById('customConfirmDialog');
+    const confT = document.getElementById('customConfirmTitle');
+    const confM = document.getElementById('customConfirmMessage');
+    const okBtn = document.getElementById('customConfirmConfirmButton');
+    const noBtn = document.getElementById('customConfirmCancelButton');
+
+    // Global Header Elements (MOVED HERE)
+    const pageTitleEl = document.getElementById('pageTitle');
+    const pointValEl = document.getElementById('pointVal');
+    const dpEl = document.getElementById('lineDisplayPicture');
+
+    // Define styles for each level (for level badges)
+    const LEVEL_STYLES = {
+      'Member': { text: 'Member', class: 'badge-info badge-outline' },
+      'VIP': { text: 'VIP', class: 'badge-primary badge-outline' },
+      'Super': { text: 'Super', class: 'badge-success badge-outline' }
+    };
+
+    // NEW: Define styles for custom tags (optional, can be expanded)
+    const CUSTOM_TAG_STYLES = {
+      'newuser': { class: 'badge-warning', text: 'สมาชิกใหม่' },
+      'ceo': { class: 'badge-accent', text: 'CEO' },
+      'admin': { class: 'badge-error', text: 'ผู้ดูแล' },
+      'tester': { class: 'badge-secondary', text: 'ผู้ทดสอบ' },
+      'default': { class: 'badge-neutral', text: '' } // Default style if tag not found or empty
+    };
 
     // --- Common UI Functions ---
     function showAlert(title, message, cb) {
       alertT.textContent = title;
-      alertM.innerHTML = message;
-      alertDialog.showModal();
-      const hide = () => { alertDialog.close(); alertM.innerHTML = ''; cb && cb(); };
-      alertBtn.addEventListener('click', hide, { once: true });
+      alertM.textContent = message;
+      alertDialog.showModal(); // Show the modal
+
+      const hide = () => {
+        alertDialog.close(); // Close the modal
+        alertBtn.removeEventListener('click', hide);
+        cb && cb();
+      };
+      alertBtn.addEventListener('click', hide);
     }
+
     function showConfirm(title, message) {
       return new Promise(res => {
-        confT.textContent = title; confM.textContent = message;
-        confirmDialog.showModal();
-        const onOk = () => { cleanup(); res(true); }, onNo = () => { cleanup(); res(false); };
-        function cleanup() { okBtn.removeEventListener('click', onOk); noBtn.removeEventListener('click', onNo); confirmDialog.close(); }
-        okBtn.addEventListener('click', onOk, { once: true });
-        noBtn.addEventListener('click', onNo, { once: true });
+        confT.textContent = title;
+        confM.textContent = message;
+        confirmDialog.showModal(); // Show the modal
+
+        const onOk = () => { cleanup(); res(true); };
+        const onNo = () => { cleanup(); res(false); };
+
+        function cleanup() {
+          confirmDialog.close(); // Close the modal
+          okBtn.removeEventListener('click', onOk);
+          noBtn.removeEventListener('click', onNo);
+        }
+        okBtn.addEventListener('click', onOk);
+        noBtn.addEventListener('click', onNo);
       });
     }
 
-    // --- Core Logic ---
-    async function fetchAPI(action, params = {}) {
-      const url = new URL(CONFIG.GAS_URL);
-      url.searchParams.append('action', action);
-      for (const key in params) url.searchParams.append(key, params[key]);
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      return response.json();
+    // Function to calculate level and progress (used by Profile)
+    function calculateLevelAndProgress(currentPoints) {
+      console.log("DEBUG: calculateLevelAndProgress called with points:", currentPoints); // ADD THIS LOG
+      console.log("DEBUG: dataCache.levelSettings at start of calculation:", dataCache.levelSettings); // ADD THIS LOG
+
+      const vipPoints = dataCache.levelSettings?.VIP_points || 5000;
+      const superPoints = dataCache.levelSettings?.SUPER_points || 10000;
+
+      console.log("DEBUG: Using VIP_points:", vipPoints, "SUPER_points:", superPoints); // ADD THIS LOG
+
+      let level = 'Member';
+      let currentLevelMin = 0;
+      let nextLevelMin = vipPoints;
+      let nextLevelName = 'VIP';
+
+      if (currentPoints >= superPoints) {
+        level = 'Super';
+        currentLevelMin = superPoints;
+        nextLevelMin = currentPoints; // นี่คือจุดที่ทำให้ progress เป็น 100% สำหรับ Super
+        nextLevelName = '';
+      } else if (currentPoints >= vipPoints) {
+        level = 'VIP';
+        currentLevelMin = vipPoints;
+        nextLevelMin = superPoints;
+        nextLevelName = 'Super';
+      }
+
+      const pointsInCurrentTier = currentPoints - currentLevelMin;
+      const pointsToNextTier = nextLevelMin - currentLevelMin;
+      let progressValue = 0;
+      let pointsNeeded = 0;
+
+      if (nextLevelName) {
+        progressValue = (pointsInCurrentTier / pointsToNextTier) * 100;
+        pointsNeeded = nextLevelMin - currentPoints;
+      } else {
+        progressValue = 100;
+        pointsNeeded = 0;
+      }
+
+      console.log("DEBUG: Calculated Level:", level, "Progress Value:", progressValue, "Points To Next:", pointsNeeded, "Next Level Name:", nextLevelName); // ADD THIS LOG
+
+      return {
+        level: level,
+        progressValue: Math.min(100, Math.max(0, progressValue)), // Clamp between 0 and 100
+        pointsToNext: pointsNeeded,
+        nextLevelName: nextLevelName
+      };
     }
-    async function postAPI(action, body) {
-      const response = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action, ...body }) });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      return response.text();
+
+    /**
+     * Helper to set badge text and classes.
+     * @param {HTMLElement} badgeElement - The DOM element for the badge.
+     * @param {string} text - The text to display in the badge.
+     * @param {string} className - DaisyUI class names for the badge (e.g., 'badge badge-sm badge-info').
+     */
+    function setBadgeContent(badgeElement, text, className) {
+      if (!badgeElement) return;
+      badgeElement.textContent = text;
+      badgeElement.className = className; // Overwrite existing classes
+      if (text) {
+        badgeElement.classList.remove('hidden');
+      } else {
+        badgeElement.classList.add('hidden'); // Hide if no text
+      }
     }
+
+    /**
+     * Updates the global header with user points.
+     * This function should be called after any action that changes points or initial load.
+     * @param {number} newPoints - The new point value to display.
+     */
+    function updatePointsInHeader(newPoints) {
+      userState.points = newPoints;
+      pointValEl.textContent = userState.points;
+      userState.pointsChanged = true; // Set flag when points change, to trigger history reload for Dashboard
+
+      // อัปเดต userState.level และ customTag ทันทีเมื่อคะแนนเปลี่ยนหรือโหลดข้อมูลผู้ใช้ครั้งแรก
+      // เพื่อให้ข้อมูลพร้อมสำหรับหน้า Profile ทันทีที่ถูกเรียก
+      // เราจะอัปเดต userState.level และ userState.customTag จริงๆ จากการ fetch getUserInfo เท่านั้น
+      // เพื่อให้มั่นใจว่าค่าใน Frontend ตรงกับ Backend หลังจาก Transaction
+    }
+
+    /**
+     * Fetches user info and updates global userState and points in header.
+     * This is a centralized function to ensure user's points, level, and customTag are always fresh.
+     */
     async function fetchAndUpdateUserState() {
       try {
-        const userData = await fetchAPI('getUserInfo', { lineId: userState.lineId });
+        const userRes = await fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`);
+        const userData = await userRes.json();
         if (userData && !userData.error) {
           userState.points = parseInt(userData.point || 0, 10);
           userState.level = userData.level || 'Member';
           userState.customTag = userData.customTag || '';
-          dataCache.userProfileFull = userData;
-          pointValEl.textContent = userState.points;
-          userState.pointsChanged = true;
+          dataCache.userProfileFull = userData; // Update cached full profile data
+          pointValEl.textContent = userState.points; // Update header point display
+          userState.pointsChanged = true; // Mark history as stale
+          console.log(`User state updated: Points=${userState.points}, Level=${userState.level}, Tag=${userState.customTag}`);
+        } else {
+          console.error("Failed to fetch user data after action:", userData?.error || "Unknown error");
         }
-      } catch (e) { console.error("Error fetching user state:", e); }
+      } catch (e) {
+        console.error("Error fetching user info after action:", e);
+      }
     }
+
+
+    // --- LIFF Initialization & Initial Data Fetch ---
     async function ensureLIFFAndFetchInitialData() {
       if (!liffInitialized) {
-        try { await liff.init({ liffId: CONFIG.LIFF_ID }); liffInitialized = true; }
-        catch (e) { showAlert("ข้อผิดพลาด", "ไม่สามารถเริ่มต้น LIFF ได้"); return false; }
+        try {
+          await liff.init({ liffId: CONFIG.LIFF_ID });
+          liffInitialized = true;
+        } catch (e) {
+          console.error("LIFF initialization failed", e);
+          showAlert("ข้อผิดพลาด", "ไม่สามารถเริ่มต้น LIFF ได้ กรุณาลองใหม่ภายหลัง");
+          return false;
+        }
       }
-      if (!liff.isLoggedIn()) { liff.login(); return false; }
+
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return false; // Stop execution if not logged in, LIFF will handle redirect
+      }
+
+      // Fetch LIFF profile if not already set (should only happen once)
       if (!userState.profile) {
         userState.profile = await liff.getProfile();
         userState.lineId = userState.profile.userId;
-        dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/150';
+
+        // Update global header with display picture
+        dpEl.src = userState.profile.pictureUrl || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Line-icon.svg/1200px-Line-icon.svg.png';
+        dpEl.alt = `รูปโปรไฟล์ของ ${userState.profile.displayName}`;
       }
-      pointValEl.textContent = '...';
+
+      pointValEl.textContent = '0'; // Show loading state for points
+
       try {
-        const [userData, histData, eventsData, itemsData, settingsData] = await Promise.all([
-          fetchAPI('getUserInfo', { lineId: userState.lineId }),
-          fetchAPI('getHistory', { lineId: userState.lineId }),
-          fetchAPI('getEvents'), fetchAPI('getItems'), fetchAPI('getLevelConfig')
+        // Fetch user info (points, registration status, level, customTag), history, events, redeem items, AND settings concurrently
+        console.log("Fetching all initial data concurrently...");
+        const [userRes, histRes, eventsRes, redeemRes, settingsRes] = await Promise.all([
+          fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`),
+          fetch(`${CONFIG.GAS_URL}?action=getHistory&lineId=${userState.lineId}`),
+          fetch(`${CONFIG.GAS_URL}?action=getEvents`), // Preload events
+          fetch(`${CONFIG.GAS_URL}?action=getItems`),   // Preload redeem items
+          fetch(`${CONFIG.GAS_URL}?action=getLevelConfig`) // NEW: Preload level settings
         ]);
-        if (!userData || userData.isRegistered === false) { window.location.href = 'register.html'; return false; }
-        dataCache.levelSettings = settingsData && !settingsData.error ? { VIP_points: parseInt(settingsData.VIP_points || 5000), SUPER_points: parseInt(settingsData.SUPER_points || 10000) } : { VIP_points: 5000, SUPER_points: 10000 };
-        userState.points = parseInt(userData.point || 0);
-        userState.level = userData.level || 'Member';
-        userState.customTag = userData.customTag || '';
-        dataCache.userProfileFull = userData;
-        pointValEl.textContent = userState.points;
-        dataCache.history = histData; dataCache.events = eventsData; dataCache.redeemItems = itemsData;
-        userState.pointsChanged = false;
-      } catch (error) { showAlert("ข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลผู้ใช้ได้"); return false; }
+        const userData = await userRes.json();
+        const historyData = await histRes.json();
+        dataCache.events = await eventsRes.json(); // Store preloaded events
+        dataCache.redeemItems = await redeemRes.json(); // Store preloaded redeem items
+        const settingsData = await settingsRes.json(); // NEW: Store preloaded settings
+
+        if (settingsData && !settingsData.error) {
+          dataCache.levelSettings = {
+            VIP_points: parseInt(settingsData.VIP_points || 0, 10),
+            SUPER_points: parseInt(settingsData.SUPER_points || 0, 10),
+          };
+          console.log("DEBUG: Level settings loaded (ensureLIFFAndFetchInitialData):", dataCache.levelSettings); // ADD THIS LOG
+        } else {
+          console.warn("Failed to load level settings, using defaults.");
+          dataCache.levelSettings = { VIP_points: 5000, SUPER_points: 10000 }; // Ensure defaults are set
+        }
+
+
+        if (!userData || !userData.name || userData.isRegistered === false) {
+          console.log("User not registered. Redirecting to register.html");
+          window.location.href = 'register.html';
+          return false;
+        }
+
+        userState.points = parseInt(userData.point || 0, 10);
+        userState.level = userData.level || 'Member'; // ตั้งค่า level ที่นี่
+        userState.customTag = userData.customTag || ''; // ตั้งค่า customTag ที่นี่
+        dataCache.userProfileFull = userData; // Cache full user profile
+
+        updatePointsInHeader(userState.points); // อัปเดต UI ด้วยคะแนน (level/tag จะถูกอัปเดตใน userState แล้ว)
+        dataCache.history = historyData; // Store history in cache
+        userState.pointsChanged = false; // Reset flag as history is now fresh
+
+        console.log("DEBUG: Initial User Points:", userState.points, "Level:", userState.level, "Tag:", userState.customTag); // ADD THIS LOG
+
+      } catch (error) {
+        console.error("Failed to fetch initial data:", error);
+        pointValEl.textContent = 'N/A';
+        showAlert("ข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลผู้ใช้ได้ กรุณาลองใหม่");
+        return false;
+      }
       return true;
     }
 
-    // --- Router ---
+    // --- Router Setup ---
     const routes = {
-      '': { title: 'CRM-3RN', tpl: 'view-dashboard', init: initDashboard }, '#dashboard': { title: 'CRM-3RN', tpl: 'view-dashboard', init: initDashboard },
-      '#event': { title: 'กิจกรรม', tpl: 'view-event', init: initEvent }, '#event-detail': { title: 'รายละเอียดกิจกรรม', tpl: 'view-event-detail', init: initEventDetail },
-      '#profile': { title: 'โปรไฟล์ของคุณ', tpl: 'view-profile', init: initProfile }, '#redeem': { title: 'ร้านค้าแลกของรางวัล', tpl: 'view-redeem', init: initRedeem },
-      '#transfer': { title: 'โอนพ้อยให้เพื่อน', tpl: 'view-transfer', init: initTransfer }, '#warehouse': { title: 'คลังของรางวัล', tpl: 'view-warehouse', init: initWarehouse },
+      '#dashboard': { title: 'CRM-3RN', tpl: 'view-dashboard', init: initDashboard },
+      '#event': { title: 'กิจกรรม', tpl: 'view-event', init: initEvent },
+      '#event-detail': { title: 'รายละเอียดกิจกรรม', tpl: 'view-event-detail', init: initEventDetail },
+      '#profile': { title: 'โปรไฟล์ของคุณ', tpl: 'view-profile', init: initProfile },
+      '#redeem': { title: 'ร้านค้าแลกของรางวัล', tpl: 'view-redeem', init: initRedeem },
+      '#transfer': { title: 'โอนพ้อยให้เพื่อน', tpl: 'view-transfer', init: initTransfer },
+      '#warehouse': { title: 'คลังของรางวัล', tpl: 'view-warehouse', init: initWarehouse },
       '#addpoint': { title: 'โค้ดเพื่อรับรางวัล', tpl: 'view-addpoint', init: initAddpoint },
+      '': { title: 'CRM-3RN', tpl: 'view-dashboard', init: initDashboard } // Default route
     };
+
     async function router() {
-      const hash = window.location.hash.split('?')[0] || '';
+      const hash = window.location.hash.split('?')[0] || ''; // Get hash without query params
       const route = routes[hash] || routes[''];
       const appDiv = document.getElementById('app');
+
+      // Update Header Title immediately
       pageTitleEl.textContent = route.title;
+
+      // Clear previous content and load new template content
       appDiv.innerHTML = '';
       const template = document.getElementById(route.tpl);
-      if (template) { appDiv.appendChild(template.content.cloneNode(true)); try { await route.init(); } catch (e) { showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลหน้านี้ได้'); } }
+      if (template) {
+        appDiv.appendChild(template.content.cloneNode(true));
+      } else {
+        appDiv.innerHTML = `<p class="text-center text-red-500 py-8">เกิดข้อผิดพลาด: ไม่พบเทมเพลตสำหรับ ${hash}</p>`;
+        console.error(`Template ${route.tpl} not found.`);
+        return;
+      }
+
+      // Initialize the view's specific logic
+      try {
+        await route.init();
+      } catch (error) {
+        console.error(`Error initializing view ${route.tpl}:`, error);
+        showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลหน้านี้ได้ กรุณาลองใหม่อีกครั้ง');
+      }
     }
 
-    // --- Helper Functions ---
-    const generateListSkeleton = (count) => Array.from({ length: count }, () => `<li class="flex justify-between items-center animate-pulse py-3"><div class="space-y-2 flex-1"><div class="h-4 bg-gray-200 rounded w-3/5"></div><div class="h-3 bg-gray-200 rounded w-2/5 mt-1"></div></div><div class="h-6 w-20 bg-gray-200 rounded-full"></div></li>`).join("");
-    const generateCardSkeleton = (count) => Array.from({ length: count }, () => `<li class="bg-white p-4 rounded shadow-sm loading-card-animation"><div class="h-24 bg-gray-200 rounded-md mb-3"></div><div class="h-4 bg-gray-200 rounded w-4/5 mb-2"></div><div class="h-3 bg-gray-200 rounded w-3/5 mb-3"></div><div class="h-8 bg-gray-200 rounded-full w-full"></div></li>`).join('');
+    // --- Common Helper Functions ---
+
+    // Skeleton generator for lists
+    function generateListSkeleton(count) {
+      return Array.from({ length: count }).map(_ => `
+        <li class="flex justify-between items-center animate-pulse py-3">
+          <div class="space-y-2 flex-1">
+            <div class="h-4 bg-gray-200 rounded w-${Math.floor(30 + Math.random() * 40)}%"></div>
+            <div class="h-3 bg-gray-200 rounded w-${Math.floor(30 + Math.random() * 30)}% mt-1"></div>
+          </div>
+          <div class="h-6 w-12 bg-gray-200 rounded-full"></div>
+        </li>`).join("");
+    }
+
+    // Skeleton generator for cards (e.g., redeem items)
+    function generateCardSkeleton(count) {
+      let html = '';
+      for (let i = 0; i < count; i++) {
+        html += `
+          <li class="bg-white p-4 rounded shadow-sm loading-card-animation">
+            <div class="h-24 bg-gray-200 rounded-md mb-3"></div>
+            <div class="h-4 bg-gray-200 rounded w-${30 + Math.random() * 50}% mb-2"></div>
+            <div class="h-3 bg-gray-200 rounded w-${20 + Math.random() * 40}% mb-3"></div>
+            <div class="h-8 bg-gray-200 rounded-full w-full"></div>
+          </li>`;
+      }
+      return html;
+    }
+
+    /**
+     * Helper function to render history list into the DOM.
+     * @param {Array} historyDataToRender - The history array to display.
+     */
+    function renderHistoryList(historyDataToRender) {
+      const historyListEl = document.getElementById('historyList');
+      if (!historyListEl) return;
+
+      // Use slice().reverse() to avoid modifying the original cached array
+      const latest10 = historyDataToRender.slice().reverse().slice(0, 10);
+      if (latest10.length === 0) {
+        historyListEl.innerHTML = `<li class="text-center text-gray-400 py-4">ไม่มีประวัติการทำรายการ</li>`;
+      }
+      else {
+        historyListEl.innerHTML = latest10.map(item => {
+          const isDebit = ['redeem', 'transfer_out'].includes(item.type);
+          const badge = isDebit ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700';
+          const sign = isDebit ? '-' : '+';
+          return `
+            <li class="flex justify-between items-center">
+              <div>
+                <div class="font-medium text-gray-800 text-sm">${item.detail}</div>
+                <div class="text-xs text-gray-400 mt-1">${item.date}</div>
+              </div>
+              <div class="text-sm font-bold px-4 py-1.5 rounded-full ${badge}">
+                ${sign} ${item.amount}
+              </div>
+            </li>`;
+        }).join("");
+      }
+    }
+
+    /**
+     * Fetches history data, either from cache if points haven't changed, or freshly from API.
+     * It also resets userState.pointsChanged after a fresh fetch.
+     * @returns {Array} history data.
+     */
     async function getFreshOrCachedHistory() {
-      if (userState.pointsChanged || !dataCache.history) { try { dataCache.history = await fetchAPI('getHistory', { lineId: userState.lineId }); userState.pointsChanged = false; } catch (e) { dataCache.history = []; } }
+      // If points have changed, OR if history hasn't been loaded yet, fetch fresh.
+      if (userState.pointsChanged || dataCache.history === null) {
+        console.log("Fetching fresh history (points changed or initial load / cache empty).");
+        try {
+          const hRes = await fetch(`${CONFIG.GAS_URL}?action=getHistory&lineId=${userState.lineId}`);
+          dataCache.history = await hRes.json();
+          userState.pointsChanged = false; // Reset the flag AFTER successful fetch
+        } catch (e) {
+          console.error("Error fetching history:", e);
+          showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดประวัติได้');
+          dataCache.history = []; // Default to empty array on error
+          userState.pointsChanged = false; // Reset even on error to avoid looping unnecessarily
+        }
+      } else {
+        console.log("Using cached history.");
+      }
       return dataCache.history;
     }
-    const setBadgeContent = (el, text, className) => { if (!el) return; el.textContent = text; el.className = className; el.classList.toggle('hidden', !text); };
 
-    // --- Init Functions for Each View ---
+
+    // --------- Init functions for each view ---------
+
     async function initDashboard() {
       const historyListEl = document.getElementById('historyList');
-      if (dataCache.history && !userState.pointsChanged) renderHistoryList(dataCache.history); else historyListEl.innerHTML = generateListSkeleton(5);
-      try {
-        const [checkData, history] = await Promise.all([fetchAPI('checkinStatus', { lineId: userState.lineId }), getFreshOrCachedHistory()]);
-        renderHistoryList(history);
-        const checkinBox = document.getElementById('checkinBox');
-        if (checkinBox && !checkData.checkedInToday) {
-          checkinBox.classList.remove('hidden');
-          document.getElementById('todayDate').textContent = new Date().getDate().toString().padStart(2, "0");
-          document.getElementById('checkinBtn').onclick = async (e) => {
-            e.target.disabled = true;
-            try { const text = await postAPI('dailyCheckin', { lineId: userState.lineId }); showAlert('เช็คอินสำเร็จ', text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); checkinBox.classList.add('hidden'); await initDashboard(); } }); }
-            catch (e) { showAlert('ข้อผิดพลาด', 'ไม่สามารถเช็คอินได้'); } finally { e.target.disabled = false; }
-          };
-        }
-      } catch (e) { historyListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาด</li>`; }
-    }
-    function renderHistoryList(historyData) {
-      const el = document.getElementById('historyList'); if (!el) return;
-      const latest10 = historyData.slice().reverse().slice(0, 10);
-      if (latest10.length === 0) { el.innerHTML = `<li class="text-center text-gray-400 py-4">ไม่มีประวัติ</li>`; }
-      else { el.innerHTML = latest10.map(item => { const isDebit = ['redeem', 'transfer_out'].includes(item.type); return `<li class="flex justify-between items-center"><div><div class="font-medium text-gray-800 text-sm">${item.detail}</div><div class="text-xs text-gray-400 mt-1">${item.date}</div></div><div class="text-sm font-bold px-4 py-1.5 rounded-full ${isDebit ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">${isDebit ? '-' : '+'} ${item.amount}</div></li>`; }).join(""); }
-    }
-    async function initEvent() {
-      const eventListEl = document.getElementById('eventList'); eventListEl.innerHTML = generateListSkeleton(5);
-      const events = dataCache.events || []; const filteredEvents = events.filter(e => !e.allowedLevels || e.allowedLevels.length === 0 || e.allowedLevels.includes(userState.level));
-      if (filteredEvents.length === 0) { eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมสำหรับระดับของคุณ</div>`; return; }
-      eventListEl.innerHTML = filteredEvents.map(e => `<div class="bg-white rounded p-4 flex justify-between items-center shadow-sm"><div><div class="font-semibold text-gray-800 text-sm">${e.title}</div><div class="text-xs text-gray-500">${e.desc.substring(0, 50)}...</div></div><a href="#event-detail?id=${e.id}" class="btn btn-neutral btn-sm">ดูรายละเอียด</a></div>`).join('');
-    }
-    async function initEventDetail() {
-      const params = new URLSearchParams(window.location.hash.split('?')[1]), eventId = params.get("id");
-      const cardSkel = document.getElementById('cardSkeleton'), card = document.getElementById('card'), titleEl = document.getElementById('eventDetailTitle'), descEl = document.getElementById('eventDetailDesc'), pointEl = document.getElementById('eventPoint'), joinBtn = document.getElementById('joinBtn');
-      cardSkel.classList.remove('hidden'); card.classList.add('hidden');
-      let eventData = dataCache.eventDetails[eventId];
-      if (!eventData) { try { eventData = await fetchAPI('getEventById', { id: eventId }); if (!eventData.error) dataCache.eventDetails[eventId] = eventData; } catch (e) { eventData = { error: "โหลดข้อมูลล้มเหลว" }; } }
-      const historyList = await getFreshOrCachedHistory();
-      if (eventData.error) { titleEl.textContent = "ผิดพลาด"; descEl.textContent = eventData.error; joinBtn.disabled = true; } else {
-        titleEl.textContent = eventData.title; descEl.textContent = eventData.desc; pointEl.textContent = `${eventData.point}+`;
-        const isAllowed = !eventData.allowedLevels || eventData.allowedLevels.length === 0 || eventData.allowedLevels.includes(userState.level);
-        const hasJoined = historyList.some(item => item.type === 'event' && item.eventId === eventId);
-        if (hasJoined) { joinBtn.textContent = "รับพ้อยต์แล้ว"; joinBtn.disabled = true; }
-        else if (!isAllowed) { joinBtn.textContent = `สำหรับระดับ ${eventData.allowedLevels.join(', ')} เท่านั้น`; joinBtn.disabled = true; }
-        else { joinBtn.onclick = async e => { if (!(await showConfirm('ยืนยัน', `รับ ${eventData.point} พ้อยต์จาก "${eventData.title}"?`))) return; e.target.disabled = true; try { const text = await postAPI('joinEvent', { lineId: userState.lineId, eventId, title: eventData.title, point: eventData.point }); showAlert("สถานะ", text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); e.target.textContent = "รับพ้อยต์แล้ว"; } }); } catch (err) { showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมได้'); e.target.disabled = false; } }; }
+      const checkinBox = document.getElementById('checkinBox');
+      const todayDateEl = document.getElementById('todayDate');
+      const checkinBtn = document.getElementById('checkinBtn');
+
+      // --- NEW LOGIC FOR HISTORY DISPLAY ---
+      // If history is already in cache AND points haven't changed, render immediately
+      if (dataCache.history && !userState.pointsChanged) {
+        console.log("Dashboard: Rendering history from cache immediately to avoid flicker.");
+        renderHistoryList(dataCache.history);
+      } else {
+        // Otherwise, show skeleton while we wait for fresh data
+        if (historyListEl) historyListEl.innerHTML = generateListSkeleton(5);
+        console.log("Dashboard: Showing skeleton for history, then fetching fresh.");
       }
-      cardSkel.classList.add("hidden"); card.classList.remove("hidden");
-    }
-    async function initProfile() {
-      const uData = dataCache.userProfileFull; if (!uData) { showAlert('ผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์'); return; }
-      const dp = document.getElementById('profileDisplayPicture'), dn = document.getElementById('profileDisplayName'), total = document.getElementById('profileTotalPoints'), prog = document.getElementById('profileProgressBar'), nextLvl = document.getElementById('profilePointsToNextLevel');
-      dp.src = userState.profile.pictureUrl; dn.textContent = userState.profile.displayName; total.textContent = userState.points.toLocaleString();
-      const { progressValue, pointsToNext, nextLevelName } = (() => {
-        const { VIP_points, SUPER_points } = dataCache.levelSettings; let currentMin = 0, nextMin = VIP_points, nextName = 'VIP';
-        if (userState.points >= SUPER_points) { currentMin = SUPER_points; nextMin = userState.points; nextName = ''; } else if (userState.points >= VIP_points) { currentMin = VIP_points; nextMin = SUPER_points; nextName = 'Super'; }
-        const progress = (nextMin - currentMin > 0) ? ((userState.points - currentMin) / (nextMin - currentMin)) * 100 : 100;
-        return { progressValue: Math.min(100, progress), pointsToNext: nextMin - userState.points, nextLevelName: nextName };
-      })();
-      prog.value = progressValue; nextLvl.textContent = nextLevelName ? `อีก ${pointsToNext} พ้อยต์สู่ระดับ ${nextLevelName}` : 'คุณอยู่ในระดับสูงสุดแล้ว!';
-      const levelInfo = LEVEL_STYLES[userState.level] || { text: userState.level, class: 'badge-neutral' }; setBadgeContent(document.getElementById('profileLevelBadge'), levelInfo.text, `badge badge-lg ${levelInfo.class}`);
-      const primaryTag = (userState.customTag || '').split(',')[0].trim().toLowerCase(); const tagInfo = CUSTOM_TAG_STYLES[primaryTag] || (primaryTag ? { class: CUSTOM_TAG_STYLES.default.class, text: primaryTag } : null); if (tagInfo) setBadgeContent(document.getElementById('profileCustomTagBadge'), tagInfo.text, `badge badge-lg ${tagInfo.class}`); else document.getElementById('profileCustomTagBadge').classList.add('hidden');
-      const formContainer = document.getElementById('profileFormContainer'), editBtn = document.getElementById('editProfileBtn'), editButtonsDiv = document.getElementById('profileEditButtons'), saveBtn = document.getElementById('saveProfileBtn'), cancelBtn = document.getElementById('cancelEditBtn');
-      const inputs = { lineId: document.getElementById('profileLineId'), name: document.getElementById('profileName'), phone: document.getElementById('profilePhone'), email: document.getElementById('profileEmail'), address: document.getElementById('profileAddress'), note: document.getElementById('profileNote') };
-      let initialData = {};
-      const populateForm = (data) => { Object.keys(inputs).forEach(key => { if (inputs[key]) { initialData[key] = data[key] || ''; inputs[key].value = initialData[key]; } }); }; populateForm(uData);
-      const toggleEditMode = (enable) => { Object.values(inputs).forEach(input => { if (input.id !== 'profileLineId') { input.readOnly = !enable; input.classList.toggle('cursor-not-allowed', !enable); input.classList.toggle('text-gray-500', !enable); } }); formContainer.classList.toggle('hidden', !enable); editButtonsDiv.classList.toggle('hidden', !enable); editBtn.classList.toggle('hidden', enable); };
-      editBtn.onclick = () => toggleEditMode(true); cancelBtn.onclick = () => { populateForm(initialData); toggleEditMode(false); };
-      saveBtn.onclick = async e => { e.target.disabled = true; try { const body = { lineId: uData.lineId }; Object.keys(inputs).forEach(key => body[key] = inputs[key].value); const text = await postAPI('updateProfile', body); showAlert("สถานะ", text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); toggleEditMode(false); } }); } catch (err) { showAlert('ข้อผิดพลาด', 'ไม่สามารถอัปเดตได้'); } finally { e.target.disabled = false; } };
-      toggleEditMode(false);
-    }
-    async function initRedeem() {
-      const el = document.getElementById('redeemList'); el.innerHTML = generateCardSkeleton(4);
-      const items = dataCache.redeemItems || [];
-      if (!items.length) { el.innerHTML = `<li class="col-span-2 text-center text-gray-400 py-4">ไม่มีของรางวัล</li>`; return; }
-      el.innerHTML = items.map(item => `<li class="bg-white p-4 rounded shadow-sm text-center"><img src="${item.image}" alt="${item.name}" class="h-24 w-full mx-auto mb-2 rounded-md object-cover"><div class="font-bold mb-1 truncate">${item.name}</div><div class="text-sm text-gray-600 mb-2">${item.point} พ้อยต์</div><button data-item-id="${item.id}" data-item-name="${item.name}" data-item-point="${item.point}" class="redeem-btn btn btn-neutral btn-sm w-full">แลกเลย</button></li>`).join('');
-      document.querySelectorAll('.redeem-btn').forEach(button => button.onclick = async e => { const { itemId, itemName, itemPoint } = e.currentTarget.dataset, point = parseInt(itemPoint); if (userState.points < point) { showAlert("ไม่พอ", `แต้มไม่พอสำหรับแลก "${itemName}"`); return; } if (!(await showConfirm('ยืนยัน', `แลก "${itemName}" ด้วย ${point} พ้อยต์?`))) return; e.currentTarget.disabled = true; try { const text = await postAPI('redeemItem', { lineId: userState.lineId, itemId, point }); showAlert("สถานะ", text, () => { if (text.includes("สำเร็จ")) fetchAndUpdateUserState(); }); } catch (err) { showAlert('ผิดพลาด', 'แลกของรางวัลไม่ได้'); } finally { e.currentTarget.disabled = false; } });
-    }
-    async function initTransfer() {
-      document.getElementById('transferBtn').onclick = async e => {
-        const toId = document.getElementById('transferTo').value.trim(), amt = parseInt(document.getElementById('transferAmount').value);
-        if (!toId || isNaN(amt) || amt <= 0) { showAlert("ข้อมูลผิด", "กรุณากรอกข้อมูลให้ถูกต้อง"); return; }
-        if (toId === userState.lineId) { showAlert("ผิดพลาด", "ไม่สามารถโอนให้ตัวเอง"); return; }
-        if (userState.points < amt) { showAlert("ไม่พอ", "แต้มของคุณไม่พอสำหรับโอน"); return; }
-        if (!(await showConfirm("ยืนยัน", `โอน ${amt} พ้อยต์ให้ ${toId}?`))) return;
-        e.target.disabled = true;
-        try { const text = await postAPI('transferPoints', { from: userState.lineId, to: toId, amount: amt }); showAlert("สถานะ", text, () => { if (/สำเร็จ/.test(text)) { fetchAndUpdateUserState(); document.getElementById('transferTo').value = ''; document.getElementById('transferAmount').value = ''; } }); }
-        catch (err) { showAlert("ผิดพลาด", "ไม่สามารถโอนได้"); } finally { e.target.disabled = false; }
-      };
-    }
-    async function initAddpoint() {
-      const container = document.getElementById('scanContainer');
-      const processCode = async (code) => {
-        if (!code) return;
-        if ((await getFreshOrCachedHistory()).some(i => i.type === 'code' && i.eventId === code)) { showAlert('รับแล้ว', 'คุณรับโค้ดนี้ไปแล้ว'); return; }
-        try {
-          const data = await fetchAPI('getCodeById', { id: code });
-          if (data.error) { showAlert('ไม่พบโค้ด', data.error); return; }
-          container.innerHTML = `<div class="bg-white p-6 rounded shadow mb-4 text-center"><div class="font-bold text-lg mb-2">${data.title}</div><div class="text-sm text-gray-700 mb-4">${data.desc}</div><div class="font-bold text-yellow-600 mb-4">รับ ${data.point} พ้อยต์</div><button id="acceptBtn" class="btn btn-neutral w-full">รับพ้อยต์</button></div>`;
-          document.getElementById('acceptBtn').onclick = async e => { if (!(await showConfirm('ยืนยัน', `รับ "${data.title}" (${data.point} พ้อยต์)?`))) return; e.target.disabled = true; try { const text = await postAPI('joinCode', { lineId: userState.lineId, ...data }); showAlert("สถานะ", text, () => { if (text.includes("สำเร็จ")) { fetchAndUpdateUserState(); e.target.textContent = "รับแล้ว"; } }); } catch (err) { showAlert('ผิดพลาด', 'ไม่สามารถรับพ้อยต์ได้'); e.target.disabled = false; } };
-        } catch (e) { showAlert('ผิดพลาด', 'ไม่สามารถประมวลผลโค้ดได้'); }
-      };
-      document.getElementById('scanBtn').onclick = async () => { try { const { value } = await liff.scanCodeV2(); await processCode(value); } catch (e) { showAlert('สแกนล้มเหลว', e.message); } };
-      document.getElementById('enterBtn').onclick = () => processCode(document.getElementById('manualCode').value.trim());
-    }
-    async function initWarehouse() {
-      const el = document.getElementById('warehouseList'); el.innerHTML = generateListSkeleton(3);
+
       try {
-        const items = await fetchAPI('getWarehouseItems', { lineId: userState.lineId });
-        if (items.error) throw new Error(items.error);
-        if (!items.length) { el.innerHTML = '<li class="text-center text-gray-400 py-4">ยังไม่มีของรางวัลในคลัง</li>'; return; }
-        el.innerHTML = items.map(item => `<li class="bg-white rounded p-4 shadow-sm flex justify-between items-center"><div><div class="font-semibold text-gray-800 text-sm">${item.itemName}</div><div class="text-xs text-gray-500 mt-1">แลกเมื่อ: ${item.redeemDate}</div></div><button class="btn btn-neutral btn-sm use-item-btn" data-warehouse-id="${item.warehouseId}" data-item-name="${item.itemName}">ใช้ของรางวัล</button></li>`).join('');
-        document.querySelectorAll('.use-item-btn').forEach(btn => btn.onclick = e => showItemQrCode(e.currentTarget.dataset.warehouseId, e.currentTarget.dataset.itemName));
-      } catch (e) { el.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดคลัง</li>`; }
-    }
-    function showItemQrCode(warehouseId, itemName) {
-      if (!CONFIG.ADMIN_SECRET) { showAlert("ข้อผิดพลาด", "ไม่ได้ตั้งค่า Admin Secret Key"); return; }
-      const useUrl = `${CONFIG.GAS_URL}?action=useItem&id=${warehouseId}&secret=${CONFIG.ADMIN_SECRET}`;
-      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(useUrl)}`;
-      showAlert(`ใช้ "${itemName}"`, `<p class="mb-4">กรุณาแสดง QR Code นี้ให้เจ้าหน้าที่สแกน</p><img src="${qrApiUrl}" alt="QR Code" class="mx-auto border rounded-lg">`);
+        // Fetch check-in status (always fresh for dashboard)
+        const checkRes = await fetch(`${CONFIG.GAS_URL}?action=checkinStatus&lineId=${userState.lineId}`);
+        const checkData = await checkRes.json();
+
+        // Get history - this call will handle fetching fresh if pointsChanged is true, or use cache otherwise.
+        const history = await getFreshOrCachedHistory();
+
+        // After history is obtained (either from cache or fresh fetch), render it again to ensure latest data is shown
+        renderHistoryList(history); // This will update the display if skeleton was shown or if data changed
+
+        // Check-in logic
+        if (checkinBox && todayDateEl && checkinBtn) {
+          if (!checkData.checkedInToday) {
+            checkinBox.classList.remove('hidden');
+            todayDateEl.textContent = new Date().getDate().toString().padStart(2, "0");
+            checkinBtn.onclick = async () => {
+              checkinBtn.disabled = true; // Disable button immediately
+              try {
+                const res = await fetch(CONFIG.GAS_URL, {
+                  method: 'POST',
+                  body: JSON.stringify({ action: "dailyCheckin", lineId: userState.lineId })
+                });
+                const text = await res.text();
+                showAlert('เช็คอินสำเร็จ', text, async () => {
+                  if (text.includes("สำเร็จ")) {
+                    await fetchAndUpdateUserState(); // Fetch latest points, level, and tag
+                    checkinBox.classList.add('hidden'); // Hide checkin after success
+                    initDashboard(); // Re-initialize dashboard to update history list
+                  }
+                });
+              } catch (e) {
+                console.error("Check-in failed:", e);
+                showAlert('ข้อผิดพลาด', 'ไม่สามารถเช็คอินได้ กรุณาลองใหม่');
+              } finally {
+                checkinBtn.disabled = false; // Re-enable if there was an error
+              }
+            };
+          } else {
+            checkinBox.classList.add('hidden');
+          }
+        }
+
+      } catch (error) {
+        console.error("Error in initDashboard:", error);
+        if (historyListEl) historyListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดข้อมูล</li>`;
+        if (checkinBox) checkinBox.classList.add('hidden'); // Hide checkin section on error
+      }
     }
 
-    // --- App Initialization ---
+    async function initEvent() {
+      const eventListEl = document.getElementById('eventList');
+      if (eventListEl) eventListEl.innerHTML = generateListSkeleton(5); // Show skeleton
+
+      let events;
+      // Check cache first for events (preloaded in ensureLIFFAndFetchInitialData)
+      if (dataCache.events) {
+        events = dataCache.events;
+        console.log("Loading events from frontend cache.");
+      } else {
+        try {
+          console.log("Fetching events from API (GAS cache or Sheet) - cache miss.");
+          const eventsRes = await fetch(`${CONFIG.GAS_URL}?action=getEvents`);
+          events = await eventsRes.json();
+          dataCache.events = events; // Store in frontend cache
+        } catch (error) {
+          console.error("Error fetching events:", error);
+          if (eventListEl) eventListEl.innerHTML = `<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดกิจกรรม</div>`;
+          return;
+        }
+      }
+
+      if (eventListEl) {
+        if (!events || events.length === 0) { // Check for null/undefined or empty array
+          eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`;
+        } else {
+          // Filter events by allowedLevels based on userState.level
+          const filteredEvents = events.filter(e => {
+            if (!e.allowedLevels || e.allowedLevels.length === 0) {
+              return true; // No specific levels required, everyone can join
+            }
+            return e.allowedLevels.includes(userState.level);
+          });
+
+          if (filteredEvents.length === 0) {
+              eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมสำหรับระดับของคุณในขณะนี้</div>`;
+              return;
+          }
+
+          eventListEl.innerHTML = filteredEvents.map(e => `
+            <div class="bg-white rounded p-4 flex justify-between items-center shadow-sm">
+              <div>
+                <div class="font-semibold text-gray-800 text-sm">${e.title}</div>
+                <div class="text-xs text-gray-500">${e.detail || 'ดูรายละเอียดกิจกรรม'}</div>
+              </div>
+              <a href="#event-detail?id=${e.id}" class="btn btn-neutral">  ดูรายละเอียด </a>
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    async function initEventDetail() {
+      const params = new URLSearchParams(window.location.hash.split('?')[1]);
+      const eventId = params.get("id");
+      let eventTitle = "", eventRewardPoint = 0;
+
+      const cardSkeleton = document.getElementById('cardSkeleton');
+      const card = document.getElementById('card');
+      const titleEl = document.getElementById('eventDetailTitle');
+      const descEl = document.getElementById('eventDetailDesc');
+      const eventPointEl = document.getElementById('eventPoint');
+      const joinBtn = document.getElementById('joinBtn');
+
+      if (cardSkeleton) cardSkeleton.classList.remove('hidden');
+      if (card) card.classList.add('hidden');
+
+      function disableJoinBtn() {
+        if (joinBtn) {
+          joinBtn.disabled = true;
+        }
+      }
+
+      let eventData;
+      // Check frontend cache first for event detail
+      if (dataCache.eventDetails[eventId]) {
+        eventData = dataCache.eventDetails[eventId];
+        console.log(`Loading event detail for ${eventId} from frontend cache.`);
+      } else {
+        try {
+          console.log(`Fetching event detail for ${eventId} from API - cache miss.`);
+          const eRes = await fetch(`${CONFIG.GAS_URL}?action=getEventById&id=${eventId}`);
+          eventData = await eRes.json();
+          if (!eventData.error) {
+            dataCache.eventDetails[eventId] = eventData; // Store in frontend cache if no error
+          }
+        } catch (error) {
+          console.error("Error fetching event detail:", error);
+          if (titleEl) titleEl.textContent = "เกิดข้อผิดพลาด";
+          if (descEl) descEl.textContent = "ไม่สามารถโหลดรายละเอียดกิจกรรมได้";
+          disableJoinBtn();
+          if (cardSkeleton) cardSkeleton.classList.add("hidden");
+          if (card) card.classList.remove("hidden");
+          return;
+        }
+      }
+
+      // Get history for join status (from cache or fresh if points changed)
+      const historyList = await getFreshOrCachedHistory();
+
+      if (eventData.error) {
+        if (titleEl) titleEl.textContent = "ไม่พบกิจกรรม";
+        if (descEl) descEl.textContent = eventData.error;
+        disableJoinBtn();
+      } else {
+        eventTitle = eventData.title;
+        eventRewardPoint = eventData.point;
+        if (titleEl) titleEl.textContent = eventTitle;
+        if (eventPointEl) eventPointEl.textContent = `${eventRewardPoint}+`;
+        if (descEl) descEl.textContent = eventData.desc;
+
+        // Check if user's level is allowed to join this event
+        const isLevelAllowed = !eventData.allowedLevels || eventData.allowedLevels.length === 0 || eventData.allowedLevels.includes(userState.level);
+
+        const hasJoined = historyList.some(item =>
+          item.type === 'event' && item.eventId === eventId
+        );
+
+        if (hasJoined) {
+          if (joinBtn) joinBtn.textContent = "รับพ้อยต์แล้ว";
+          disableJoinBtn();
+        } else if (!isLevelAllowed) {
+            if (joinBtn) joinBtn.textContent = `กิจกรรมสำหรับระดับ ${eventData.allowedLevels.join(', ')}`;
+            disableJoinBtn();
+        }
+        else {
+          if (joinBtn) {
+            joinBtn.onclick = async () => {
+              const confirmed = await showConfirm(`ยืนยันการเข้าร่วม`, `เข้าร่วม "${eventTitle}" และรับ ${eventRewardPoint} พ้อยต์ ใช่หรือไม่?`);
+              if (!confirmed) return;
+
+              joinBtn.disabled = true; // Disable button immediately
+              try {
+                const res = await fetch(CONFIG.GAS_URL, {
+                  method: "POST",
+                  body: JSON.stringify({
+                    action: "joinEvent",
+                    lineId: userState.lineId,
+                    eventId,
+                    title: eventTitle,
+                    point: eventRewardPoint
+                  })
+                });
+                const text = await res.text();
+                showAlert("สถานะ", text, async () => {
+                  if (text.includes("สำเร็จ")) {
+                    await fetchAndUpdateUserState(); // Fetch latest points, level, and tag
+                    if (joinBtn) joinBtn.textContent = "รับพ้อยต์แล้ว";
+                    disableJoinBtn(); // Ensure it stays disabled
+                  }
+                });
+              } catch (e) {
+                console.error("Join event failed:", e);
+                showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมกิจกรรมได้ กรุณาลองใหม่');
+              } finally {
+                joinBtn.disabled = false; // Re-enable on error
+              }
+            };
+          }
+        }
+      }
+      if (cardSkeleton) cardSkeleton.classList.add("hidden");
+      if (card) card.classList.remove("hidden");
+    }
+
+    async function initProfile() {
+      const profileDisplayPictureEl = document.getElementById('profileDisplayPicture');
+      const profileDisplayNameEl = document.getElementById('profileDisplayName');
+      const profileLineIdEl = document.getElementById('profileLineId');
+
+      // Elements for Level/Tag/Progress specific to Profile Page
+      const profileLevelBadgeEl = document.getElementById('profileLevelBadge');
+      const profileCustomTagBadgeEl = document.getElementById('profileCustomTagBadge');
+      const profileProgressBarEl = document.getElementById('profileProgressBar');
+      const profilePointsToNextLevelEl = document.getElementById('profilePointsToNextLevel');
+      const profileTotalPointsEl = document.getElementById('profileTotalPoints');
+
+      const profileNameEl = document.getElementById('profileName');
+      const profilePhoneEl = document.getElementById('profilePhone');
+      const profileEmailEl = document.getElementById('profileEmail');
+      const profileAddressEl = document.getElementById('profileAddress');
+      const profileNoteEl = document.getElementById('profileNote');
+
+      const editProfileBtn = document.getElementById('editProfileBtn');
+      const profileFormContainer = document.getElementById('profileFormContainer');
+      const profileEditButtonsDiv = document.getElementById('profileEditButtons');
+      const saveProfileBtn = document.getElementById('saveProfileBtn');
+      const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+      // Array of editable input elements
+      const editableInputs = [
+        profileNameEl,
+        profilePhoneEl,
+        profileEmailEl,
+        profileAddressEl,
+        profileNoteEl
+      ];
+
+      let initialProfileData = {}; // To store values for revert on cancel
+
+      if (profileDisplayPictureEl && userState.profile) {
+        profileDisplayPictureEl.src = userState.profile.pictureUrl || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Line-icon.svg/1200px-Line-icon.svg.png';
+      }
+      if (profileDisplayNameEl && userState.profile) {
+        profileDisplayNameEl.textContent = userState.profile.displayName || 'ผู้ใช้ LINE';
+      }
+      // profileLineIdEl is always readonly, populated later
+
+      if (profileTotalPointsEl) {
+        profileTotalPointsEl.textContent = userState.points.toLocaleString(); // Use points from global userState
+      }
+
+      // แสดงระดับและ Progress Bar ในหน้า Profile โดยใช้ค่าจาก userState
+      const { level: calculatedLevel, progressValue, pointsToNext, nextLevelName } = calculateLevelAndProgress(userState.points);
+
+      // ADD THESE LOGS
+      console.log("DEBUG: initProfile - userState.points:", userState.points);
+      console.log("DEBUG: initProfile - userState.level (from backend):", userState.level);
+      console.log("DEBUG: initProfile - calculatedLevel (from frontend function):", calculatedLevel);
+      console.log("DEBUG: initProfile - progressValue:", progressValue);
+      console.log("DEBUG: initProfile - pointsToNext:", pointsToNext); // Check pointsToNext
+      console.log("DEBUG: initProfile - nextLevelName:", nextLevelName);
+
+
+      // Update level badge in profile
+      // ควรใช้ userState.level ที่มาจาก Backend เพื่อความถูกต้องตามข้อมูลจริงในชีต
+      setBadgeContent(profileLevelBadgeEl, LEVEL_STYLES[userState.level] ? LEVEL_STYLES[userState.level].text : userState.level, `badge badge-lg ${LEVEL_STYLES[userState.level] ? LEVEL_STYLES[userState.level].class : ''}`);
+
+      // Update custom tag badge in profile
+      // Split the tags string and use the first one, converting to lowercase for style lookup
+      const tagsArray = userState.customTag.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+      const primaryTag = tagsArray.length > 0 ? tagsArray[0].toLowerCase() : '';
+
+      const customTagInfo = CUSTOM_TAG_STYLES[primaryTag] || CUSTOM_TAG_STYLES['default'];
+      const tagText = customTagInfo.text || (primaryTag ? primaryTag.charAt(0).toUpperCase() + primaryTag.slice(1) : ''); // Capitalize first letter if using raw tag
+
+      if (!tagText) {
+        if (profileCustomTagBadgeEl) profileCustomTagBadgeEl.classList.add('hidden');
+      } else {
+        setBadgeContent(profileCustomTagBadgeEl, tagText, `badge badge-lg ${customTagInfo.class}`);
+      }
+
+
+      if (profileProgressBarEl) profileProgressBarEl.value = progressValue;
+      if (profilePointsToNextLevelEl) {
+        if (nextLevelName) { // ถ้ามีระดับถัดไป (คือไม่ใช่ Super)
+          profilePointsToNextLevelEl.textContent = `อีก ${pointsToNext} พ้อยต์ สู่ระดับ ${nextLevelName}`;
+        } else { // ถ้าไม่มีระดับถัดไป (คือ Super)
+          profilePointsToNextLevelEl.textContent = `คุณอยู่ในระดับสูงสุดแล้ว!`;
+        }
+      }
+
+      let uData;
+      // Get full profile data for editable fields (check cache first)
+      // Note: userState.level and userState.customTag are already populated from initial fetch,
+      // dataCache.userProfileFull might also be populated.
+      if (dataCache.userProfileFull) {
+        uData = dataCache.userProfileFull;
+        console.log("Loading full profile data from frontend cache.");
+      } else {
+        try {
+          console.log("Fetching full profile data from API.");
+          const uRes = await fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`);
+          uData = await uRes.json();
+          if (uData.error) {
+            throw new Error(uData.error);
+          }
+          dataCache.userProfileFull = uData; // Store in frontend cache
+          // Ensure userState's level and customTag are updated with the latest full profile data
+          userState.level = uData.level || 'Member';
+          userState.customTag = uData.customTag || '';
+        } catch (error) {
+          console.error("Error in initProfile:", error);
+          showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้');
+          if (profileLineIdEl) profileLineIdEl.value = 'โหลดข้อมูลล้มเหลว';
+          if (editProfileBtn) editProfileBtn.classList.add('hidden');
+          return;
+        }
+      }
+
+      // Store initial data for revert on cancel
+      initialProfileData = {
+        name: uData.name || '',
+        phone: uData.phone || '',
+        email: uData.email || '',
+        address: uData.address || '',
+        note: uData.note || ''
+      };
+
+      // Populate input fields
+      if (profileLineIdEl) profileLineIdEl.value = userState.lineId; // Always readonly
+      if (profileNameEl) profileNameEl.value = initialProfileData.name;
+      if (profilePhoneEl) profilePhoneEl.value = initialProfileData.phone;
+      if (profileEmailEl) profileEmailEl.value = initialProfileData.email;
+      if (profileAddressEl) profileAddressEl.value = initialProfileData.address;
+      if (profileNoteEl) profileNoteEl.value = initialProfileData.note;
+
+      // Set initial state (view mode)
+      toggleEditMode(false);
+
+      // --- Helper function to toggle edit mode ---
+      function toggleEditMode(enable) {
+        editableInputs.forEach(input => {
+          if (input) {
+            input.readOnly = !enable;
+            input.classList.toggle('input-neutral', enable);
+            input.classList.toggle('cursor-not-allowed', !enable);
+            input.classList.toggle('text-gray-500', !enable);
+          }
+        });
+
+        // Hide/Show the entire form container
+        if (profileFormContainer) {
+          profileFormContainer.classList.toggle('hidden', !enable);
+        }
+
+        if (editProfileBtn) {
+          editProfileBtn.classList.toggle('hidden', enable);
+        }
+        if (profileEditButtonsDiv) {
+          profileEditButtonsDiv.classList.toggle('hidden', !enable);
+        }
+      }
+
+      // --- Event Listeners for buttons ---
+
+      // Edit Button (Pencil Icon)
+      if (editProfileBtn) {
+        editProfileBtn.onclick = () => {
+          toggleEditMode(true);
+        };
+      }
+
+      // Save Button
+      if (saveProfileBtn) {
+        saveProfileBtn.onclick = async () => {
+          saveProfileBtn.disabled = true;
+          if (cancelEditBtn) cancelEditBtn.disabled = true;
+
+          try {
+            const body = {
+              action: 'updateProfile',
+              lineId: userState.lineId,
+              name: profileNameEl.value,
+              phone: profilePhoneEl.value,
+              email: profileEmailEl.value,
+              address: profileAddressEl.value,
+              note: profileNoteEl.value
+            };
+            const res = await fetch(CONFIG.GAS_URL, {
+              method: 'POST',
+              body: JSON.stringify(body)
+            });
+            const responseText = await res.text();
+            showAlert("สถานะ", responseText, async () => {
+              if (responseText.includes("สำเร็จ")) {
+                await fetchAndUpdateUserState(); // Fetch latest full profile after save
+                toggleEditMode(false);
+              } else {
+                saveProfileBtn.disabled = false;
+                if (cancelEditBtn) cancelEditBtn.disabled = false;
+              }
+            });
+          }
+          catch (e) {
+            console.error("Update profile failed:", e);
+            showAlert('ข้อผิดพลาด', 'ไม่สามารถอัปเดตข้อมูลได้ กรุณาลองใหม่');
+            saveProfileBtn.disabled = false;
+            if (cancelEditBtn) cancelEditBtn.disabled = false;
+          }
+        };
+      }
+
+      // Cancel Button
+      if (cancelEditBtn) {
+        cancelEditBtn.onclick = () => {
+          // Revert values to initial state
+          if (profileNameEl) profileNameEl.value = initialProfileData.name;
+          if (profilePhoneEl) profilePhoneEl.value = initialProfileData.phone;
+          if (profileEmailEl) profileEmailEl.value = initialProfileData.email;
+          if (profileAddressEl) profileAddressEl.value = initialProfileData.address;
+          if (profileNoteEl) profileNoteEl.value = initialProfileData.note;
+
+          toggleEditMode(false);
+        };
+      }
+    }
+
+    async function initRedeem() {
+      const redeemListEl = document.getElementById('redeemList');
+      if (redeemListEl) redeemListEl.innerHTML = generateCardSkeleton(4); // Show skeleton
+
+      let items;
+      // Check frontend cache first for redeem items (preloaded in ensureLIFFAndFetchInitialData)
+      if (dataCache.redeemItems) {
+        items = dataCache.redeemItems;
+        console.log("Loading redeem items from frontend cache.");
+      } else {
+        try {
+          console.log("Fetching redeem items from API (GAS cache or Sheet) - cache miss.");
+          const itemsRes = await fetch(`${CONFIG.GAS_URL}?action=getItems`);
+          items = await itemsRes.json();
+          dataCache.redeemItems = items; // Store in frontend cache
+        } catch (error) {
+          console.error("Error fetching redeem items:", error);
+          if (redeemListEl) redeemListEl.innerHTML = `<li class="col-span-2 text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดของรางวัล</li>`;
+          return;
+        }
+      }
+
+      if (redeemListEl) {
+        if (!items || items.length === 0) {
+          redeemListEl.innerHTML = `<li class="col-span-2 text-center text-gray-400 py-4">ไม่มีของรางวัลให้แลก</li>`;
+          return;
+        }
+        redeemListEl.innerHTML = items.map(item => `
+          <li class="bg-white p-4 rounded shadow-sm text-center">
+            <img src="${item.image}" alt="${item.name}" class="h-24 mx-auto mb-2 rounded-md object-cover">
+            <div class="font-bold mb-1">${item.name}</div>
+            <div class="text-sm text-gray-600 mb-2">${item.point} พ้อยต์</div>
+            <button data-item-id="${item.id}" data-item-name="${item.name}" data-item-point="${item.point}"
+                    class="redeem-btn btn btn-neutral btn-sm">
+              แลกเลย
+            </button>
+          </li>
+        `).join('');
+
+        // Attach event listeners after rendering
+        document.querySelectorAll('.redeem-btn').forEach(button => {
+          button.addEventListener('click', async (event) => {
+            const btn = event.target;
+            const id = btn.dataset.itemId;
+            const name = btn.dataset.itemName;
+            const point = parseInt(btn.dataset.itemPoint, 10);
+
+            if (userState.points < point) {
+              showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points}) ไม่พอสำหรับแลก "${name}" ซึ่งใช้ ${point} พ้อยต์`);
+              return;
+            }
+
+            const confirmed = await showConfirm(`ยืนยันการแลก`, `แลก "${name}" ด้วย ${point} พ้อยต์ ใช่หรือไม่?`);
+            if (!confirmed) return;
+
+            btn.disabled = true;
+            try {
+              const res = await fetch(CONFIG.GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'redeemItem', lineId: userState.lineId, itemId: id, point: point })
+              });
+              const text = await res.text();
+              showAlert("สถานะ", text, async () => {
+                if (text.includes("สำเร็จ")) {
+                  await fetchAndUpdateUserState(); // Fetch latest points, level, and tag
+                  btn.textContent = "แลกแล้ว";
+                }
+              });
+            } catch (e) {
+              console.error("Redeem failed:", e);
+              showAlert('ข้อผิดพลาด', 'ไม่สามารถแลกของรางวัลได้ กรุณาลองใหม่');
+            } finally {
+              btn.disabled = false;
+            }
+          });
+        });
+      }
+    }
+
+    async function initTransfer() {
+      const transferToEl = document.getElementById('transferTo');
+      const transferAmountEl = document.getElementById('transferAmount');
+      const transferBtn = document.getElementById('transferBtn');
+
+      if (transferBtn) {
+        transferBtn.onclick = async () => {
+          const toId = transferToEl.value.trim();
+          const amt = parseInt(transferAmountEl.value, 10);
+
+          if (!toId) { showAlert("ข้อผิดพลาด", "กรุณากรอก LINE ID เพื่อน / เบอร์โทรปลายทาง"); return; }
+          if (isNaN(amt) || amt <= 0) { showAlert("ข้อผิดพลาด", "กรุณากรอกจำนวนพ้อยต์ให้ถูกต้อง"); return; }
+          if (toId === userState.lineId) { showAlert("ข้อผิดพลาด", "ไม่สามารถโอนพ้อยต์ให้ตัวเอง"); return; }
+          if (userState.points < amt) { showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points}) ไม่พอสำหรับโอน ${amt} พ้อยต์`); return; }
+
+          const confirmed = await showConfirm("ยืนยันโอน", `คุณต้องการโอน ${amt} พ้อยต์ ให้กับ ${toId} ใช่หรือไม่?`);
+          if (!confirmed) return;
+
+          transferBtn.disabled = true;
+          try {
+            const res = await fetch(CONFIG.GAS_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: 'transferPoints', from: userState.lineId, to: toId, amount: amt })
+            });
+            const txt = await res.text();
+            showAlert("สถานะการโอน", txt, async () => {
+              if (/สำเร็จ|เรียบร้อย/.test(txt)) {
+                await fetchAndUpdateUserState(); // Fetch latest points, level, and tag
+                if (transferToEl) transferToEl.value = '';
+                if (transferAmountEl) transferAmountEl.value = '';
+              }
+            });
+          } catch (e) {
+            console.error("Transfer failed:", e);
+            showAlert("ข้อผิดพลาด", "ไม่สามารถโอนได้ ลองอีกครั้ง");
+          } finally {
+            transferBtn.disabled = false;
+          }
+        };
+      }
+    }
+
+    async function initWarehouse() {
+      const warehouseListEl = document.getElementById('warehouseList');
+      if (warehouseListEl) warehouseListEl.innerHTML = generateListSkeleton(5); // Show skeleton
+
+      // Get history for owned items (from cache or fresh if points changed)
+      const allHistory = await getFreshOrCachedHistory();
+
+      try {
+        const ownedItems = allHistory.filter(i => i.type === 'redeem');
+
+        if (!ownedItems.length) {
+          warehouseListEl.innerHTML = '<li class="text-center text-gray-400 py-4">ยังไม่มีของรางวัลในคลังของคุณ</li>';
+          return;
+        }
+
+        // Group items by name and count
+        const itemCounts = {};
+        ownedItems.forEach(item => {
+          const itemName = item.detail.startsWith('แลก: ') ? item.detail.substring(5) : item.detail;
+          itemCounts[itemName] = (itemCounts[itemName] || 0) + 1;
+        });
+
+        warehouseListEl.innerHTML = Object.entries(itemCounts).map(([name, count]) => `
+          <li class="bg-white rounded p-4 shadow-sm flex justify-between items-center">
+            <div>
+              <div class="font-semibold text-gray-800 text-sm">${name}</div>
+              <div class="text-xs text-gray-500 mt-1">จำนวน: ${count} ชิ้น</div>
+            </div>
+          </li>
+        `).join('');
+
+      } catch (e) {
+        console.error("Error in initWarehouse:", e);
+        showAlert("เกิดข้อผิดพลาด", "ไม่สามารถโหลดคลังของรางวัลได้");
+        if (warehouseListEl) warehouseListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดคลังของรางวัล</li>`;
+      }
+    }
+
+    async function initAddpoint() {
+      const scanContainer = document.getElementById('scanContainer');
+      const scanBtn = document.getElementById('scanBtn');
+      const enterBtn = document.getElementById('enterBtn');
+      const manualInput = document.getElementById('manualCode');
+
+      let scannedCode = "";
+      let codeTitle = "";
+      let codePoint = 0;
+
+      async function hasReceived(code) {
+        // Get history to check if code has been received (from cache or fresh if points changed)
+        const historyList = await getFreshOrCachedHistory();
+        return historyList.some(item =>
+          item.type === 'code' && item.eventId === code // eventId for codes is the code itself
+        );
+      }
+
+      async function processCode(code) {
+        if (!code) {
+          showAlert('ข้อผิดพลาด', 'โค้ดว่างเปล่า');
+          return;
+        }
+        if (await hasReceived(code)) {
+          showAlert('รับแล้ว', 'คุณรับโค้ดนี้ไปแล้ว');
+          return;
+        }
+        scannedCode = code;
+        try {
+          // Always fetch code details
+          const eRes = await fetch(`${CONFIG.GAS_URL}?action=getCodeById&id=${code}`);
+          const eData = await eRes.json();
+
+          if (eData.error) {
+            showAlert('ไม่พบโค้ด', eData.error);
+            return;
+          }
+
+          codeTitle = eData.title;
+          codePoint = eData.point;
+
+          if (scanContainer) {
+            scanContainer.innerHTML = `
+              <div class="bg-white p-6 rounded shadow mb-4">
+                <div class="font-bold text-lg mb-2">${codeTitle}</div>
+                <div class="text-sm text-gray-700 mb-4">${eData.desc}</div>
+                <div class="font-bold text-yellow-600 mb-4">พ้อยต์ที่จะได้รับ: ${codePoint}</div>
+                <button id="acceptBtn"
+                        class="btn btn-neutral">
+                  รับพ้อยต์
+                </button>
+              </div>`;
+            document.getElementById('acceptBtn')
+              ?.addEventListener('click', joinCodeFromInput);
+          }
+        } catch (e) {
+          console.error("Process code failed:", e);
+          showAlert('ข้อผิดพลาด', 'ไม่สามารถประมวลผลโค้ดได้ กรุณาลองใหม่');
+        }
+      }
+
+      async function joinCodeFromInput() {
+        const btn = document.getElementById("acceptBtn");
+        const confirmed = await showConfirm(
+          `ยืนยันการรับโค้ด`,
+          `รับ "${codeTitle}" และรับ ${codePoint} พ้อยต์ ใช่หรือไม่?`
+        );
+        if (!confirmed) return;
+
+        if (btn) {
+          btn.disabled = true;
+        }
+        try {
+          const res = await fetch(CONFIG.GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({
+              action: "joinCode",
+              lineId: userState.lineId,
+              id: scannedCode,
+              title: codeTitle,
+              point: codePoint
+            })
+          });
+          const text = await res.text();
+          showAlert("สถานะ", text, async () => {
+            if (text.includes("สำเร็จ")) {
+              await fetchAndUpdateUserState(); // Fetch latest points, level, and tag
+              if (btn) btn.textContent = "รับพ้อยต์แล้ว";
+            }
+          });
+        } catch (e) {
+          console.error("Join code failed:", e);
+          showAlert('ข้อผิดพลาด', 'ไม่สามารถรับพ้อยต์ได้ กรุณาลองใหม่');
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+          }
+        }
+      }
+
+      if (scanBtn) {
+        scanBtn.onclick = async () => {
+          try {
+            const { value } = await liff.scanCodeV2();
+            await processCode(value);
+          } catch (e) {
+            showAlert('ข้อผิดพลาด', `ไม่สามารถสแกนได้: ${e.message || 'กรุณาลองใหม่'}`);
+          }
+        };
+      }
+
+      if (enterBtn && manualInput) {
+        enterBtn.onclick = () => {
+          const code = manualInput.value.trim();
+          processCode(code);
+        };
+      }
+    }
+
+    // --- Global App Initialization ---
     async function initializeApp() {
+      // Ensure LIFF is initialized and user is logged in, and fetch initial data
       const liffReady = await ensureLIFFAndFetchInitialData();
-      if (!liffReady) return;
+      if (!liffReady) {
+        // LIFF login will redirect, or we redirected to register.html, so no further action here
+        return;
+      }
+
+      // Set up the router
       window.addEventListener('hashchange', router);
+      // Trigger the router for the initial load
       router();
     }
+
+    // Start the app
     initializeApp();
   </script>
 </body>
+
 </html>
