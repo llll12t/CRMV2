@@ -676,33 +676,128 @@ async function executeRedemption(buttonElement, payload) {
       };
     }
 
+    // ========== START: โค้ดที่แก้ไขแล้ว ==========
     async function initAddpoint() {
-      const scanContainer = document.getElementById('scanContainer'), scanBtn = document.getElementById('scanBtn'), enterBtn = document.getElementById('enterBtn'), manualInput = document.getElementById('manualCode');
-      let scannedCode = "", codeTitle = "", codePoint = 0;
+      const scanContainer = document.getElementById('scanContainer');
+      const scanBtn = document.getElementById('scanBtn');
+      const enterBtn = document.getElementById('enterBtn');
+      const manualInput = document.getElementById('manualCode');
+
+      // แยกฟังก์ชันการจัดการโค้ดออกมา
       async function processCode(code) {
           if (!code) return;
-          if ((await getFreshOrCachedHistory()).some(item => item.type === 'code' && item.eventId === code)) { showAlert('รับแล้ว', 'คุณรับโค้ดนี้ไปแล้ว'); return; }
+
+          // ตรวจสอบจากประวัติก่อนส่งคำขอไปเซิร์ฟเวอร์ เพื่อลดภาระงานและเร็วขึ้น
+          const history = await getFreshOrCachedHistory();
+          if (history.some(item => (item.type === 'code' || item.type === 'event') && item.eventId === code)) {
+              showAlert('รับแล้ว', 'คุณเคยรับโค้ดนี้ไปแล้ว');
+              return;
+          }
+
           try {
               const res = await fetch(`${CONFIG.GAS_URL}?action=getCodeById&id=${code}`);
               const data = await res.json();
-              if (data.error) { showAlert('ไม่พบโค้ด', data.error); return; }
-              scannedCode = code; codeTitle = data.title; codePoint = data.point;
-              scanContainer.innerHTML = `<div class="bg-white p-6 rounded shadow mb-4"><div class="font-bold text-lg mb-2">${codeTitle}</div><div class="text-sm text-gray-700 mb-4">${data.desc}</div><div class="font-bold text-yellow-600 mb-4">พ้อยต์: ${codePoint}</div><button id="acceptBtn" class="btn btn-neutral">รับพ้อยต์</button></div>`;
-              document.getElementById('acceptBtn').addEventListener('click', joinCode);
-          } catch (e) { showAlert('ข้อผิดพลาด', 'ไม่สามารถประมวลผลโค้ดได้'); }
+
+              if (data.error) {
+                  showAlert('ไม่พบโค้ด', data.error);
+                  return;
+              }
+
+              // แสดง UI สำหรับยืนยันการรับพ้อยต์
+              scanContainer.innerHTML = `
+                <div class="bg-white p-6 rounded shadow mb-4 text-center">
+                  <div class="font-bold text-lg mb-2">${data.title}</div>
+                  <div class="text-sm text-gray-700 mb-4">${data.desc}</div>
+                  <div class="font-bold text-yellow-600 mb-4 text-xl">คุณจะได้รับ: ${data.point} พ้อยต์</div>
+                  <button id="acceptBtn" class="btn btn-neutral w-full">ยืนยันการรับพ้อยต์</button>
+                </div>`;
+              
+              // เพิ่ม event listener ให้กับปุ่มที่สร้างขึ้นใหม่
+              document.getElementById('acceptBtn').addEventListener('click', () => joinCode(data));
+
+          } catch (e) {
+              console.error("Error processing code:", e);
+              showAlert('ข้อผิดพลาด', 'ไม่สามารถประมวลผลโค้ดได้ กรุณาลองใหม่');
+          }
       }
-      async function joinCode() {
-          if (!(await showConfirm('ยืนยัน', `รับ "${codeTitle}" (${codePoint} พ้อยต์)?`))) return;
-          const btn = document.getElementById("acceptBtn"); btn.disabled = true;
+
+      // แยกฟังก์ชันการรับพ้อยต์ออกมา
+      async function joinCode(codeData) {
+          const { id: scannedCode, title: codeTitle, point: codePoint } = codeData;
+          
+          if (!(await showConfirm('ยืนยัน', `คุณต้องการรับพ้อยต์จาก "${codeTitle}" จำนวน ${codePoint} พ้อยต์ใช่หรือไม่?`))) return;
+
+          const btn = document.getElementById("acceptBtn");
+          if (!btn) return; // ป้องกันกรณีที่ element หายไป
+
+          btn.disabled = true;
+          btn.textContent = "กำลังดำเนินการ...";
+          
+          let success = false; // สร้าง Flag เพื่อตรวจสอบสถานะ
+
           try {
-              const res = await fetch(CONFIG.GAS_URL, { method: "POST", body: JSON.stringify({ action: "joinCode", lineId: userState.lineId, id: scannedCode, title: codeTitle, point: codePoint }) });
+              const res = await fetch(CONFIG.GAS_URL, {
+                  method: "POST",
+                  body: JSON.stringify({ action: "joinCode", lineId: userState.lineId, id: scannedCode, title: codeTitle, point: codePoint })
+              });
               const text = await res.text();
-              showAlert("สถานะ", text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); btn.textContent = "รับแล้ว"; } });
-          } catch (e) { showAlert('ข้อผิดพลาด', 'ไม่สามารถรับพ้อยต์ได้'); } finally { if (btn.textContent !== "รับแล้ว") btn.disabled = false; }
+
+              if (text.includes("สำเร็จ")) {
+                  success = true; // ตั้งค่า Flag เป็น true เมื่อสำเร็จ
+                  // **แก้ไขจุดสำคัญ:** เปลี่ยนข้อความปุ่มทันที
+                  btn.textContent = "รับพ้อยต์แล้ว"; 
+                  
+                  // แสดง Alert และเมื่อผู้ใช้กดตกลง ค่อยอัปเดตข้อมูล State ทั้งหมด
+                  showAlert("สำเร็จ", text, async () => {
+                      await fetchAndUpdateUserState();
+                      // กลับไปหน้าหลักหลังจากรับพ้อยต์สำเร็จ
+                      window.location.hash = '#dashboard';
+                  });
+              } else {
+                  // กรณีเซิร์ฟเวอร์ตอบกลับว่าไม่สำเร็จ (เช่น โค้ดถูกใช้ไปแล้ว)
+                  showAlert("เกิดข้อผิดพลาด", text);
+                  // เมื่อผู้ใช้กดตกลง อาจจะให้กลับไปหน้ากรอกโค้ดใหม่
+                   window.location.hash = '#addpoint';
+              }
+          } catch (e) {
+              console.error("Join code failed:", e);
+              showAlert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเพื่อรับพ้อยต์ได้');
+          } finally {
+              // **แก้ไขจุดสำคัญ:** จะเปิดปุ่มให้กดใหม่ต่อเมื่อการทำงานไม่สำเร็จเท่านั้น
+              if (!success && btn) {
+                  btn.disabled = false;
+                  btn.textContent = "ยืนยันการรับพ้อยต์";
+              }
+          }
       }
-      scanBtn.onclick = async () => { try { const { value } = await liff.scanCodeV2(); await processCode(value); } catch (e) { showAlert('ข้อผิดพลาด', `สแกนไม่สำเร็จ: ${e.message || 'กรุณาลองใหม่'}`); } };
-      enterBtn.onclick = () => processCode(manualInput.value.trim());
+
+      // กำหนด Event Listeners
+      scanBtn.onclick = async () => {
+          try {
+              const result = await liff.scanCodeV2();
+              if (result && result.value) {
+                  await processCode(result.value);
+              }
+          } catch (e) {
+              // liff.scanCodeV2() จะ throw error เมื่อผู้ใช้กดยกเลิก
+              if (e.code !== 'USER_CANCEL') {
+                 console.error("Scan failed:", e);
+                 showAlert('สแกนไม่สำเร็จ', e.message || 'กรุณาลองใหม่อีกครั้ง');
+              }
+          }
+      };
+
+      enterBtn.onclick = () => {
+        const codeValue = manualInput.value.trim();
+        if (codeValue) {
+          processCode(codeValue);
+        } else {
+          showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกโค้ด');
+        }
+      };
     }
+    // ========== END: โค้ดที่แก้ไขแล้ว ==========
+
 
     // --- WAREHOUSE ---
     async function initWarehouse() {
