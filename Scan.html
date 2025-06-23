@@ -30,7 +30,7 @@
             border-radius: 0.5rem;
             background-color: #e5e7eb;
         }
-        #qr-reader{
+        #qr-shaded-region{
             border-width:none !important ;
         }
 
@@ -63,7 +63,7 @@
                 <div id="qr-reader" class="w-full h-64 overflow-hidden"></div>
                 <div class="card-actions w-full mt-4">
                     <button id="startScanBtn" class="btn btn-primary w-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="6" height="6" color="#ffffff"
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#ffffff"
                             fill="none">
                             <path
                                 d="M2.5 8.18677C2.60406 6.08705 2.91537 4.77792 3.84664 3.84664C4.77792 2.91537 6.08705 2.60406 8.18677 2.5M21.5 8.18677C21.3959 6.08705 21.0846 4.77792 20.1534 3.84664C19.2221 2.91537 17.9129 2.60406 15.8132 2.5M15.8132 21.5C17.9129 21.3959 19.2221 21.0846 20.1534 20.1534C21.0846 19.2221 21.3959 17.9129 21.5 15.8132M8.18676 21.5C6.08705 21.3959 4.77792 21.0846 3.84664 20.1534C2.91537 19.2221 2.60406 17.9129 2.5 15.8132"
@@ -88,12 +88,9 @@
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-gray-700">ประวัติการสแกนล่าสุด</h2>
                 <button id="refreshHistoryBtn" class="btn btn-sm btn-ghost">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="5" height="5" color="#ffffff"
-                        fill="none">
-                        <path
-                            d="M20.0092 2V5.13219C20.0092 5.42605 19.6418 5.55908 19.4537 5.33333C17.6226 3.2875 14.9617 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12"
-                            stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                    </svg> รีเฟรช
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" color="#000000" fill="none">
+    <path d="M20.0092 2V5.13219C20.0092 5.42605 19.6418 5.55908 19.4537 5.33333C17.6226 3.2875 14.9617 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg> รีเฟรช
                 </button>
             </div>
             <div class="overflow-x-auto bg-base-100 rounded-lg shadow-md">
