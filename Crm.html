@@ -85,7 +85,9 @@
       <p class="text-xs text-gray-500 mb-4">ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า</p>
       <div class="modal-action justify-around">
         <button id="qrDialogCloseBtn" class="btn btn-outline">ปิด</button>
+        <!-- ปุ่มใหม่สำหรับส่งข้อความ -->
         <button id="sendMessageToOABtn" class="btn btn-info">แจ้งพนักงาน</button> 
+        <!-- ปุ่มยืนยันจะถูกซ่อนด้วย JavaScript เพราะเราจะใช้ระบบตรวจสอบอัตโนมัติ -->
         <button id="qrDialogConfirmBtn" class="btn btn-neutral hidden">ยืนยันการรับของ</button>
       </div>
     </div>
@@ -239,21 +241,18 @@
     let liffInitialized = false;
     const userState = { profile: null, lineId: "", points: 0, pointsChanged: false, level: "Member", customTag: "" };
     const dataCache = { events: null, redeemItems: null, eventDetails: {}, userProfileFull: null, history: null, levelSettings: null };
-    // เพิ่มตัวแปรสำหรับเก็บ polling interval
     let warehousePollingInterval = null;
 
     // --- DIALOGS & UI ELEMENTS ---
     const alertDialog = document.getElementById('customAlertDialog'), alertT = document.getElementById('customAlertTitle'), alertM = document.getElementById('customAlertMessage'), alertBtn = document.getElementById('customAlertButton');
     const confirmDialog = document.getElementById('customConfirmDialog'), confT = document.getElementById('customConfirmTitle'), confM = document.getElementById('customConfirmMessage'), okBtn = document.getElementById('customConfirmConfirmButton'), noBtn = document.getElementById('customConfirmCancelButton');
     const pageTitleEl = document.getElementById('pageTitle'), pointValEl = document.getElementById('pointVal'), dpEl = document.getElementById('lineDisplayPicture');
-    // อ้างอิง Dialog QR
     const qrDialog = document.getElementById('qrDialog'),
           qrDialogTitle = document.getElementById('qrDialogTitle'),
-          qrDialogItemName = document.getElementById('qrDialogItemName'), // ใช้แสดง ID การแลก
-          qrcodeContainer = document.getElementById('qrcode'), // Div ที่จะใส่ QR หรือข้อความสถานะ
+          qrDialogItemName = document.getElementById('qrDialogItemName'),
+          qrcodeContainer = document.getElementById('qrcode'),
           qrConfirmBtn = document.getElementById('qrDialogConfirmBtn'),
           qrCloseBtn = document.getElementById('qrDialogCloseBtn');
-
 
     // --- STYLES ---
     const LEVEL_STYLES = { 'Member': { text: 'Member', class: 'badge-info badge-outline' }, 'VIP': { text: 'VIP', class: 'badge-primary badge-outline' }, 'Super': { text: 'Super', class: 'badge-success badge-outline' } };
@@ -355,11 +354,9 @@
       '': { title: 'CRM-3RN', tpl: 'view-dashboard', init: initDashboard }
     };
     async function router() {
-      // Clear any active polling interval before changing view
       if (warehousePollingInterval) {
          clearInterval(warehousePollingInterval);
          warehousePollingInterval = null;
-         // Close the dialog if it's open
          if (qrDialog && qrDialog.open) {
              qrDialog.close();
          }
@@ -769,11 +766,9 @@
 
     // --- WAREHOUSE ---
     async function initWarehouse() {
-      // Clear any active polling interval before re-initializing the warehouse view
       if (warehousePollingInterval) {
          clearInterval(warehousePollingInterval);
          warehousePollingInterval = null;
-         // Ensure the dialog is closed if it was open
           if (qrDialog && qrDialog.open) {
              qrDialog.close();
          }
@@ -795,17 +790,19 @@
         warehouseListEl.innerHTML = ownedItems.map(item => {
           const isClaimed = item.status === 'claimed';
           const statusBadge = `<span class="badge ${isClaimed ? 'badge-success' : 'badge-warning'}">${isClaimed ? 'รับแล้ว' : 'รอรับ'}</span>`;
-          // ใช้ uniqueId สำหรับ QR และ Polling
           const actionArea = isClaimed
             ? `<div class="text-xs text-gray-500 mt-1">วันที่รับ: ${item.claimDate || '-'}</div>`
-            : `<button class="btn btn-neutral btn-sm claim-btn" data-unique-id="${item.uniqueId}" data-item-name="${item.itemName}">รับของ</button>`; // ส่ง unique-id แทน warehouse-id
+            : `<button class="btn btn-neutral btn-sm claim-btn" data-unique-id="${item.uniqueId}" data-item-name="${item.itemName}">รับของ</button>`;
 
           return `<li class="bg-white rounded p-4 shadow-sm flex justify-between items-center">
                     <div><div class="font-semibold text-gray-800 text-sm">${item.itemName}</div><div class="text-xs text-gray-500 mt-1">วันที่แลก: ${item.redeemDate}</div>${statusBadge}</div>
                     <div class="text-right">${actionArea}</div></li>`;
         }).join('');
 
-        document.querySelectorAll('.claim-btn').forEach(button => button.addEventListener('click', ));
+        // *** นี่คือบรรทัดที่แก้ไขแล้ว ***
+        document.querySelectorAll('.claim-btn').forEach(button => {
+            button.addEventListener('click', handleClaimButtonClick);
+        });
 
       } catch (e) {
         console.error("Error in initWarehouse:", e);
@@ -814,9 +811,7 @@
       }
     }
 
-      // *** แทนที่ฟังก์ชันนี้ทั้งหมดด้วยโค้ดใหม่ ***
     function handleClaimButtonClick(event) {
-        // Clear any existing interval before starting a new one
         if (warehousePollingInterval) {
             clearInterval(warehousePollingInterval);
             warehousePollingInterval = null;
@@ -825,17 +820,14 @@
         const btn = event.currentTarget;
         const { uniqueId, itemName } = btn.dataset;
 
-        // อ้างอิง UI Elements ของ Modal QR
         const qrDialog = document.getElementById('qrDialog');
         const sendMessageToOABtn = document.getElementById('sendMessageToOABtn');
 
-        // ตั้งค่า Modal เริ่มต้น
         qrConfirmBtn.classList.add('hidden');
         qrDialogTitle.textContent = `สแกนเพื่อรับ: ${itemName}`;
         qrDialogItemName.textContent = `ID เฉพาะ: ${uniqueId}`;
         qrcodeContainer.innerHTML = '';
 
-        // *** ส่วนนี้ยังคงเหมือนเดิม: สร้าง QR Code สำหรับแสดงบนหน้าจอผู้ใช้ ***
         try {
             const qr = qrcode(4, 'L');
             qr.addData(uniqueId);
@@ -846,159 +838,75 @@
             console.error(e);
         }
 
-        // --- *** ส่วนสำคัญที่แก้ไข: สร้าง Flex Message เมื่อกดปุ่ม "แจ้งพนักงาน" ---
         sendMessageToOABtn.onclick = async () => {
-            
-            // สร้าง URL ของ QR Code ผ่าน API ภายนอก
-            // เราจำเป็นต้อง encodeURIComponent เพื่อให้แน่ใจว่า URL ถูกต้องเสมอ
             const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(uniqueId)}`;
-
-            // สร้าง JSON ของ Flex Message
+            
             const flexMessage = {
                 "type": "bubble",
                 "hero": {
-                    "type": "image",
-                    "url": qrImageUrl, // ใช้ URL ของรูป QR Code ที่สร้างจาก API
-                    "size": "full",
-                    "aspectRatio": "1:1",
-                    "aspectMode": "cover"
+                    "type": "image", "url": qrImageUrl, "size": "full", "aspectRatio": "1:1", "aspectMode": "cover"
                 },
                 "body": {
-                    "type": "box",
-                    "layout": "vertical",
-                    "spacing": "md",
+                    "type": "box", "layout": "vertical", "spacing": "md",
                     "contents": [
+                        { "type": "text", "text": "แจ้งรับของรางวัล", "weight": "bold", "size": "xl", "color": "#1DB446" },
+                        { "type": "separator" },
                         {
-                            "type": "text",
-                            "text": "แจ้งรับของรางวัล",
-                            "weight": "bold",
-                            "size": "xl",
-                            "color": "#1DB446"
-                        },
-                        {
-                            "type": "separator"
-                        },
-                        {
-                            "type": "box",
-                            "layout": "vertical",
-                            "margin": "lg",
-                            "spacing": "sm",
+                            "type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm",
                             "contents": [
-                                {
-                                    "type": "box",
-                                    "layout": "baseline",
-                                    "spacing": "sm",
-                                    "contents": [
-                                        {
-                                            "type": "text",
-                                            "text": "สินค้า",
-                                            "color": "#aaaaaa",
-                                            "size": "sm",
-                                            "flex": 2
-                                        },
-                                        {
-                                            "type": "text",
-                                            "text": itemName, // ชื่อสินค้า
-                                            "wrap": true,
-                                            "color": "#666666",
-                                            "size": "sm",
-                                            "flex": 5
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "box",
-                                    "layout": "baseline",
-                                    "spacing": "sm",
-                                    "contents": [
-                                        {
-                                            "type": "text",
-                                            "text": "รหัส",
-                                            "color": "#aaaaaa",
-                                            "size": "sm",
-                                            "flex": 2
-                                        },
-                                        {
-                                            "type": "text",
-                                            "text": uniqueId, // รหัสรับของ
-                                            "wrap": true,
-                                            "color": "#666666",
-                                            "size": "sm",
-                                            "flex": 5
-                                        }
-                                    ]
-                                }
+                                { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [
+                                    { "type": "text", "text": "สินค้า", "color": "#aaaaaa", "size": "sm", "flex": 2 },
+                                    { "type": "text", "text": itemName, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 }
+                                ]},
+                                { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [
+                                    { "type": "text", "text": "รหัส", "color": "#aaaaaa", "size": "sm", "flex": 2 },
+                                    { "type": "text", "text": uniqueId, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 }
+                                ]}
                             ]
                         }
                     ]
                 },
                 "footer": {
-                    "type": "box",
-                    "layout": "vertical",
+                    "type": "box", "layout": "vertical",
                     "contents": [
-                         {
-                            "type": "text",
-                            "text": `แจ้งจากคุณ: ${userState.profile.displayName}`,
-                            "size": "xs",
-                            "color": "#888888",
-                            "align": "center"
-                        }
+                         { "type": "text", "text": `แจ้งจากคุณ: ${userState.profile.displayName}`, "size": "xs", "color": "#888888", "align": "center" }
                     ]
                 }
             };
             
-            // สร้าง Object ของข้อความตามรูปแบบของ LIFF
-            const messagesToSend = [{
-                type: 'flex',
-                // altText คือข้อความที่จะแสดงในหน้า Chat list และ Notification
-                altText: `แจ้งรับของรางวัล: ${itemName}`, 
-                contents: flexMessage
-            }];
+            const messagesToSend = [{ type: 'flex', altText: `แจ้งรับของรางวัล: ${itemName}`, contents: flexMessage }];
 
             try {
                 if (!liff.isInClient()) {
                     showAlert('ไม่สามารถส่งได้', 'ฟังก์ชันนี้ใช้ได้เมื่อเปิดผ่านแอป LINE เท่านั้น');
                     return;
                 }
-                
                 await liff.sendMessages(messagesToSend);
                 showAlert('ส่งข้อความสำเร็จ', 'ข้อความของคุณถูกส่งไปยังพนักงานแล้ว');
-
             } catch (error) {
                 console.error('Failed to send flex message:', error);
                 showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถส่งข้อความได้ กรุณาลองใหม่');
             }
         };
-        // --- จบส่วนที่แก้ไข ---
 
-
-        // ฟังก์ชันสำหรับ Polling สถานะ (ส่วนนี้เหมือนเดิม)
         async function checkClaimStatus() {
-            //... (โค้ดส่วนนี้ไม่ต้องแก้ไข)
             console.log(`Polling status for UniqueID: ${uniqueId}...`);
             try {
                 const res = await fetch(`${CONFIG.GAS_URL}?action=getWarehouseItemStatus&uniqueId=${uniqueId}`);
                 const data = await res.json();
-
                 if (data && data.status === 'claimed') {
                     console.log('Item has been claimed!');
                     clearInterval(warehousePollingInterval);
                     warehousePollingInterval = null;
-                    qrcodeContainer.innerHTML = `
-                        <div class="text-center text-green-600 font-bold text-lg p-4">
-                            ✅ สินค้า "${itemName}" ถูกรับแล้ว!
-                        </div>
-                    `;
+                    qrcodeContainer.innerHTML = `<div class="text-center text-green-600 font-bold text-lg p-4">✅ สินค้า "${itemName}" ถูกรับแล้ว!</div>`;
                     qrCloseBtn.textContent = 'ปิด';
                     setTimeout(() => initWarehouse(), 1000); 
-
                 } else if (data && data.status === 'not_found') {
                      console.error(`Polling: Warehouse item with UniqueID ${uniqueId} not found.`);
                      clearInterval(warehousePollingInterval);
                      warehousePollingInterval = null;
                      qrcodeContainer.innerHTML = `<p class="text-red-500">รายการนี้ไม่ถูกต้องหรือไม่พบในระบบ</p>`;
                      setTimeout(() => qrDialog.close(), 3000);
-
                 }
             } catch (err) {
                 console.error('Polling failed:', err);
@@ -1008,23 +916,17 @@
                  setTimeout(() => qrDialog.close(), 3000);
             }
         }
-
+        
         warehousePollingInterval = setInterval(checkClaimStatus, 1000);
 
         qrCloseBtn.onclick = () => {
-            if (warehousePollingInterval) {
-                clearInterval(warehousePollingInterval);
-                warehousePollingInterval = null;
-            }
+            if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; }
             qrDialog.close();
         };
 
-         qrDialog.addEventListener('close', () => {
-             if (warehousePollingInterval) {
-                clearInterval(warehousePollingInterval);
-                warehousePollingInterval = null;
-             }
-         }, { once: true });
+        qrDialog.addEventListener('close', () => {
+             if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; }
+        }, { once: true });
 
         qrDialog.showModal();
     }
@@ -1033,13 +935,6 @@
     async function initializeApp() {
       const liffReady = await ensureLIFFAndFetchInitialData();
       if (!liffReady) return;
-
-      // Add event listener for modal close ONCE during initial setup
-      // This handles closing via backdrop click or ESC key specifically for the qrDialog
-      // The {once: true} in handleClaimButtonClick might be enough, let's re-evaluate.
-      // Let's add it inside handleClaimButtonClick with { once: true } is better as it's tied to that specific modal instance.
-      // So, no need for a global close listener here.
-
       window.addEventListener('hashchange', router);
       router();
     }
