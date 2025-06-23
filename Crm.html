@@ -36,16 +36,6 @@
       backdrop-filter: blur(8.1px); -webkit-backdrop-filter: blur(8.1px);
       border: 1px solid rgba(255, 255, 255, 0.3);
     }
-     /* ปรับขนาด QR Code ให้เหมาะสมกับ container */
-     #qrcode canvas {
-      width: 100% !important;
-      height: auto !important;
-    }
-    #qrcode img {
-       width: 100% !important;
-      height: auto !important;
-      image-rendering: pixelated; /* ช่วยให้ QR code คมชัดขึ้น */
-    }
   </style>
 </head>
 
@@ -55,15 +45,15 @@
     <h2 id="pageTitle" class="text-xl font-bold text-white">กำลังโหลด...</h2>
     <div class="glass-white rounded-full flex items-center p-1 space-x-2">
       <div id="pointVal" class="font-bold neon-text text-lg px-2">0</div>
-      <img id="lineDisplayPicture" class="mask mask-circle w-10 h-10 rounded-full object-cover border border-black" src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" alt="รูปโปรไฟล์" />
+      <img id="lineDisplayPicture" class="mask mask-circle w-10 h-10 rounded-full object-cover border border-black" src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" />
     </div>
   </div>
-
+  
   <!-- Main App Container -->
   <div id="app">
     <div class="text-center text-gray-100 py-8">กำลังโหลดเนื้อหา...</div>
   </div>
-
+  
   <!-- Dialogs -->
   <dialog id="customAlertDialog" class="modal">
     <div class="modal-box text-center">
@@ -74,7 +64,7 @@
       </div>
     </div>
   </dialog>
-
+  
   <dialog id="customConfirmDialog" class="modal">
     <div class="modal-box text-center">
       <h3 id="customConfirmTitle" class="font-bold text-lg mb-3"></h3>
@@ -86,12 +76,12 @@
     </div>
   </dialog>
 
-  <!-- QR Code Dialog (for Warehouse Claim) -->
+  <!-- QR Code Dialog (for Warehouse) -->
   <dialog id="qrDialog" class="modal">
     <div class="modal-box text-center">
       <h3 id="qrDialogTitle" class="font-bold text-lg mb-2">สแกนเพื่อรับของ</h3>
       <p id="qrDialogItemName" class="mb-4 text-sm text-gray-600"></p>
-      <div id="qrcode" class="flex justify-center mb-4 p-4 bg-white rounded-lg"></div>
+      <div id="qrcode" class="flex justify-center mb-4 p-4 bg-white rounded-lg"></div> 
       <p class="text-xs text-gray-500 mb-4">ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า</p>
       <div class="modal-action justify-around">
         <button id="qrDialogCloseBtn" class="btn btn-outline">ปิด</button>
@@ -100,32 +90,6 @@
       </div>
     </div>
   </dialog>
-
-<!-- Shipping Form Dialog (for Physical Items) -->
-<dialog id="shippingFormDialog" class="modal">
-  <div class="modal-box">
-    <h3 id="shippingFormTitle" class="font-bold text-lg mb-4">ข้อมูลสำหรับจัดส่ง</h3>
-    <div class="space-y-4">
-      <div>
-        <label class="label"><span class="label-text">ชื่อ-นามสกุล ผู้รับ</span></label>
-        <input id="shippingName" type="text" placeholder="กรอกชื่อ-นามสกุล" class="input input-bordered w-full" />
-      </div>
-      <div>
-        <label class="label"><span class="label-text">เบอร์โทรศัพท์ติดต่อ</span></label>
-        <input id="shippingPhone" type="tel" placeholder="กรอกเบอร์โทรศัพท์" class="input input-bordered w-full" />
-      </div>
-      <div>
-        <label class="label"><span class="label-text">ที่อยู่สำหรับจัดส่ง</span></label>
-        <textarea id="shippingAddress" class="textarea textarea-bordered w-full" rows="4" placeholder="บ้านเลขที่, ถนน, ตำบล, อำเภอ, จังหวัด, รหัสไปรษณีย์"></textarea>
-      </div>
-    </div>
-    <div class="modal-action justify-between mt-6">
-      <button id="shippingFormCancelBtn" class="btn btn-outline">ยกเลิก</button>
-      <button id="shippingFormConfirmBtn" class="btn btn-neutral">ยืนยันและแลกของ</button>
-    </div>
-  </div>
-</dialog>
-
 
   <!-- Template: Dashboard (Main Menu) -->
   <template id="view-dashboard">
@@ -246,23 +210,49 @@
     </div>
   </template>
 
+<!-- Shipping Form Dialog (for Physical Items) -->
+<dialog id="shippingFormDialog" class="modal">
+  <div class="modal-box">
+    <h3 id="shippingFormTitle" class="font-bold text-lg mb-4">ข้อมูลสำหรับจัดส่ง</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="label"><span class="label-text">ชื่อ-นามสกุล ผู้รับ</span></label>
+        <input id="shippingName" type="text" placeholder="กรอกชื่อ-นามสกุล" class="input input-bordered w-full" />
+      </div>
+      <div>
+        <label class="label"><span class="label-text">เบอร์โทรศัพท์ติดต่อ</span></label>
+        <input id="shippingPhone" type="tel" placeholder="กรอกเบอร์โทรศัพท์" class="input input-bordered w-full" />
+      </div>
+      <div>
+        <label class="label"><span class="label-text">ที่อยู่สำหรับจัดส่ง</span></label>
+        <textarea id="shippingAddress" class="textarea textarea-bordered w-full" rows="4" placeholder="บ้านเลขที่, ถนน, ตำบล, อำเภอ, จังหวัด, รหัสไปรษณีย์"></textarea>
+      </div>
+    </div>
+    <div class="modal-action justify-between mt-6">
+      <button id="shippingFormCancelBtn" class="btn btn-outline">ยกเลิก</button>
+      <button id="shippingFormConfirmBtn" class="btn btn-neutral">ยืนยันและแลกของ</button>
+    </div>
+  </div>
+</dialog>
 <script>
     // --- GLOBAL STATE & CACHE ---
     let liffInitialized = false;
     const userState = { profile: null, lineId: "", points: 0, pointsChanged: false, level: "Member", customTag: "" };
     const dataCache = { events: null, redeemItems: null, eventDetails: {}, userProfileFull: null, history: null, levelSettings: null };
-
-    // เพิ่มตัวแปรนี้สำหรับเก็บ Polling interval
-    let pollingInterval = null;
+    // เพิ่มตัวแปรสำหรับเก็บ polling interval
+    let warehousePollingInterval = null;
 
     // --- DIALOGS & UI ELEMENTS ---
     const alertDialog = document.getElementById('customAlertDialog'), alertT = document.getElementById('customAlertTitle'), alertM = document.getElementById('customAlertMessage'), alertBtn = document.getElementById('customAlertButton');
     const confirmDialog = document.getElementById('customConfirmDialog'), confT = document.getElementById('customConfirmTitle'), confM = document.getElementById('customConfirmMessage'), okBtn = document.getElementById('customConfirmConfirmButton'), noBtn = document.getElementById('customConfirmCancelButton');
     const pageTitleEl = document.getElementById('pageTitle'), pointValEl = document.getElementById('pointVal'), dpEl = document.getElementById('lineDisplayPicture');
-    // Warehouse QR Dialog Elements
-    const qrDialog = document.getElementById('qrDialog'), qrDialogTitle = document.getElementById('qrDialogTitle'), qrDialogItemName = document.getElementById('qrDialogItemName'), qrcodeContainer = document.getElementById('qrcode'), qrConfirmBtn = document.getElementById('qrDialogConfirmBtn'), qrCloseBtn = document.getElementById('qrDialogCloseBtn');
-    // Shipping Form Dialog Elements
-    const shippingFormDialog = document.getElementById('shippingFormDialog'), shippingFormTitle = document.getElementById('shippingFormTitle'), shippingNameInput = document.getElementById('shippingName'), shippingPhoneInput = document.getElementById('shippingPhone'), shippingAddressInput = document.getElementById('shippingAddress'), shippingFormConfirmBtn = document.getElementById('shippingFormConfirmBtn'), shippingFormCancelBtn = document.getElementById('shippingFormCancelBtn');
+    // อ้างอิง Dialog QR
+    const qrDialog = document.getElementById('qrDialog'),
+          qrDialogTitle = document.getElementById('qrDialogTitle'),
+          qrDialogItemName = document.getElementById('qrDialogItemName'), // ใช้แสดง ID การแลก
+          qrcodeContainer = document.getElementById('qrcode'), // Div ที่จะใส่ QR หรือข้อความสถานะ
+          qrConfirmBtn = document.getElementById('qrDialogConfirmBtn'),
+          qrCloseBtn = document.getElementById('qrDialogCloseBtn');
 
 
     // --- STYLES ---
@@ -311,7 +301,7 @@
           userState.customTag = userData.customTag || '';
           dataCache.userProfileFull = userData;
           pointValEl.textContent = userState.points;
-          userState.pointsChanged = true; // Mark history cache as potentially stale
+          userState.pointsChanged = true;
           console.log(`User state updated: Points=${userState.points}, Level=${userState.level}, Tag=${userState.customTag}`);
         } else { console.error("Failed to fetch user data after action:", userData?.error || "Unknown error"); }
       } catch (e) { console.error("Error fetching user info after action:", e); }
@@ -329,9 +319,8 @@
         dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/40';
         dpEl.alt = `รูปโปรไฟล์ของ ${userState.profile.displayName}`;
       }
-      pointValEl.textContent = '...'; // Show loading indicator for points
+      pointValEl.textContent = '...';
       try {
-        // Fetch initial data concurrently
         const [userRes, histRes, eventsRes, redeemRes, settingsRes] = await Promise.all([
           fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`),
           fetch(`${CONFIG.GAS_URL}?action=getHistory&lineId=${userState.lineId}`),
@@ -339,39 +328,19 @@
           fetch(`${CONFIG.GAS_URL}?action=getItems`),
           fetch(`${CONFIG.GAS_URL}?action=getLevelConfig`)
         ]);
-
-        const userData = await userRes.json();
-        const historyData = await histRes.json();
-        dataCache.events = await eventsRes.json();
-        dataCache.redeemItems = await redeemRes.json();
+        const userData = await userRes.json(); const historyData = await histRes.json();
+        dataCache.events = await eventsRes.json(); dataCache.redeemItems = await redeemRes.json();
         const settingsData = await settingsRes.json();
-
-        // Process level settings
         if (settingsData && !settingsData.error) { dataCache.levelSettings = { VIP_points: parseInt(settingsData.VIP_points || 0), SUPER_points: parseInt(settingsData.SUPER_points || 0) }; }
         else { console.warn("Failed to load level settings, using defaults."); dataCache.levelSettings = { VIP_points: 5000, SUPER_points: 10000 }; }
-
-        // Check user registration status
         if (!userData || !userData.isRegistered) { window.location.href = 'register.html'; return false; }
-
-        // Update user state and cache
         userState.points = parseInt(userData.point || 0, 10);
-        userState.level = userData.level || 'Member';
-        userState.customTag = userData.customTag || '';
-        dataCache.userProfileFull = userData;
-        pointValEl.textContent = userState.points.toLocaleString(); // Update points display
-        dataCache.history = historyData; // Cache initial history
-        userState.pointsChanged = false; // Reset flag after loading history
-
-      } catch (error) {
-          console.error("Failed to fetch initial data:", error);
-          pointValEl.textContent = 'N/A';
-          showAlert("ข้อผิดพลาด", `ไม่สามารถโหลดข้อมูลผู้ใช้ได้ กรุณาลองใหม่ (${error.message})`);
-          // Depending on severity, you might want to prevent navigation or show a specific error page
-          return false;
-      }
-      return true; // Indicate successful initialization and data fetch
+        userState.level = userData.level || 'Member'; userState.customTag = userData.customTag || '';
+        dataCache.userProfileFull = userData; pointValEl.textContent = userState.points;
+        dataCache.history = historyData; userState.pointsChanged = false;
+      } catch (error) { console.error("Failed to fetch initial data:", error); pointValEl.textContent = 'N/A'; showAlert("ข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลผู้ใช้ได้ กรุณาลองใหม่"); return false; }
+      return true;
     }
-
 
     // --- ROUTER ---
     const routes = {
@@ -386,35 +355,26 @@
       '': { title: 'CRM-3RN', tpl: 'view-dashboard', init: initDashboard }
     };
     async function router() {
-      // Clear any active polling before navigating
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        pollingInterval = null;
-        console.log('Cleared polling interval on route change.');
+      // Clear any active polling interval before changing view
+      if (warehousePollingInterval) {
+         clearInterval(warehousePollingInterval);
+         warehousePollingInterval = null;
+         // Close the dialog if it's open
+         if (qrDialog && qrDialog.open) {
+             qrDialog.close();
+         }
+         console.log("Polling stopped due to route change.");
       }
-      // Close any open modals on route change (optional but good practice)
-      if (qrDialog.open) qrDialog.close();
-      if (shippingFormDialog.open) shippingFormDialog.close();
-      if (alertDialog.open) alertDialog.close();
-      if (confirmDialog.open) confirmDialog.close();
-
 
       const hash = window.location.hash.split('?')[0] || '';
       const route = routes[hash] || routes[''];
       pageTitleEl.textContent = route.title;
-      const appDiv = document.getElementById('app'); appDiv.innerHTML = ''; // Clear previous view
+      const appDiv = document.getElementById('app'); appDiv.innerHTML = '';
       const template = document.getElementById(route.tpl);
       if (template) { appDiv.appendChild(template.content.cloneNode(true)); }
       else { appDiv.innerHTML = `<p class="text-center text-red-500 py-8">เกิดข้อผิดพลาด: ไม่พบเทมเพลตสำหรับ ${hash}</p>`; return; }
-
-      // Call the initialization function for the new view
-      try {
-          console.log(`Initializing view: ${route.tpl}`);
-          await route.init();
-      } catch (error) {
-          console.error(`Error initializing view ${route.tpl}:`, error);
-          showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลหน้านี้ได้');
-      }
+      try { await route.init(); }
+      catch (error) { console.error(`Error initializing view ${route.tpl}:`, error); showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลหน้านี้ได้'); }
     }
 
     // --- SKELETONS & HELPERS ---
@@ -422,300 +382,102 @@
     function generateCardSkeleton(count) { return Array.from({ length: count }).map(_ => `<li class="bg-white p-4 rounded shadow-sm loading-card-animation"><div class="h-24 bg-gray-200 rounded-md mb-3"></div><div class="h-4 bg-gray-200 rounded w-2/3 mb-2"></div><div class="h-3 bg-gray-200 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-200 rounded-full w-full"></div></li>`).join(''); }
     function renderHistoryList(historyData) {
       const el = document.getElementById('historyList'); if (!el) return;
-      // Sort history by date descending and take the latest 10
-      const sortedHistory = historyData.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
-      if (sortedHistory.length === 0) { el.innerHTML = `<li class="text-center text-gray-400 py-4">ไม่มีประวัติการทำรายการ</li>`; return; }
-      el.innerHTML = sortedHistory.map(item => {
+      const latest = historyData.slice().reverse().slice(0, 10);
+      if (latest.length === 0) { el.innerHTML = `<li class="text-center text-gray-400 py-4">ไม่มีประวัติการทำรายการ</li>`; return; }
+      el.innerHTML = latest.map(item => {
         const isDebit = ['redeem', 'transfer_out'].includes(item.type);
-        const datePart = item.date ? item.date.split(' ')[0] : ''; // Get only date part
-        return `<li class="flex justify-between items-center"><div><div class="font-medium text-gray-800 text-sm">${item.detail}</div><div class="text-xs text-gray-400 mt-1">${datePart}</div></div><div class="text-sm font-bold px-4 py-1.5 rounded-full ${isDebit ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">${isDebit ? '-' : '+'} ${item.amount.toLocaleString()}</div></li>`;
+        return `<li class="flex justify-between items-center"><div><div class="font-medium text-gray-800 text-sm">${item.detail}</div><div class="text-xs text-gray-400 mt-1">${item.date}</div></div><div class="text-sm font-bold px-4 py-1.5 rounded-full ${isDebit ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">${isDebit ? '-' : '+'} ${item.amount}</div></li>`;
       }).join("");
     }
-     // Helper to get fresh or cached history
     async function getFreshOrCachedHistory() {
-      // Fetch fresh history only if points have changed or cache is empty
-      if (userState.pointsChanged || !dataCache.history || dataCache.history.length === 0) {
+      if (userState.pointsChanged || !dataCache.history) {
         try {
-          console.log("Fetching fresh history...");
           const res = await fetch(`${CONFIG.GAS_URL}?action=getHistory&lineId=${userState.lineId}`);
-          dataCache.history = await res.json();
-          userState.pointsChanged = false; // Reset flag
-        } catch (e) {
-          console.error("Error fetching history:", e);
-          dataCache.history = []; // Set to empty array on error
-          userState.pointsChanged = false; // Reset flag even on error
-        }
-      } else {
-           console.log("Using cached history.");
-      }
-      return dataCache.history;
+          dataCache.history = await res.json(); userState.pointsChanged = false;
+        } catch (e) { console.error("Error fetching history:", e); dataCache.history = []; userState.pointsChanged = false; }
+      } return dataCache.history;
     }
-
 
     // --- VIEW INITIALIZATION FUNCTIONS ---
     async function initDashboard() {
-      const historyListEl = document.getElementById('historyList');
-      const checkinBox = document.getElementById('checkinBox');
-      const todayDateEl = document.getElementById('todayDate');
-      const checkinBtn = document.getElementById('checkinBtn');
-
-      // Show skeleton while waiting for history
-      if (historyListEl) historyListEl.innerHTML = generateListSkeleton(5);
-
+      const historyListEl = document.getElementById('historyList'), checkinBox = document.getElementById('checkinBox'), todayDateEl = document.getElementById('todayDate'), checkinBtn = document.getElementById('checkinBtn');
+      if (dataCache.history && !userState.pointsChanged) renderHistoryList(dataCache.history);
+      else if (historyListEl) historyListEl.innerHTML = generateListSkeleton(5);
       try {
-        // Fetch checkin status and history concurrently
-        const [checkRes, history] = await Promise.all([
-            fetch(`${CONFIG.GAS_URL}?action=checkinStatus&lineId=${userState.lineId}`).then(r => r.json()),
-            getFreshOrCachedHistory() // Use the helper function
-        ]);
-
-        // Render history once fetched
+        const [checkData, history] = await Promise.all([fetch(`${CONFIG.GAS_URL}?action=checkinStatus&lineId=${userState.lineId}`).then(r => r.json()), getFreshOrCachedHistory()]);
         renderHistoryList(history);
-
-        // Handle check-in status
-        if (checkBox && !checkRes.checkedInToday) {
-          checkinBox.classList.remove('hidden');
-          todayDateEl.textContent = new Date().getDate().toString().padStart(2, "0");
+        if (checkinBox && !checkData.checkedInToday) {
+          checkinBox.classList.remove('hidden'); todayDateEl.textContent = new Date().getDate().toString().padStart(2, "0");
           checkinBtn.onclick = async () => {
             checkinBtn.disabled = true;
-            checkinBtn.textContent = 'กำลังเช็คอิน...';
             try {
               const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: "dailyCheckin", lineId: userState.lineId }) });
               const text = await res.text();
-              showAlert('เช็คอิน', text, async () => {
-                  if (text.includes("สำเร็จ")) {
-                      await fetchAndUpdateUserState(); // Update points and mark history stale
-                       checkinBox.classList.add('hidden'); // Hide check-in box
-                      // Re-render dashboard to show updated points and potentially new history
-                      router(); // Navigate back to dashboard to refresh
-                  } else {
-                     checkinBtn.disabled = false;
-                     checkinBtn.textContent = 'เช็คอิน';
-                  }
-              });
-            } catch (e) {
-              console.error("Check-in failed:", e);
-              showAlert('ข้อผิดพลาด', 'ไม่สามารถเช็คอินได้');
-              checkinBtn.disabled = false;
-              checkinBtn.textContent = 'เช็คอิน';
-            }
+              showAlert('เช็คอินสำเร็จ', text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); checkinBox.classList.add('hidden'); initDashboard(); } });
+            } catch (e) { console.error("Check-in failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถเช็คอินได้'); } finally { checkinBtn.disabled = false; }
           };
-        } else if (checkinBox) {
-             console.log("Checked in today or checkinBox not found.");
-             checkinBox.classList.add('hidden');
-        }
-      } catch (e) {
-        console.error("Error in initDashboard:", e);
-         if (historyListEl) historyListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดข้อมูล</li>`;
-         if (checkinBox) checkinBox.classList.add('hidden'); // Hide on error
-      }
+        } else if (checkinBox) { checkinBox.classList.add('hidden'); }
+      } catch (e) { console.error("Error in initDashboard:", e); if (historyListEl) historyListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาด</li>`; }
     }
-
 
     async function initEvent() {
       const eventListEl = document.getElementById('eventList');
-      if (eventListEl) eventListEl.innerHTML = generateListSkeleton(5); // Show skeleton
-
-      let events = dataCache.events;
-      if (!events || events.length === 0) {
+      if (eventListEl) eventListEl.innerHTML = generateListSkeleton(5);
+      let events = dataCache.events || [];
+      if (!dataCache.events) {
         try {
-            console.log("Fetching events...");
             const res = await fetch(`${CONFIG.GAS_URL}?action=getEvents`);
-            events = await res.json();
-            if (events.error) throw new Error(events.error);
-            dataCache.events = events; // Cache fetched events
-        } catch (e) {
-            console.error("Error fetching events:", e);
-            if (eventListEl) eventListEl.innerHTML = `<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดกิจกรรม: ${e.message}</div>`;
-            return; // Exit if fetching fails
-        }
-      } else {
-          console.log("Using cached events.");
+            events = await res.json(); dataCache.events = events;
+        } catch (e) { console.error("Error fetching events:", e); if (eventListEl) eventListEl.innerHTML = `<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดกิจกรรม</div>`; return; }
       }
-
-
-      if (!events || events.length === 0) {
-          eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`;
-          return;
-      }
-
-      // Filter events by allowed levels
+      if (!events || events.length === 0) { eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`; return; }
       const filteredEvents = events.filter(e => !e.allowedLevels || e.allowedLevels.length === 0 || e.allowedLevels.includes(userState.level));
-
-      if (filteredEvents.length === 0) {
-          eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมสำหรับระดับของคุณในขณะนี้</div>`;
-          return;
-      }
-
-      // Render event list
-      eventListEl.innerHTML = filteredEvents.map(e => `
-          <div class="bg-white rounded p-4 flex justify-between items-center shadow-sm">
-              <div>
-                  <div class="font-semibold text-gray-800 text-sm">${e.title}</div>
-                  <div class="text-xs text-gray-500">${e.desc ? e.desc.substring(0, 50) + '...' : 'ไม่มีคำอธิบาย'}</div>
-              </div>
-              <a href="#event-detail?id=${e.id}" class="btn btn-neutral btn-sm">ดูรายละเอียด</a>
-          </div>
-      `).join('');
+      if (filteredEvents.length === 0) { eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมสำหรับระดับของคุณ</div>`; return; }
+      eventListEl.innerHTML = filteredEvents.map(e => `<div class="bg-white rounded p-4 flex justify-between items-center shadow-sm"><div><div class="font-semibold text-gray-800 text-sm">${e.title}</div><div class="text-xs text-gray-500">${e.detail || 'ดูรายละเอียดกิจกรรม'}</div></div><a href="#event-detail?id=${e.id}" class="btn btn-neutral">ดูรายละเอียด</a></div>`).join('');
     }
-
 
     async function initEventDetail() {
       const params = new URLSearchParams(window.location.hash.split('?')[1]);
       const eventId = params.get("id");
-      if (!eventId) {
-          showAlert('ข้อผิดพลาด', 'ไม่พบ ID กิจกรรม');
-          window.location.hash = '#event'; // Redirect back to event list
-          return;
-      }
-
-      const cardSkeleton = document.getElementById('cardSkeleton');
-      const card = document.getElementById('card');
-      const titleEl = document.getElementById('eventDetailTitle');
-      const descEl = document.getElementById('eventDetailDesc');
-      const pointEl = document.getElementById('eventPoint');
-      const joinBtn = document.getElementById('joinBtn');
-
-      // Show skeleton, hide card
-      if(cardSkeleton && card) {
-        cardSkeleton.classList.remove('hidden');
-        card.classList.add('hidden');
-      } else {
-           // Handle case where elements aren't found
-           console.error("Event detail elements not found.");
-           showAlert('ข้อผิดพลาด', 'ไม่สามารถแสดงรายละเอียดกิจกรรมได้');
-            window.location.hash = '#event';
-            return;
-      }
-
+      const cardSkeleton = document.getElementById('cardSkeleton'), card = document.getElementById('card'), titleEl = document.getElementById('eventDetailTitle'), descEl = document.getElementById('eventDetailDesc'), pointEl = document.getElementById('eventPoint'), joinBtn = document.getElementById('joinBtn');
+      cardSkeleton.classList.remove('hidden'); card.classList.add('hidden');
 
       let eventData = dataCache.eventDetails[eventId];
-
-      // Fetch event detail if not in cache
       if (!eventData) {
-        try {
-            console.log(`Fetching event detail for ID: ${eventId}`);
-            const res = await fetch(`${CONFIG.GAS_URL}?action=getEventById&id=${eventId}`);
-            const fetchedData = await res.json();
-            if (fetchedData.error) throw new Error(fetchedData.error);
-            eventData = fetchedData;
-            dataCache.eventDetails[eventId] = eventData; // Cache the fetched data
-        } catch (e) {
-            console.error("Error fetching event detail:", e);
-            // Set a placeholder error state if fetch fails
-            eventData = { error: `ไม่สามารถโหลดรายละเอียดได้: ${e.message}` };
-            dataCache.eventDetails[eventId] = eventData; // Cache the error state too? Depends on desired behavior
+        try { const res = await fetch(`${CONFIG.GAS_URL}?action=getEventById&id=${eventId}`); eventData = await res.json(); if (!eventData.error) dataCache.eventDetails[eventId] = eventData; }
+        catch (e) { console.error("Error fetching event detail:", e); eventData = { error: "ไม่สามารถโหลดรายละเอียดได้" }; }
+      }
+
+      const history = await getFreshOrCachedHistory();
+      if (eventData.error) { titleEl.textContent = "ไม่พบกิจกรรม"; descEl.textContent = eventData.error; joinBtn.disabled = true; }
+      else {
+        titleEl.textContent = eventData.title; pointEl.textContent = `${eventData.point}+`; descEl.textContent = eventData.desc;
+        const hasJoined = history.some(item => item.type === 'event' && item.eventId === eventId);
+        const isLevelAllowed = !eventData.allowedLevels || eventData.allowedLevels.length === 0 || eventData.allowedLevels.includes(userState.level);
+        if (hasJoined) { joinBtn.textContent = "รับพ้อยต์แล้ว"; joinBtn.disabled = true; }
+        else if (!isLevelAllowed) { joinBtn.textContent = `สำหรับระดับ ${eventData.allowedLevels.join(', ')}`; joinBtn.disabled = true; }
+        else {
+          joinBtn.onclick = async () => {
+            if (!(await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`))) return;
+            joinBtn.disabled = true;
+            try {
+              const res = await fetch(CONFIG.GAS_URL, { method: "POST", body: JSON.stringify({ action: "joinEvent", lineId: userState.lineId, eventId, title: eventData.title, point: eventData.point }) });
+              const text = await res.text();
+              showAlert("สถานะ", text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); joinBtn.textContent = "รับพ้อยต์แล้ว"; } });
+            } catch (e) { console.error("Join event failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมได้'); }
+            finally { if (joinBtn.textContent !== "รับพ้อยต์แล้ว") joinBtn.disabled = false; }
+          };
         }
-      } else {
-           console.log(`Using cached event detail for ID: ${eventId}`);
       }
-
-      // Fetch history to check if user already joined
-      const history = await getFreshOrCachedHistory(); // Use the helper function
-
-      // Hide skeleton and show card (even if there's an error to display the message)
-      cardSkeleton.classList.add("hidden");
-      card.classList.remove("hidden");
-
-      if (eventData.error) {
-          // Display error message
-          titleEl.textContent = "ไม่พบกิจกรรม";
-          descEl.textContent = eventData.error;
-          pointEl.textContent = 'N/A';
-          joinBtn.textContent = "ไม่พร้อมใช้งาน";
-          joinBtn.disabled = true;
-      } else {
-          // Display event details
-          titleEl.textContent = eventData.title;
-          pointEl.textContent = `${eventData.point}+`;
-          descEl.textContent = eventData.desc;
-
-          // Check if user has already joined this event
-          const hasJoined = history.some(item => item.type === 'event' && item.eventId === eventId);
-
-          // Check if user's level is allowed
-          const isLevelAllowed = !eventData.allowedLevels || eventData.allowedLevels.length === 0 || eventData.allowedLevels.includes(userState.level);
-
-          if (hasJoined) {
-              joinBtn.textContent = "รับพ้อยต์แล้ว";
-              joinBtn.disabled = true;
-              console.log(`User ${userState.lineId} already joined event ${eventId}.`);
-          } else if (!isLevelAllowed) {
-              joinBtn.textContent = `สำหรับระดับ ${eventData.allowedLevels.join(', ')}`;
-              joinBtn.disabled = true;
-              console.log(`User ${userState.lineId} level ${userState.level} not allowed for event ${eventId}.`);
-          } else {
-              // Enable join button and set click handler
-              joinBtn.textContent = "เข้าร่วม";
-              joinBtn.disabled = false;
-              joinBtn.onclick = async () => {
-                  const confirmed = await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`);
-                  if (!confirmed) return;
-
-                  joinBtn.disabled = true;
-                  joinBtn.textContent = "กำลังเข้าร่วม...";
-
-                  try {
-                      console.log(`Joining event ${eventId}...`);
-                      const res = await fetch(CONFIG.GAS_URL, {
-                          method: "POST",
-                          body: JSON.stringify({ action: "joinEvent", lineId: userState.lineId, eventId: eventData.id, title: eventData.title, point: eventData.point })
-                      });
-                      const text = await res.text();
-
-                      showAlert("สถานะ", text, async () => {
-                          if (text.includes("สำเร็จ")) {
-                              await fetchAndUpdateUserState(); // Update points and mark history stale
-                               // Refresh current view or navigate back
-                               router(); // Best way to re-initialize the view and history
-                          } else {
-                              // If not successful, re-enable the button
-                              joinBtn.disabled = false;
-                              joinBtn.textContent = "เข้าร่วม";
-                          }
-                      });
-                  } catch (e) {
-                      console.error("Join event failed:", e);
-                      showAlert('ข้อผิดพลาด', `ไม่สามารถเข้าร่วมได้: ${e.message}`);
-                      joinBtn.disabled = false;
-                      joinBtn.textContent = "เข้าร่วม";
-                  }
-              };
-          }
-      }
+      cardSkeleton.classList.add("hidden"); card.classList.remove("hidden");
     }
 
-
     async function initProfile() {
-      const dpEl = document.getElementById('profileDisplayPicture');
-      const dnEl = document.getElementById('profileDisplayName');
-      const lineIdEl = document.getElementById('profileLineId');
-      const levelBadgeEl = document.getElementById('profileLevelBadge');
-      const tagBadgeEl = document.getElementById('profileCustomTagBadge');
-      const progressEl = document.getElementById('profileProgressBar');
-      const progressTextEl = document.getElementById('profilePointsToNextLevel');
-      const totalPointsEl = document.getElementById('profileTotalPoints');
-      const nameEl = document.getElementById('profileName');
-      const phoneEl = document.getElementById('profilePhone');
-      const emailEl = document.getElementById('profileEmail');
-      const addressEl = document.getElementById('profileAddress');
-      const noteEl = document.getElementById('profileNote');
-      const editBtn = document.getElementById('editProfileBtn');
-      const formContainer = document.getElementById('profileFormContainer');
-      const editButtonsDiv = document.getElementById('profileEditButtons');
-      const saveBtn = document.getElementById('saveProfileBtn');
-      const cancelBtn = document.getElementById('cancelEditBtn');
+      const dpEl = document.getElementById('profileDisplayPicture'), dnEl = document.getElementById('profileDisplayName'), lineIdEl = document.getElementById('profileLineId'), levelBadgeEl = document.getElementById('profileLevelBadge'), tagBadgeEl = document.getElementById('profileCustomTagBadge'), progressEl = document.getElementById('profileProgressBar'), progressTextEl = document.getElementById('profilePointsToNextLevel'), totalPointsEl = document.getElementById('profileTotalPoints'), nameEl = document.getElementById('profileName'), phoneEl = document.getElementById('profilePhone'), emailEl = document.getElementById('profileEmail'), addressEl = document.getElementById('profileAddress'), noteEl = document.getElementById('profileNote'), editBtn = document.getElementById('editProfileBtn'), formContainer = document.getElementById('profileFormContainer'), editButtonsDiv = document.getElementById('profileEditButtons'), saveBtn = document.getElementById('saveProfileBtn'), cancelBtn = document.getElementById('cancelEditBtn');
+      const editableInputs = [nameEl, phoneEl, emailEl, addressEl, noteEl]; let initialData = {};
 
-      // Array of editable input elements
-      const editableInputs = [nameEl, phoneEl, emailEl, addressEl, noteEl];
-      let initialData = {}; // To store original values when editing starts
-
-      // Display basic LIFF profile info
-      dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/96';
-      dnEl.textContent = userState.profile.displayName || 'ผู้ใช้ LINE';
+      dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/96'; dnEl.textContent = userState.profile.displayName || 'ผู้ใช้ LINE';
       totalPointsEl.textContent = userState.points.toLocaleString();
-
-      // Calculate and display level/progress
       const { level, progressValue, pointsToNext, nextLevelName } = calculateLevelAndProgress(userState.points);
       setBadgeContent(levelBadgeEl, LEVEL_STYLES[userState.level]?.text || userState.level, `badge badge-lg ${LEVEL_STYLES[userState.level]?.class || ''}`);
       const primaryTag = (userState.customTag.split(',')[0] || '').trim().toLowerCase();
@@ -725,172 +487,76 @@
       progressEl.value = progressValue;
       progressTextEl.textContent = nextLevelName ? `อีก ${pointsToNext.toLocaleString()} พ้อยต์สู่ ${nextLevelName}` : `คุณอยู่ระดับสูงสุดแล้ว!`;
 
-
-      // Fetch full user data if not already cached
       let uData = dataCache.userProfileFull;
-      if (!uData) {
-          try {
-              console.log("Fetching full user profile data...");
-              uData = await fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`).then(r => r.json());
-              if (uData.error) throw new Error(uData.error);
-              dataCache.userProfileFull = uData; // Cache the full data
-          } catch (e) {
-              console.error("Error fetching full user profile:", e);
-              uData = { error: `โหลดข้อมูลล้มเหลว: ${e.message}` }; // Set error state
-          }
-      } else {
-           console.log("Using cached full user profile data.");
-      }
+      if (!uData) { try { uData = await fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`).then(r => r.json()); if (!uData.error) dataCache.userProfileFull = uData; } catch (e) { uData = { error: 'โหลดข้อมูลล้มเหลว' }; } }
 
+      if (uData.error) { showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้'); return; }
 
-      if (uData.error) {
-          showAlert('ข้อผิดพลาด', `ไม่สามารถโหลดข้อมูลโปรไฟล์ได้: ${uData.error}`);
-           // Hide form or show error state in form area
-           if (formContainer) formContainer.innerHTML = `<div class="text-center text-red-500 py-4">${uData.error}</div>`;
-           if (editBtn) editBtn.classList.add('hidden'); // Hide edit button if data loading failed
-           return; // Exit if data failed to load
-      }
+      initialData = { name: uData.name || '', phone: uData.phone || '', email: uData.email || '', address: uData.address || '', note: uData.note || '' };
+      lineIdEl.value = userState.lineId; nameEl.value = initialData.name; phoneEl.value = initialData.phone; emailEl.value = initialData.email; addressEl.value = initialData.address; noteEl.value = initialData.note;
 
-      // Populate form fields with fetched data
-      initialData = {
-          name: uData.name || '',
-          phone: uData.phone || '',
-          email: uData.email || '',
-          address: uData.address || '',
-          note: uData.note || ''
-      };
-      lineIdEl.value = userState.lineId; // Line ID is not editable
-      nameEl.value = initialData.name;
-      phoneEl.value = initialData.phone;
-      emailEl.value = initialData.email;
-      addressEl.value = initialData.address;
-      noteEl.value = initialData.note;
-
-      // Function to toggle form edit mode
       const toggleEditMode = (enable) => {
-        editableInputs.forEach(input => {
-            input.readOnly = !enable;
-            input.classList.toggle('input-neutral', enable);
-            input.classList.toggle('cursor-not-allowed', !enable);
-            input.classList.toggle('text-gray-500', !enable);
-        });
-        formContainer.classList.toggle('hidden', !enable);
-        editBtn.classList.toggle('hidden', enable);
-        editButtonsDiv.classList.toggle('hidden', !enable);
+        editableInputs.forEach(input => { input.readOnly = !enable; input.classList.toggle('input-neutral', enable); input.classList.toggle('cursor-not-allowed', !enable); input.classList.toggle('text-gray-500', !enable); });
+        formContainer.classList.toggle('hidden', !enable); editBtn.classList.toggle('hidden', enable); editButtonsDiv.classList.toggle('hidden', !enable);
       };
 
-      // Set up event listeners for edit/cancel/save buttons
-      if (editBtn) editBtn.onclick = () => toggleEditMode(true);
-      if (cancelBtn) cancelBtn.onclick = () => {
-          // Reset values to initial data
-          Object.keys(initialData).forEach(key => {
-              const inputEl = document.getElementById(`profile${key.charAt(0).toUpperCase() + key.slice(1)}`);
-              if (inputEl) inputEl.value = initialData[key];
-          });
-          toggleEditMode(false);
-      };
-      if (saveBtn) saveBtn.onclick = async () => {
-        // Disable buttons during save
-        saveBtn.disabled = true;
-        if(cancelBtn) cancelBtn.disabled = true;
-        saveBtn.textContent = 'กำลังบันทึก...';
-
+      editBtn.onclick = () => toggleEditMode(true);
+      cancelBtn.onclick = () => { Object.keys(initialData).forEach(k => document.getElementById(`profile${k.charAt(0).toUpperCase() + k.slice(1)}`).value = initialData[k]); toggleEditMode(false); };
+      saveBtn.onclick = async () => {
+        saveBtn.disabled = true; cancelBtn.disabled = true;
         try {
-          const body = {
-              action: 'updateProfile',
-              lineId: userState.lineId,
-              name: nameEl.value.trim(),
-              phone: phoneEl.value.trim(),
-              email: emailEl.value.trim(),
-              address: addressEl.value.trim(),
-              note: noteEl.value.trim()
-          };
-
-          console.log("Saving profile...", body);
+          const body = { action: 'updateProfile', lineId: userState.lineId, name: nameEl.value, phone: phoneEl.value, email: emailEl.value, address: addressEl.value, note: noteEl.value };
           const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify(body) });
-          const text = await res.text(); // Assuming GAS returns plain text status
-
-          showAlert("สถานะ", text, async () => {
-              if (text.includes("สำเร็จ")) {
-                  // Update user state and full profile cache after successful save
-                  await fetchAndUpdateUserState();
-                  // Update initialData with new saved values so cancel works correctly
-                  initialData = { name: nameEl.value.trim(), phone: phoneEl.value.trim(), email: emailEl.value.trim(), address: addressEl.value.trim(), note: noteEl.value.trim() };
-                  toggleEditMode(false); // Exit edit mode
-              }
-               // Re-enable buttons regardless of success for user to retry if needed
-              saveBtn.disabled = false;
-              if(cancelBtn) cancelBtn.disabled = false;
-               saveBtn.textContent = 'บันทึกข้อมูล';
-          });
-        } catch (e) {
-          console.error("Update profile failed:", e);
-          showAlert('ข้อผิดพลาด', `ไม่สามารถอัปเดตได้: ${e.message}`);
-           // Re-enable buttons on error
-          saveBtn.disabled = false;
-          if(cancelBtn) cancelBtn.disabled = false;
-           saveBtn.textContent = 'บันทึกข้อมูล';
-        }
+          const text = await res.text();
+          showAlert("สถานะ", text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); toggleEditMode(false); } });
+        } catch (e) { console.error("Update profile failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถอัปเดตได้'); } finally { saveBtn.disabled = false; cancelBtn.disabled = false; }
       };
-
-      // Initialize in read-only mode
       toggleEditMode(false);
-      if (formContainer) formContainer.classList.remove('hidden'); // Ensure form container is visible initially
     }
-
 
     async function initRedeem() {
         const redeemListEl = document.getElementById('redeemList');
-        if (redeemListEl) redeemListEl.innerHTML = generateCardSkeleton(4); // Show skeleton
+        if (redeemListEl) redeemListEl.innerHTML = generateCardSkeleton(4);
 
-        let items = dataCache.redeemItems;
-        if (!items || items.length === 0) {
+        let items = dataCache.redeemItems || [];
+        if (!dataCache.redeemItems || dataCache.redeemItems.length === 0) {
             try {
-                console.log("Fetching redeem items...");
                 const res = await fetch(`${CONFIG.GAS_URL}?action=getItems`);
                 items = await res.json();
                 if (items.error) throw new Error(items.error);
-                dataCache.redeemItems = items; // Cache items
+                dataCache.redeemItems = items;
             } catch (e) {
                 console.error("Error fetching items:", e);
-                if (redeemListEl) redeemListEl.innerHTML = `<li class="col-span-2 text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดของรางวัล: ${e.message}</li>`;
-                return; // Exit if fetch fails
+                if (redeemListEl) redeemListEl.innerHTML = `<li class="col-span-2 text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดของรางวัล</li>`;
+                return;
             }
-        } else {
-            console.log("Using cached redeem items.");
         }
 
         if (!items || items.length === 0) {
-            redeemListEl.innerHTML = `<li class="col-span-2 text-center text-gray-400 py-4">ไม่มีของรางวัลให้แลกในขณะนี้</li>`;
+            redeemListEl.innerHTML = `<li class="col-span-2 text-center text-gray-400 py-4">ไม่มีของรางวัลให้แลก</li>`;
             return;
         }
 
-        // Render items
         redeemListEl.innerHTML = items.map(item => `
             <li class="bg-white p-4 rounded shadow-sm text-center flex flex-col justify-between">
                 <div>
-                  <img src="${item.image || 'https://via.placeholder.com/100x80?text=No+Image'}" alt="${item.name}" class="h-24 w-full object-cover mx-auto mb-2 rounded-md">
-                  <div class="font-bold mb-1 text-gray-800">${item.name}</div>
-                  <div class="text-sm text-gray-600 mb-2">${item.point.toLocaleString()} พ้อยต์</div>
+                  <img src="${item.image}" alt="${item.name}" class="h-24 w-full object-cover mx-auto mb-2 rounded-md">
+                  <div class="font-bold mb-1">${item.name}</div>
+                  <div class="text-sm text-gray-600 mb-2">${item.point} พ้อยต์</div>
                 </div>
                 <button
                     data-item-id="${item.id}"
                     data-item-name="${item.name}"
                     data-item-point="${item.point}"
                     data-item-type="${item.type}"
-                    class="redeem-btn btn btn-neutral btn-sm mt-2"
-                    ${userState.points < item.point ? 'disabled' : ''}> <!-- Disable button if not enough points -->
-                    ${userState.points < item.point ? 'พ้อยต์ไม่พอ' : 'แลกเลย'}
+                    class="redeem-btn btn btn-neutral btn-sm mt-2">
+                    แลกเลย
                 </button>
             </li>
         `).join('');
 
-        // Add event listeners after rendering
         document.querySelectorAll('.redeem-btn').forEach(btn => {
-            // Only add listener if button is not disabled (i.e., user has enough points)
-            if (!btn.disabled) {
-                 btn.addEventListener('click', handleRedeemClick);
-            }
+            btn.addEventListener('click', handleRedeemClick);
         });
     }
 
@@ -899,58 +565,51 @@
         const { itemId, itemName, itemPoint, itemType } = btn.dataset;
         const point = parseInt(itemPoint, 10);
 
-        // This check should technically not be needed if button is disabled correctly, but good fallback
         if (userState.points < point) {
-            showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points.toLocaleString()}) ไม่พอสำหรับแลก "${itemName}" ซึ่งใช้ ${point.toLocaleString()} พ้อยต์`);
+            showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points}) ไม่พอสำหรับแลก "${itemName}" ซึ่งใช้ ${point} พ้อยต์`);
             return;
         }
 
         if (itemType === 'physical') {
-            // Show shipping form for physical items
             showShippingForm({ itemId, itemName, point });
         } else {
-            // Direct redemption for digital items
-            const confirmed = await showConfirm(`ยืนยันการแลก`, `แลก "${itemName}" ด้วย ${point.toLocaleString()} พ้อยต์ ใช่หรือไม่?`);
+            const confirmed = await showConfirm(`ยืนยันการแลก`, `แลก "${itemName}" ด้วย ${point} พ้อยต์ ใช่หรือไม่?`);
             if (!confirmed) return;
             await executeRedemption(btn, { itemId, point });
         }
     }
 
-     // Function to show the shipping form dialog
     function showShippingForm(item) {
-        shippingFormTitle.textContent = `ข้อมูลจัดส่งสำหรับ: ${item.itemName}`;
+        const dialog = document.getElementById('shippingFormDialog');
+        const titleEl = document.getElementById('shippingFormTitle');
+        const nameInput = document.getElementById('shippingName');
+        const phoneInput = document.getElementById('shippingPhone');
+        const addressInput = document.getElementById('shippingAddress');
+        const confirmBtn = document.getElementById('shippingFormConfirmBtn');
+        const cancelBtn = document.getElementById('shippingFormCancelBtn');
 
-        // Pre-fill form with user's profile info if available
+        titleEl.textContent = `ข้อมูลจัดส่งสำหรับ: ${item.itemName}`;
+
         const profile = dataCache.userProfileFull || {};
-        shippingNameInput.value = profile.name || '';
-        shippingPhoneInput.value = profile.phone || '';
-        shippingAddressInput.value = profile.address || '';
+        nameInput.value = profile.name || '';
+        phoneInput.value = profile.phone || '';
+        addressInput.value = profile.address || '';
 
-        // Remove previous listeners to avoid duplicates
-        shippingFormConfirmBtn.onclick = null;
-        shippingFormCancelBtn.onclick = null;
+        dialog.showModal();
 
-        // Show the dialog
-        shippingFormDialog.showModal();
-
-        // Set up new listeners
-        shippingFormConfirmBtn.onclick = async () => {
-            const shippingName = shippingNameInput.value.trim();
-            const shippingPhone = shippingPhoneInput.value.trim();
-            const shippingAddress = shippingAddressInput.value.trim();
+        const handleConfirm = async () => {
+            const shippingName = nameInput.value.trim();
+            const shippingPhone = phoneInput.value.trim();
+            const shippingAddress = addressInput.value.trim();
 
             if (!shippingName || !shippingPhone || !shippingAddress) {
                 showAlert("ข้อมูลไม่ครบ", "กรุณากรอกชื่อ, เบอร์โทร, และที่อยู่ให้ครบถ้วน");
                 return;
             }
 
-            // Close the shipping form dialog
-            shippingFormDialog.close();
-
-            // Find the original redeem button element by item ID
+            dialog.close();
             const originalButton = document.querySelector(`.redeem-btn[data-item-id="${item.itemId}"]`);
 
-            // Proceed with redemption, including shipping info
             await executeRedemption(originalButton, {
                 itemId: item.itemId,
                 point: item.point,
@@ -958,115 +617,59 @@
             });
         };
 
-        shippingFormCancelBtn.onclick = () => {
-            shippingFormDialog.close();
-        };
+        confirmBtn.onclick = handleConfirm;
+        cancelBtn.onclick = () => dialog.close();
     }
 
-
     async function executeRedemption(buttonElement, payload) {
-        if (!buttonElement) {
-            console.error("Redeem button element not found.");
-            showAlert('ข้อผิดพลาด', 'ไม่สามารถทำรายการแลกของได้ (ปุ่มไม่พร้อมใช้งาน)');
-            return;
-        }
-
         buttonElement.disabled = true;
         buttonElement.textContent = "กำลังแลก...";
 
         try {
-            console.log("Executing redemption...", payload);
             const body = {
                 action: 'redeemItem',
                 lineId: userState.lineId,
                 itemId: payload.itemId,
                 point: payload.point,
-                ...(payload.shippingInfo && { shippingInfo: payload.shippingInfo }) // Include shippingInfo if present
+                ...(payload.shippingInfo && { shippingInfo: payload.shippingInfo })
             };
 
             const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify(body) });
-            const text = await res.text(); // Assuming GAS returns plain text status
+            const text = await res.text();
 
             showAlert("สถานะการแลก", text, async () => {
-                if (text.includes("สำเร็จ") || text.includes("เข้าคลังแล้ว")) {
-                    // Update user state (points will change)
+                if (text.includes("สำเร็จ")) {
                     await fetchAndUpdateUserState();
-                    // Mark the item as 'แลกแล้ว' on the button
                     buttonElement.textContent = "แลกแล้ว";
-                     // Optionally, disable the button permanently or remove it
-                     buttonElement.disabled = true;
-                     // Refresh the redeem list to show updated availability/state (optional)
-                     initRedeem(); // Re-initialize the redeem view
                 } else {
-                    // If not successful, re-enable the button
                     buttonElement.disabled = false;
                     buttonElement.textContent = "แลกเลย";
-                    // Re-render the redeem list to reset state
-                    initRedeem();
                 }
             });
         } catch (e) {
             console.error("Redemption failed:", e);
-            showAlert('ข้อผิดพลาด', `ไม่สามารถทำรายการแลกของได้: ${e.message}`);
-            // Re-enable button on error
+            showAlert('ข้อผิดพลาด', 'ไม่สามารถทำรายการแลกของได้ กรุณาลองใหม่');
             buttonElement.disabled = false;
             buttonElement.textContent = "แลกเลย";
-             // Re-render the redeem list to reset state
-             initRedeem();
         }
     }
 
     async function initTransfer() {
       const toEl = document.getElementById('transferTo'), amountEl = document.getElementById('transferAmount'), transferBtn = document.getElementById('transferBtn');
-
-        if (!toEl || !amountEl || !transferBtn) {
-             console.error("Transfer elements not found.");
-             return;
-        }
-
       transferBtn.onclick = async () => {
-          const to = toEl.value.trim();
-          const amount = parseInt(amountEl.value, 10);
-
+          const to = toEl.value.trim(), amount = parseInt(amountEl.value, 10);
           if (!to) { showAlert("ข้อผิดพลาด", "กรุณากรอก LINE ID / เบอร์โทรปลายทาง"); return; }
-          if (isNaN(amount) || amount <= 0) { showAlert("ข้อผิดพลาด", "กรุณากรอกจำนวนพ้อยต์ให้ถูกต้อง (ต้องเป็นตัวเลขบวก)"); return; }
-          if (to === userState.lineId) { showAlert("ข้อผิดพลาด", "ไม่สามารถโอนให้ตัวเองได้"); return; }
-          if (userState.points < amount) { showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points.toLocaleString()}) ไม่พอสำหรับโอน ${amount.toLocaleString()} พ้อยต์`); return; }
-
-          const confirmed = await showConfirm("ยืนยันการโอน", `คุณต้องการโอน ${amount.toLocaleString()} พ้อยต์ให้ "${to}" ใช่หรือไม่?`);
-          if (!confirmed) return;
-
+          if (isNaN(amount) || amount <= 0) { showAlert("ข้อผิดพลาด", "กรอกจำนวนพ้อยต์ให้ถูกต้อง"); return; }
+          if (to === userState.lineId) { showAlert("ข้อผิดพลาด", "ไม่สามารถโอนให้ตัวเอง"); return; }
+          if (userState.points < amount) { showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points}) ไม่พอสำหรับโอน`); return; }
+          if (!(await showConfirm("ยืนยัน", `โอน ${amount} พ้อยต์ให้ ${to}?`))) return;
           transferBtn.disabled = true;
-          transferBtn.textContent = 'กำลังโอน...';
-
           try {
-              console.log(`Attempting to transfer ${amount} points from ${userState.lineId} to ${to}`);
-              const res = await fetch(CONFIG.GAS_URL, {
-                  method: 'POST',
-                  body: JSON.stringify({ action: 'transferPoints', from: userState.lineId, to: to, amount: amount })
-              });
-              const text = await res.text(); // Assuming GAS returns plain text status
-
-              showAlert("สถานะ", text, async () => {
-                  if (text.includes("สำเร็จ") || text.includes("เรียบร้อย")) {
-                      await fetchAndUpdateUserState(); // Update points and mark history stale
-                      // Clear input fields on success
-                      toEl.value = '';
-                      amountEl.value = '';
-                       // Refresh dashboard to show updated points and history
-                       router(); // Navigate back to dashboard
-                  }
-                   // Re-enable button regardless of success for user to retry if needed
-                  transferBtn.disabled = false;
-                  transferBtn.textContent = 'โอนพ้อย';
-              });
-          } catch (e) {
-              console.error("Transfer failed:", e);
-              showAlert("ข้อผิดพลาด", `ไม่สามารถโอนได้: ${e.message}`);
-              // Re-enable button on error
-              transferBtn.disabled = false;
-              transferBtn.textContent = 'โอนพ้อย';
-          }
+              const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'transferPoints', from: userState.lineId, to, amount }) });
+              const txt = await res.text();
+              showAlert("สถานะ", txt, async () => { if (/สำเร็จ|เรียบร้อย/.test(txt)) { await fetchAndUpdateUserState(); toEl.value = ''; amountEl.value = ''; } });
+          } catch (e) { showAlert("ข้อผิดพลาด", "ไม่สามารถโอนได้"); }
+          finally { transferBtn.disabled = false; }
       };
     }
 
@@ -1076,363 +679,267 @@
       const enterBtn = document.getElementById('enterBtn');
       const manualInput = document.getElementById('manualCode');
 
-      if (!scanContainer || !scanBtn || !enterBtn || !manualInput) {
-           console.error("Addpoint elements not found.");
-           return;
-      }
-
-      // Function to process a given code (from scan or manual input)
       async function processCode(code) {
-          if (!code) {
-              showAlert('ข้อมูลไม่ครบ', 'กรุณาระบุโค้ด');
+          if (!code) return;
+          const history = await getFreshOrCachedHistory();
+          if (history.some(item => (item.type === 'code' || item.type === 'event') && item.eventId === code)) {
+              showAlert('รับแล้ว', 'คุณเคยรับโค้ดนี้ไปแล้ว');
               return;
           }
-          // Prevent duplicate processing if user tries same code again quickly
-           scanBtn.disabled = true;
-           enterBtn.disabled = true;
-           manualInput.disabled = true;
-
           try {
-               // Check history first if code was already used (less API calls if cached history is fresh)
-               const history = await getFreshOrCachedHistory();
-               // Check if item.eventId or item.id matches the code
-               const alreadyUsed = history.some(item => {
-                   const relatedId = item.eventId || item.id; // history uses eventId, maybe code history uses id? Check your history structure.
-                   return (item.type === 'code' || item.type === 'event') && String(relatedId) === String(code);
-               });
-
-               if (alreadyUsed) {
-                   showAlert('รับแล้ว', 'คุณเคยรับโค้ดนี้ไปแล้ว');
-                   return; // Stop processing
-               }
-
-              console.log(`Processing code: ${code}`);
-              // Fetch code details from GAS
               const res = await fetch(`${CONFIG.GAS_URL}?action=getCodeById&id=${code}`);
               const data = await res.json();
-
               if (data.error) {
                   showAlert('ไม่พบโค้ด', data.error);
-                  return; // Stop processing
+                  return;
               }
-
-              // If code is found and valid, display details and confirmation button
               scanContainer.innerHTML = `
                 <div class="bg-white p-6 rounded shadow mb-4 text-center">
-                  <div class="font-bold text-lg mb-2 text-gray-800">${data.title}</div>
-                  <div class="text-sm text-gray-700 mb-4">${data.desc || 'ไม่มีคำอธิบาย'}</div>
-                  <div class="font-bold text-yellow-600 mb-4 text-xl">คุณจะได้รับ: ${data.point.toLocaleString()} พ้อยต์</div>
+                  <div class="font-bold text-lg mb-2">${data.title}</div>
+                  <div class="text-sm text-gray-700 mb-4">${data.desc}</div>
+                  <div class="font-bold text-yellow-600 mb-4 text-xl">คุณจะได้รับ: ${data.point} พ้อยต์</div>
                   <button id="acceptBtn" class="btn btn-neutral w-full">ยืนยันการรับพ้อยต์</button>
                 </div>`;
-
-              // Add event listener to the new accept button
-              const acceptBtn = document.getElementById('acceptBtn');
-              if (acceptBtn) {
-                 acceptBtn.addEventListener('click', () => joinCode(data));
-              } else {
-                   console.error("Accept button not found after rendering code details.");
-                   showAlert('ข้อผิดพลาด', 'ไม่สามารถแสดงปุ่มยืนยันได้');
-              }
-
-
+              document.getElementById('acceptBtn').addEventListener('click', () => joinCode(data));
           } catch (e) {
               console.error("Error processing code:", e);
-              showAlert('ข้อผิดพลาด', `ไม่สามารถประมวลผลโค้ดได้: ${e.message}`);
-          } finally {
-              // Re-enable input elements regardless of success (except if replaced by acceptBtn)
-               if (document.getElementById('manualCode')) manualInput.disabled = false;
-               if (document.getElementById('scanBtn')) scanBtn.disabled = false;
-               if (document.getElementById('enterBtn')) enterBtn.disabled = false;
+              showAlert('ข้อผิดพลาด', 'ไม่สามารถประมวลผลโค้ดได้ กรุณาลองใหม่');
           }
       }
 
-        // Function to join the code (called after confirmation)
       async function joinCode(codeData) {
           const { id: scannedCode, title: codeTitle, point: codePoint } = codeData;
-
-          const confirmed = await showConfirm('ยืนยันการรับพ้อยต์', `คุณต้องการรับพ้อยต์จาก "${codeTitle}" จำนวน ${codePoint.toLocaleString()} พ้อยต์ใช่หรือไม่?`);
-          if (!confirmed) {
-              // If cancelled, re-render the initial addpoint view
-              router(); // Navigate back to #addpoint
-              return;
-          }
-
+          if (!(await showConfirm('ยืนยัน', `คุณต้องการรับพ้อยต์จาก "${codeTitle}" จำนวน ${codePoint} พ้อยต์ใช่หรือไม่?`))) return;
           const btn = document.getElementById("acceptBtn");
-          if (!btn) {
-              console.error("Accept button missing during joinCode.");
-              showAlert('ข้อผิดพลาด', 'ไม่สามารถดำเนินการได้ (ปุ่มไม่พร้อมใช้งาน)');
-              router(); // Navigate back to #addpoint
-              return;
-          }
-
+          if (!btn) return;
           btn.disabled = true;
           btn.textContent = "กำลังดำเนินการ...";
-
           let success = false;
           try {
-              console.log(`Joining code ${scannedCode}...`);
               const res = await fetch(CONFIG.GAS_URL, {
                   method: "POST",
                   body: JSON.stringify({ action: "joinCode", lineId: userState.lineId, id: scannedCode, title: codeTitle, point: codePoint })
               });
-              const text = await res.text(); // Assuming GAS returns plain text status
-
+              const text = await res.text();
               if (text.includes("สำเร็จ")) {
                   success = true;
                   btn.textContent = "รับพ้อยต์แล้ว";
                   showAlert("สำเร็จ", text, async () => {
-                      await fetchAndUpdateUserState(); // Update points and mark history stale
-                      window.location.hash = '#dashboard'; // Navigate to dashboard after success
+                      await fetchAndUpdateUserState();
+                      window.location.hash = '#dashboard';
                   });
               } else {
-                  // Handle error message from GAS
-                  showAlert("เกิดข้อผิดพลาด", text, () => {
-                       window.location.hash = '#addpoint'; // Navigate back to #addpoint on error
-                  });
+                  showAlert("เกิดข้อผิดพลาด", text);
+                   window.location.hash = '#addpoint';
               }
           } catch (e) {
               console.error("Join code failed:", e);
-              showAlert('ข้อผิดพลาด', `ไม่สามารถเชื่อมต่อเพื่อรับพ้อยต์ได้: ${e.message}`, () => {
-                   window.location.hash = '#addpoint'; // Navigate back to #addpoint on error
-              });
+              showAlert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเพื่อรับพ้อยต์ได้');
           } finally {
-               // No need to re-enable the button if navigating away or successful
-               // If navigation failed, router() would handle it.
+              if (!success && btn) {
+                  btn.disabled = false;
+                  btn.textContent = "ยืนยันการรับพ้อยต์";
+              }
           }
       }
 
-
-      // Set up initial button listeners
       scanBtn.onclick = async () => {
           try {
-              console.log("Starting LIFF scanCodeV2...");
               const result = await liff.scanCodeV2();
               if (result && result.value) {
-                  console.log("Scan successful, value:", result.value);
                   await processCode(result.value);
-              } else {
-                   console.log("Scan returned no value.");
               }
           } catch (e) {
-              if (e.code !== 'USER_CANCEL') { // Ignore user cancelling scan
+              if (e.code !== 'USER_CANCEL') {
                  console.error("Scan failed:", e);
                  showAlert('สแกนไม่สำเร็จ', e.message || 'กรุณาลองใหม่อีกครั้ง');
-              } else {
-                   console.log("LIFF scan cancelled by user.");
               }
-              // Re-enable inputs if scan fails/cancelled without showing code details
-              manualInput.disabled = false;
-              scanBtn.disabled = false;
-              enterBtn.disabled = false;
           }
       };
 
       enterBtn.onclick = () => {
         const codeValue = manualInput.value.trim();
-        console.log("Manual code entered:", codeValue);
-        processCode(codeValue); // Process the manually entered code
+        if (codeValue) {
+          processCode(codeValue);
+        } else {
+          showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกโค้ด');
+        }
       };
     }
 
     // --- WAREHOUSE ---
-
-    // Function to fetch and render warehouse items
     async function initWarehouse() {
-      const warehouseListEl = document.getElementById('warehouseList');
-      if (warehouseListEl) warehouseListEl.innerHTML = generateListSkeleton(3); // Show skeleton
+      // Clear any active polling interval before re-initializing the warehouse view
+      if (warehousePollingInterval) {
+         clearInterval(warehousePollingInterval);
+         warehousePollingInterval = null;
+         // Ensure the dialog is closed if it was open
+          if (qrDialog && qrDialog.open) {
+             qrDialog.close();
+         }
+         console.log("Polling stopped due to initWarehouse call.");
+      }
 
+      const warehouseListEl = document.getElementById('warehouseList');
+      if (warehouseListEl) warehouseListEl.innerHTML = generateListSkeleton(3);
       try {
-        console.log("Fetching warehouse items for user:", userState.lineId);
         const res = await fetch(`${CONFIG.GAS_URL}?action=getWarehouseItems&lineId=${userState.lineId}`);
         const ownedItems = await res.json();
-
-        if (!ownedItems || ownedItems.error) {
-             const errorMessage = ownedItems?.error || 'Failed to load data';
-             console.error("Error fetching warehouse items:", errorMessage);
-             if (warehouseListEl) warehouseListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดคลัง: ${errorMessage}</li>`;
-             return;
-        }
+        if (!ownedItems || ownedItems.error) throw new Error(ownedItems.error || 'Failed to load data');
 
         if (ownedItems.length === 0) {
           warehouseListEl.innerHTML = '<li class="text-center text-gray-400 py-4">ยังไม่มีของรางวัลในคลังของคุณ</li>';
           return;
         }
 
-        // Render the list of items
         warehouseListEl.innerHTML = ownedItems.map(item => {
           const isClaimed = item.status === 'claimed';
-          const statusBadgeClass = isClaimed ? 'badge-success' : 'badge-warning';
-          const statusText = isClaimed ? 'รับแล้ว' : 'รอรับ';
-
+          const statusBadge = `<span class="badge ${isClaimed ? 'badge-success' : 'badge-warning'}">${isClaimed ? 'รับแล้ว' : 'รอรับ'}</span>`;
+          // ใช้ uniqueId สำหรับ QR และ Polling
           const actionArea = isClaimed
             ? `<div class="text-xs text-gray-500 mt-1">วันที่รับ: ${item.claimDate || '-'}</div>`
-            : `<button class="btn btn-neutral btn-sm claim-btn"
-                        data-warehouse-id="${item.warehouseId}"
-                        data-item-name="${item.itemName}"
-                        data-unique-id="${item.uniqueId}"
-                        data-item-status="${item.status}"
-                        >รับของ</button>`; // Added data-item-status
+            : `<button class="btn btn-neutral btn-sm claim-btn" data-unique-id="${item.uniqueId}" data-item-name="${item.itemName}">รับของ</button>`; // ส่ง unique-id แทน warehouse-id
 
           return `<li class="bg-white rounded p-4 shadow-sm flex justify-between items-center">
-                    <div>
-                        <div class="font-semibold text-gray-800 text-sm">${item.itemName}</div>
-                        <div class="text-xs text-gray-500 mt-1">วันที่แลก: ${item.redeemDate}</div>
-                        <span class="badge ${statusBadgeClass}">${statusText}</span>
-                    </div>
-                    <div class="text-right">${actionArea}</div>
-                  </li>`;
+                    <div><div class="font-semibold text-gray-800 text-sm">${item.itemName}</div><div class="text-xs text-gray-500 mt-1">วันที่แลก: ${item.redeemDate}</div>${statusBadge}</div>
+                    <div class="text-right">${actionArea}</div></li>`;
         }).join('');
 
-        // Attach event listeners to 'claim-btn' elements
-        document.querySelectorAll('.claim-btn').forEach(button => {
-            button.addEventListener('click', handleClaimButtonClick);
-        });
+        document.querySelectorAll('.claim-btn').forEach(button => button.addEventListener('click', handleClaimButtonClick));
 
       } catch (e) {
         console.error("Error in initWarehouse:", e);
-        showAlert("เกิดข้อผิดพลาด", `ไม่สามารถโหลดคลังของรางวัลได้: ${e.message}`);
+        showAlert("เกิดข้อผิดพลาด", "ไม่สามารถโหลดคลังของรางวัลได้");
         if (warehouseListEl) warehouseListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดคลัง</li>`;
       }
     }
 
-    // Function to check item status via polling
-    async function checkClaimStatus(warehouseId, itemName) {
-        console.log(`Polling status for warehouseId: ${warehouseId}...`);
-        try {
-            // Call GAS endpoint to get the item status
-            const res = await fetch(`${CONFIG.GAS_URL}?action=getWarehouseItemStatus&warehouseId=${warehouseId}`);
-            const data = await res.json();
-
-            if (data && data.status === 'claimed') {
-                console.log(`Item ${warehouseId} has been claimed!`);
-                // Stop polling
-                if (pollingInterval) {
-                    clearInterval(pollingInterval);
-                    pollingInterval = null;
-                    console.log('Polling stopped.');
-                }
-
-                // Close the QR dialog
-                qrDialog.close();
-
-                // Notify the user and refresh the warehouse list
-                showAlert("รับสินค้าสำเร็จ", `"${itemName}" ถูกบันทึกเข้าระบบเรียบร้อยแล้ว`, () => {
-                    // Re-initialize the warehouse view to show updated status
-                    initWarehouse();
-                });
-
-            } else if (data && data.status === 'not_found') {
-                 console.warn(`Warehouse item ${warehouseId} not found during polling.`);
-                 // Stop polling if item is not found (e.g., deleted?)
-                  if (pollingInterval) {
-                    clearInterval(pollingInterval);
-                    pollingInterval = null;
-                    console.log('Polling stopped due to item not found.');
-                }
-                qrDialog.close();
-                showAlert("ข้อผิดพลาด", `ไม่พบรายการสินค้าในคลัง (ID: ${warehouseId})`, () => {
-                    initWarehouse(); // Refresh in case list needs update
-                });
-
-            } else if (data && data.error) {
-                console.error(`Error status from GAS during polling for ${warehouseId}:`, data.error);
-                 // Optionally stop polling on severe errors
-                // if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
-                // showAlert("ข้อผิดพลาดในการตรวจสอบ", `ไม่สามารถตรวจสอบสถานะได้: ${data.error}`);
-                 // Decide if polling should stop on error or retry
-            }
-            // If status is still 'pending_claim' or other, polling continues
-
-        } catch (err) {
-            console.error('Polling failed due to network error:', err);
-            // Stop polling if there's a network error
-            if (pollingInterval) {
-                clearInterval(pollingInterval);
-                pollingInterval = null;
-                console.log('Polling stopped due to network error.');
-            }
-            // Optionally notify user of polling failure, but avoid spamming alerts
-            // showAlert('การตรวจสอบล้มเหลว', 'ไม่สามารถเชื่อมต่อเพื่อตรวจสอบสถานะได้');
-        }
-    }
-
-
-    // Function handling the click on the 'รับของ' button
+    // แก้ไขฟังก์ชัน handleClaimButtonClick
     function handleClaimButtonClick(event) {
-        // Ensure any previous polling is stopped
-        if (pollingInterval) {
-            clearInterval(pollingInterval);
-            pollingInterval = null;
-            console.log('Cleared existing polling interval.');
+        // Clear any existing interval before starting a new one
+        if (warehousePollingInterval) {
+            clearInterval(warehousePollingInterval);
+            warehousePollingInterval = null;
         }
 
         const btn = event.currentTarget;
-        const { warehouseId, itemName, uniqueId, itemStatus } = btn.dataset;
+        // ดึง uniqueId จาก dataset แทน warehouseId
+        const { uniqueId, itemName } = btn.dataset;
 
-        // Optional: Check status again just in case UI is stale (less critical with polling)
-        if (itemStatus === 'claimed') {
-            showAlert('รับแล้ว', `รายการ "${itemName}" นี้ถูกรับไปแล้ว`);
-            // Re-initialize warehouse to refresh UI if it was stale
-             initWarehouse();
-            return;
-        }
+        // อ้างอิง UI Elements ของ Modal QR (ประกาศไว้ด้านบน)
+        // const qrDialog = document.getElementById('qrDialog'), ...
 
+        // ตั้งค่า Modal เริ่มต้น
+        qrConfirmBtn.classList.add('hidden'); // ปุ่มยืนยันยังคงซ่อนอยู่
+        qrDialogTitle.textContent = `สแกนเพื่อรับ: ${itemName}`; // เปลี่ยนชื่อ
+        qrDialogItemName.textContent = `ID เฉพาะ: ${uniqueId}`; // แสดง Unique ID
+        qrcodeContainer.innerHTML = ''; // ล้างเนื้อหาเก่าในคอนเทนเนอร์ QR
 
-        // Set text and QR data in the dialog
-        qrDialogTitle.textContent = `รับ: ${itemName}`;
-        // Display warehouseId or a shortened uniqueId for user reference
-        qrDialogItemName.textContent = `ID รายการ: ${warehouseId}`; // Or `ID: ${uniqueId.substring(0, 8)}...`;
-
-        // Clear previous QR and generate new one
-        qrcodeContainer.innerHTML = '';
+        // สร้าง QR Code
         try {
-            const qr = qrcode(4, 'L'); // Error correction level L
-            qr.addData(uniqueId); // The UniqueID is the data the Admin Scanner will read
+            const qr = qrcode(4, 'L');
+            qr.addData(uniqueId); // ใช้ uniqueId สร้าง QR
             qr.make();
-            // Create an image tag from the QR code data
-            qrcodeContainer.innerHTML = qr.createImgTag(6, 4); // Module size 6, Margin 4
-            console.log(`Generated QR code for UniqueID: ${uniqueId}`);
+            // แสดง QR Code
+            qrcodeContainer.innerHTML = qr.createImgTag(6, 4);
         } catch(e) {
             qrcodeContainer.innerHTML = `<p class="text-red-500">ไม่สามารถสร้าง QR Code ได้</p>`;
-            console.error("QR code generation failed:", e);
+            console.error(e);
         }
 
-        // Set up the close button listener for the QR dialog
-        // Remove existing listener first to avoid duplicates
-        qrCloseBtn.onclick = null;
+        // ฟังก์ชันสำหรับ Polling สถานะ
+        async function checkClaimStatus() {
+            console.log(`Polling status for UniqueID: ${uniqueId}...`);
+            try {
+                // เรียก Apps Script โดยส่ง uniqueId ไป
+                const res = await fetch(`${CONFIG.GAS_URL}?action=getWarehouseItemStatus&uniqueId=${uniqueId}`);
+                const data = await res.json();
+
+                if (data && data.status === 'claimed') {
+                    console.log('Item has been claimed!');
+                    // เมื่อสถานะเปลี่ยนเป็น claimed ให้หยุด polling
+                    clearInterval(warehousePollingInterval);
+                    warehousePollingInterval = null;
+
+                    // อัปเดต UI ภายใน Modal แทนการปิดทันที
+                    qrcodeContainer.innerHTML = `
+                        <div class="text-center text-green-600 font-bold text-lg p-4">
+                            ✅ สินค้า "${itemName}" ถูกรับแล้ว!
+                        </div>
+                        <p class="text-sm text-gray-600 mt-2">กรุณาปิดหน้าต่างนี้</p>
+                    `;
+                    // อาจจะเปลี่ยนข้อความปุ่มปิดเป็น "ปิด"
+                    qrCloseBtn.textContent = 'ปิด';
+
+                    // เรียกโหลดรายการคลังใหม่ในพื้นหลังเพื่ออัปเดตรายการ
+                     setTimeout(() => initWarehouse(), 1000); // หน่วงเวลาเล็กน้อยก่อนโหลดใหม่
+
+                } else if (data && data.status === 'not_found') {
+                     // กรณีไม่พบรายการ (ไม่ควรเกิดขึ้นหากรายการมาจาก getWarehouseItems)
+                     console.error(`Polling: Warehouse item with UniqueID ${uniqueId} not found.`);
+                     clearInterval(warehousePollingInterval);
+                     warehousePollingInterval = null;
+                     qrcodeContainer.innerHTML = `<p class="text-red-500">รายการนี้ไม่ถูกต้องหรือไม่พบในระบบ</p>`;
+                     // อาจจะปิด Modal หลังจากหน่วงเวลา
+                     setTimeout(() => qrDialog.close(), 3000);
+
+                } else {
+                     console.log(`Polling: Status is still ${data?.status || 'unknown'}`);
+                }
+            } catch (err) {
+                console.error('Polling failed:', err);
+                // หากเกิดข้อผิดพลาดในการ Polling ให้หยุด Timer
+                clearInterval(warehousePollingInterval);
+                warehousePollingInterval = null;
+                qrcodeContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการตรวจสอบสถานะ. <br>กรุณาลองเปิดหน้านี้ใหม่</p>`;
+                 // อาจจะปิด Modal หลังจากหน่วงเวลา
+                 setTimeout(() => qrDialog.close(), 3000);
+            }
+        }
+
+        // เริ่ม Polling ทุก 1 วินาที (1000 มิลลิวินาที)
+        warehousePollingInterval = setInterval(checkClaimStatus, 1000);
+
+        // Event Listener สำหรับปุ่มปิด Modal - ต้องเคลียร์ Timer ด้วย
         qrCloseBtn.onclick = () => {
-            // Stop polling when the user closes the dialog
-            if (pollingInterval) {
-                clearInterval(pollingInterval);
-                pollingInterval = null;
-                console.log('Polling stopped by user closing dialog.');
+            if (warehousePollingInterval) {
+                clearInterval(warehousePollingInterval);
+                warehousePollingInterval = null;
+                console.log("Polling stopped by Close button.");
             }
             qrDialog.close();
         };
 
-        // Show the QR dialog
+        // Event Listener สำหรับการปิด Modal ด้วยวิธีอื่น (เช่น คลิกพื้นหลัง, ปุ่ม ESC) - ต้องเคลียร์ Timer ด้วย
+         qrDialog.addEventListener('close', () => {
+             if (warehousePollingInterval) {
+                clearInterval(warehousePollingInterval);
+                warehousePollingInterval = null;
+                console.log("Polling stopped due to modal close event.");
+             }
+             // ลบ listener ตัวนี้ออกหลังจากทำงานแล้ว เพื่อไม่ให้มี listener ซ้ำซ้อนหากเปิด Modal ใหม่
+             // EventListener นี้ควรถูกเพิ่มใหม่ทุกครั้งที่ Modal เปิด
+         }, { once: true }); // ใช้ { once: true } เพื่อให้ listener ทำงานแค่ครั้งเดียวต่อการเปิด Modal
+
+        // แสดง Modal
         qrDialog.showModal();
-
-        // Start polling for status updates
-        // Call checkClaimStatus for this specific warehouseId every 3 seconds
-        pollingInterval = setInterval(() => checkClaimStatus(warehouseId, itemName), 3000); // Poll every 3 seconds
-        console.log(`Started polling for warehouseId: ${warehouseId} every 3 seconds.`);
     }
-
 
     // --- APP START ---
     async function initializeApp() {
       const liffReady = await ensureLIFFAndFetchInitialData();
-      if (!liffReady) return; // Stop if LIFF/data initialization failed
+      if (!liffReady) return;
 
-      // Add event listener for hash changes to handle navigation
+      // Add event listener for modal close ONCE during initial setup
+      // This handles closing via backdrop click or ESC key specifically for the qrDialog
+      // The {once: true} in handleClaimButtonClick might be enough, let's re-evaluate.
+      // Let's add it inside handleClaimButtonClick with { once: true } is better as it's tied to that specific modal instance.
+      // So, no need for a global close listener here.
+
       window.addEventListener('hashchange', router);
-
-      // Initial route handling based on current hash or default
       router();
     }
 
-    // Start the application initialization process
     initializeApp();
 </script>
 </body>
