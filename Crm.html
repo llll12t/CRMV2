@@ -16,7 +16,16 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
 
   <style>
+    /* General styles */
+    body {
+      background: linear-gradient(to bottom, theme('colors.neutral') 0%, theme('colors.white') 50%, theme('colors.white') 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding: 1.5rem; /* p-6 */
+    }
     .hidden { display: none !important; }
+
+    /* Neon text for points */
     .neon-text {
       color: #fff;
       text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e, 0 0 40px #ff005e, 0 0 80px #ff005e;
@@ -26,20 +35,34 @@
       from { text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e; }
       to { text-shadow: 0 0 10px #00d4ff, 0 0 20px #00d4ff, 0 0 40px #00d4ff; }
     }
+
+    /* Loading skeleton animation */
     @keyframes pulse-opacity {
       0%, 100% { opacity: 0.5; }
       50% { opacity: 1; }
     }
     .loading-card-animation { animation: pulse-opacity 1.5s infinite ease-in-out; }
+
+    /* Glassmorphism effect */
     .glass-white {
-      background: rgba(255, 255, 255, 0.15); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-      backdrop-filter: blur(8.1px); -webkit-backdrop-filter: blur(8.1px);
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(8.1px);
+      -webkit-backdrop-filter: blur(8.1px);
       border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Additional styles for QR container when showing text */
+    #qrcode.text-status {
+        min-height: 150px; /* Ensure space even if no QR */
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
   </style>
 </head>
 
-<body class="bg-gradient-to-b from-neutral via-white to-white min-h-screen relative bg-fixed p-6">
+<body>
   <!-- Header -->
   <div class="flex justify-between items-center mb-6">
     <h2 id="pageTitle" class="text-xl font-bold text-white">กำลังโหลด...</h2>
@@ -48,12 +71,12 @@
       <img id="lineDisplayPicture" class="mask mask-circle w-10 h-10 rounded-full object-cover border border-black" src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" />
     </div>
   </div>
-  
+
   <!-- Main App Container -->
   <div id="app">
     <div class="text-center text-gray-100 py-8">กำลังโหลดเนื้อหา...</div>
   </div>
-  
+
   <!-- Dialogs -->
   <dialog id="customAlertDialog" class="modal">
     <div class="modal-box text-center">
@@ -64,7 +87,7 @@
       </div>
     </div>
   </dialog>
-  
+
   <dialog id="customConfirmDialog" class="modal">
     <div class="modal-box text-center">
       <h3 id="customConfirmTitle" class="font-bold text-lg mb-3"></h3>
@@ -76,15 +99,15 @@
     </div>
   </dialog>
 
-    <!-- QR Code Dialog (for Warehouse) -->
+  <!-- QR Code Dialog (for Warehouse) -->
   <dialog id="qrDialog" class="modal">
     <div class="modal-box text-center">
       <h3 id="qrDialogTitle" class="font-bold text-lg mb-2">สแกนเพื่อรับของ</h3>
-      <p id="qrDialogItemName" class="mb-4 text-sm text-gray-600"></p> <!-- ใช้แสดง Item Name และ ID การแลก -->
+      <p id="qrDialogItemName" class="mb-4 text-sm text-gray-600"></p> <!-- ใช้แสดง Item Name และ Unique ID -->
       <div id="qrcode" class="flex justify-center mb-4 p-4 bg-white rounded-lg"></div>
-      <p class="text-xs text-gray-500 mb-4" id="qrDialogDescription">ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า</p> <!-- เพิ่ม ID -->
+      <p class="text-xs text-gray-500 mb-4" id="qrDialogDescription">ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า</p>
       <div class="modal-action justify-around">
-        <!-- เพิ่มปุ่มแชร์ -->
+         <!-- เพิ่มปุ่มแชร์ -->
         <button id="shareQrBtn" class="btn btn-outline btn-primary hidden">แชร์ QR ไปยัง LINE OA</button>
         <button id="qrDialogCloseBtn" class="btn btn-outline">ปิด</button>
         <!-- ปุ่มยืนยันจะถูกซ่อนด้วย JavaScript เพราะเราจะใช้ระบบตรวจสอบอัตโนมัติ -->
@@ -236,12 +259,14 @@
     </div>
   </div>
 </dialog>
+
 <script>
     // --- GLOBAL STATE & CACHE ---
     let liffInitialized = false;
     const userState = { profile: null, lineId: "", points: 0, pointsChanged: false, level: "Member", customTag: "" };
     const dataCache = { events: null, redeemItems: null, eventDetails: {}, userProfileFull: null, history: null, levelSettings: null };
-    let warehousePollingInterval = null; // ตัวแปรสำหรับเก็บ Polling interval
+    // เพิ่มตัวแปรสำหรับเก็บ polling interval
+    let warehousePollingInterval = null;
 
     // --- DIALOGS & UI ELEMENTS ---
     const alertDialog = document.getElementById('customAlertDialog'), alertT = document.getElementById('customAlertTitle'), alertM = document.getElementById('customAlertMessage'), alertBtn = document.getElementById('customAlertButton');
@@ -252,10 +277,10 @@
           qrDialogTitle = document.getElementById('qrDialogTitle'),
           qrDialogItemName = document.getElementById('qrDialogItemName'),
           qrcodeContainer = document.getElementById('qrcode'),
-          qrDialogDescription = document.getElementById('qrDialogDescription'), // เพิ่ม
+          qrDialogDescription = document.getElementById('qrDialogDescription'),
           qrConfirmBtn = document.getElementById('qrDialogConfirmBtn'),
           qrCloseBtn = document.getElementById('qrDialogCloseBtn'),
-          shareQrBtn = document.getElementById('shareQrBtn'); // เพิ่มปุ่มแชร์
+          shareQrBtn = document.getElementById('shareQrBtn');
 
 
     // --- STYLES ---
@@ -313,16 +338,66 @@
     // --- LIFF & APP INITIALIZATION ---
     async function ensureLIFFAndFetchInitialData() {
       if (!liffInitialized) {
-        try { await liff.init({ liffId: CONFIG.LIFF_ID }); liffInitialized = true; }
-        catch (e) { console.error("LIFF initialization failed", e); showAlert("ข้อผิดพลาด", "ไม่สามารถเริ่มต้น LIFF ได้ กรุณาลองใหม่ภายหลัง"); return false; }
+        try {
+            await liff.init({ liffId: CONFIG.LIFF_ID });
+            liffInitialized = true;
+            console.log('LIFF Init successful');
+
+            // Check if share API is available AFTER successful LIFF init
+            try {
+                 console.log('Checking share API availability...');
+                 if (liff.isApiAvailable('shareTargetPicker') || liff.isApiAvailable('sendMessage')) {
+                     // This check is done later within handleClaimButtonClick now,
+                     // as the button is only relevant in the Warehouse view modal.
+                     // Leaving this here is fine, but the primary visibility check is tied to the modal.
+                      console.log('Share API is available.');
+                 } else {
+                      console.log('Share API is NOT available.');
+                 }
+            } catch (apiError) {
+                 console.error("Error checking LIFF API availability:", apiError);
+                 // No need to hide button here globally, handle in view init/modal open
+            }
+
+        } catch (e) {
+            console.error("LIFF initialization failed:", e);
+            showAlert("ข้อผิดพลาด", "ไม่สามารถเริ่มต้น LIFF ได้ กรุณาลองใหม่ภายหลัง");
+            return false;
+        }
       }
-      if (!liff.isLoggedIn()) { liff.login(); return false; }
+
+      // Check login status
+      if (!liff.isLoggedIn()) {
+          console.log("LIFF not logged in, redirecting to login.");
+          liff.login();
+          return false;
+      }
+
+      // Get Profile (if not already obtained)
       if (!userState.profile) {
-        userState.profile = await liff.getProfile(); userState.lineId = userState.profile.userId;
-        dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/40';
-        dpEl.alt = `รูปโปรไฟล์ของ ${userState.profile.displayName}`;
+          try {
+            userState.profile = await liff.getProfile();
+            userState.lineId = userState.profile.userId;
+            dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/40';
+            dpEl.alt = `รูปโปรไฟล์ของ ${userState.profile.displayName}`;
+            console.log(`Got LIFF profile for user: ${userState.lineId}`);
+          } catch (profileError) {
+              console.error("Failed to get LIFF profile:", profileError);
+              // Continue without profile picture/name if possible, but need Line ID
+              if (!userState.lineId) {
+                 showAlert("ข้อผิดพลาด", "ไม่สามารถดึงข้อมูลโปรไฟล์ LINE ได้");
+                 // Depending on how critical the profile data is, you might want to exit here.
+                 // For now, we proceed assuming lineId might be obtained later or is not strictly needed for initial fetch.
+                 // However, our GAS calls REQUIRE lineId, so failing to get it here is a problem.
+                 // Let's assume getProfile() will eventually yield userId or fail critically.
+                 return false; // Exit if profile failed to get user ID
+              }
+          }
       }
-      pointValEl.textContent = '...';
+
+      pointValEl.textContent = '...'; // Show loading for points
+
+      // Fetch initial data from GAS
       try {
         const [userRes, histRes, eventsRes, redeemRes, settingsRes] = await Promise.all([
           fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`),
@@ -331,27 +406,48 @@
           fetch(`${CONFIG.GAS_URL}?action=getItems`),
           fetch(`${CONFIG.GAS_URL}?action=getLevelConfig`)
         ]);
-        const userData = await userRes.json(); const historyData = await histRes.json();
-        dataCache.events = await eventsRes.json(); dataCache.redeemItems = await redeemRes.json();
+
+        const userData = await userRes.json();
+        const historyData = await histRes.json();
+        dataCache.events = await eventsRes.json();
+        dataCache.redeemItems = await redeemRes.json();
         const settingsData = await settingsRes.json();
+
+        // Process settings
         if (settingsData && !settingsData.error) { dataCache.levelSettings = { VIP_points: parseInt(settingsData.VIP_points || 0), SUPER_points: parseInt(settingsData.SUPER_points || 0) }; }
         else { console.warn("Failed to load level settings, using defaults."); dataCache.levelSettings = { VIP_points: 5000, SUPER_points: 10000 }; }
-        if (!userData || !userData.isRegistered) { window.location.href = 'register.html'; return false; }
+
+        // Check registration status
+        if (!userData || !userData.isRegistered) {
+            console.log("User not registered, redirecting to register page.");
+            window.location.href = 'register.html';
+            return false;
+        }
+
+        // Update user state from fetched data
         userState.points = parseInt(userData.point || 0, 10);
-        userState.level = userData.level || 'Member'; userState.customTag = userData.customTag || '';
-        dataCache.userProfileFull = userData; pointValEl.textContent = userState.points;
-        dataCache.history = historyData; userState.pointsChanged = false;
+        userState.level = userData.level || 'Member';
+        userState.customTag = userData.customTag || '';
+        dataCache.userProfileFull = userData; // Cache full user data including profile fields
 
-        // Check if sendMessage is available and show the share button if needed in Warehouse
-         if (liff.isApiAvailable('shareTargetPicker') || liff.isApiAvailable('sendMessage')) { // Use shareTargetPicker or sendMessage
-             shareQrBtn.classList.remove('hidden');
-         } else {
-             shareQrBtn.classList.add('hidden');
-         }
+        // Update UI with points
+        pointValEl.textContent = userState.points;
 
-      } catch (error) { console.error("Failed to fetch initial data:", error); pointValEl.textContent = 'N/A'; showAlert("ข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลผู้ใช้ได้ กรุณาลองใหม่"); return false; }
-      return true;
+        // Cache history
+        dataCache.history = historyData;
+        userState.pointsChanged = false; // Reset flag after fetching history
+
+        console.log("Initial data fetch successful.");
+        return true; // Indicate successful initialization and data fetch
+
+      } catch (error) {
+        console.error("Failed to fetch initial data from GAS:", error);
+        pointValEl.textContent = 'N/A';
+        showAlert("ข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลผู้ใช้ได้ กรุณาลองใหม่");
+        return false; // Indicate failure
+      }
     }
+
 
     // --- ROUTER ---
     const routes = {
@@ -370,12 +466,14 @@
       if (warehousePollingInterval) {
          clearInterval(warehousePollingInterval);
          warehousePollingInterval = null;
-         // Close the dialog if it's open
-         if (qrDialog && qrDialog.open) {
-             qrDialog.close();
-         }
          console.log("Polling stopped due to route change.");
       }
+       // Close the QR dialog if it's open when route changes
+       if (qrDialog && qrDialog.open) {
+           qrDialog.close();
+           console.log("QR Dialog closed due to route change.");
+       }
+
 
       const hash = window.location.hash.split('?')[0] || '';
       const route = routes[hash] || routes[''];
@@ -393,7 +491,8 @@
     function generateCardSkeleton(count) { return Array.from({ length: count }).map(_ => `<li class="bg-white p-4 rounded shadow-sm loading-card-animation"><div class="h-24 bg-gray-200 rounded-md mb-3"></div><div class="h-4 bg-gray-200 rounded w-2/3 mb-2"></div><div class="h-3 bg-gray-200 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-200 rounded-full w-full"></div></li>`).join(''); }
     function renderHistoryList(historyData) {
       const el = document.getElementById('historyList'); if (!el) return;
-      const latest = historyData.slice().reverse().slice(0, 10);
+      // Sort by date descending and take the latest 10
+      const latest = historyData.sort((a, b) => new Date(b.date.split(' ')[0].split('/').reverse().join('/') + ' ' + b.date.split(' ')[1]) - new Date(a.date.split(' ')[0].split('/').reverse().join('/') + ' ' + a.date.split(' ')[1])).slice(0, 10);
       if (latest.length === 0) { el.innerHTML = `<li class="text-center text-gray-400 py-4">ไม่มีประวัติการทำรายการ</li>`; return; }
       el.innerHTML = latest.map(item => {
         const isDebit = ['redeem', 'transfer_out'].includes(item.type);
@@ -412,83 +511,228 @@
     // --- VIEW INITIALIZATION FUNCTIONS ---
     async function initDashboard() {
       const historyListEl = document.getElementById('historyList'), checkinBox = document.getElementById('checkinBox'), todayDateEl = document.getElementById('todayDate'), checkinBtn = document.getElementById('checkinBtn');
-      if (dataCache.history && !userState.pointsChanged) renderHistoryList(dataCache.history);
-      else if (historyListEl) historyListEl.innerHTML = generateListSkeleton(5);
+      // Use cached history first if available and points haven't changed
+      if (dataCache.history && !userState.pointsChanged) {
+           renderHistoryList(dataCache.history);
+      } else {
+          // Show skeleton while waiting for fresh data
+          if (historyListEl) historyListEl.innerHTML = generateListSkeleton(5);
+      }
+
       try {
-        const [checkData, history] = await Promise.all([fetch(`${CONFIG.GAS_URL}?action=checkinStatus&lineId=${userState.lineId}`).then(r => r.json()), getFreshOrCachedHistory()]);
+        // Fetch checkin status and fresh history concurrently
+        const [checkRes, history] = await Promise.all([
+            fetch(`${CONFIG.GAS_URL}?action=checkinStatus&lineId=${userState.lineId}`).then(r => r.json()),
+            getFreshOrCachedHistory() // This will fetch if needed, or use cached
+        ]);
+
+        // Render history with fetched/cached data
         renderHistoryList(history);
-        if (checkinBox && !checkData.checkedInToday) {
-          checkinBox.classList.remove('hidden'); todayDateEl.textContent = new Date().getDate().toString().padStart(2, "0");
+
+        // Handle checkin UI
+        if (checkRes && !checkRes.checkedInToday) {
+          checkinBox.classList.remove('hidden');
+          todayDateEl.textContent = new Date().getDate().toString().padStart(2, "0");
           checkinBtn.onclick = async () => {
             checkinBtn.disabled = true;
             try {
               const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: "dailyCheckin", lineId: userState.lineId }) });
               const text = await res.text();
-              showAlert('เช็คอินสำเร็จ', text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); checkinBox.classList.add('hidden'); initDashboard(); } });
-            } catch (e) { console.error("Check-in failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถเช็คอินได้'); } finally { checkinBtn.disabled = false; }
+              showAlert('เช็คอินสำเร็จ', text, async () => {
+                  if (text.includes("สำเร็จ")) {
+                      await fetchAndUpdateUserState(); // Update points and user state
+                      // After successful checkin and state update, re-initialize dashboard
+                      // This ensures history and checkin status are correctly reflected
+                       initDashboard(); // Re-run init to update history and hide checkin box
+                  }
+              });
+            } catch (e) {
+                console.error("Check-in failed:", e);
+                showAlert('ข้อผิดพลาด', 'ไม่สามารถเช็คอินได้');
+            } finally {
+                checkinBtn.disabled = false;
+            }
           };
-        } else if (checkinBox) { checkinBox.classList.add('hidden'); }
-      } catch (e) { console.error("Error in initDashboard:", e); if (historyListEl) historyListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาด</li>`; }
+        } else if (checkinBox) {
+            checkinBox.classList.add('hidden');
+        }
+      } catch (e) {
+          console.error("Error in initDashboard fetch:", e);
+          if (historyListEl && historyListEl.innerHTML.includes('animate-pulse')) {
+              historyListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดข้อมูล</li>`;
+          }
+          if (checkinBox) checkinBox.classList.add('hidden'); // Hide checkin box on error
+      }
     }
+
 
     async function initEvent() {
       const eventListEl = document.getElementById('eventList');
-      if (eventListEl) eventListEl.innerHTML = generateListSkeleton(5);
-      let events = dataCache.events || [];
-      if (!dataCache.events) {
+       if (eventListEl) eventListEl.innerHTML = generateListSkeleton(5); // Show skeleton immediately
+
+      let events = dataCache.events; // Try using cached data first
+      if (!events) {
         try {
             const res = await fetch(`${CONFIG.GAS_URL}?action=getEvents`);
-            events = await res.json(); dataCache.events = events;
-        } catch (e) { console.error("Error fetching events:", e); if (eventListEl) eventListEl.innerHTML = `<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดกิจกรรม</div>`; return; }
+            events = await res.json();
+            if (events.error) throw new Error(events.error); // Throw if GAS returns error
+            dataCache.events = events; // Cache fetched data
+        } catch (e) {
+            console.error("Error fetching events:", e);
+            if (eventListEl) eventListEl.innerHTML = `<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดกิจกรรม</div>`;
+            return; // Exit if data fetch fails
+        }
       }
-      if (!events || events.length === 0) { eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`; return; }
-      const filteredEvents = events.filter(e => !e.allowedLevels || e.allowedLevels.length === 0 || e.allowedLevels.includes(userState.level));
-      if (filteredEvents.length === 0) { eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมสำหรับระดับของคุณ</div>`; return; }
-      eventListEl.innerHTML = filteredEvents.map(e => `<div class="bg-white rounded p-4 flex justify-between items-center shadow-sm"><div><div class="font-semibold text-gray-800 text-sm">${e.title}</div><div class="text-xs text-gray-500">${e.detail || 'ดูรายละเอียดกิจกรรม'}</div></div><a href="#event-detail?id=${e.id}" class="btn btn-neutral">ดูรายละเอียด</a></div>`).join('');
+
+      if (!events || events.length === 0) {
+          eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`;
+          return; // Exit if no events
+      }
+
+      // Filter events based on user level
+      const filteredEvents = events.filter(e =>
+          !e.allowedLevels || e.allowedLevels.length === 0 || e.allowedLevels.includes(userState.level)
+      );
+
+      if (filteredEvents.length === 0) {
+          eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมสำหรับระดับของคุณ</div>`;
+          return; // Exit if no events match level
+      }
+
+      // Render the filtered event list
+      eventListEl.innerHTML = filteredEvents.map(e => `
+        <div class="bg-white rounded p-4 flex justify-between items-center shadow-sm">
+          <div>
+            <div class="font-semibold text-gray-800 text-sm">${e.title}</div>
+            <div class="text-xs text-gray-500">${e.detail || 'ดูรายละเอียดกิจกรรม'}</div>
+          </div>
+          <a href="#event-detail?id=${e.id}" class="btn btn-neutral">ดูรายละเอียด</a>
+        </div>
+      `).join('');
     }
+
 
     async function initEventDetail() {
       const params = new URLSearchParams(window.location.hash.split('?')[1]);
       const eventId = params.get("id");
-      const cardSkeleton = document.getElementById('cardSkeleton'), card = document.getElementById('card'), titleEl = document.getElementById('eventDetailTitle'), descEl = document.getElementById('eventDetailDesc'), pointEl = document.getElementById('eventPoint'), joinBtn = document.getElementById('joinBtn');
-      cardSkeleton.classList.remove('hidden'); card.classList.add('hidden');
+      const cardWrapper = document.getElementById('cardWrapper');
+      const cardSkeleton = document.getElementById('cardSkeleton');
+      const card = document.getElementById('card');
+      const titleEl = document.getElementById('eventDetailTitle');
+      const descEl = document.getElementById('eventDetailDesc');
+      const pointEl = document.getElementById('eventPoint');
+      const joinBtn = document.getElementById('joinBtn');
 
-      let eventData = dataCache.eventDetails[eventId];
-      if (!eventData) {
-        try { const res = await fetch(`${CONFIG.GAS_URL}?action=getEventById&id=${eventId}`); eventData = await res.json(); if (!eventData.error) dataCache.eventDetails[eventId] = eventData; }
-        catch (e) { console.error("Error fetching event detail:", e); eventData = { error: "ไม่สามารถโหลดรายละเอียดได้" }; }
+      // Show skeleton and hide actual card initially
+      if(cardSkeleton && card) {
+          cardSkeleton.classList.remove('hidden');
+          card.classList.add('hidden');
       }
 
-      const history = await getFreshOrCachedHistory();
-      if (eventData.error) { titleEl.textContent = "ไม่พบกิจกรรม"; descEl.textContent = eventData.error; joinBtn.disabled = true; }
-      else {
-        titleEl.textContent = eventData.title; pointEl.textContent = `${eventData.point}+`; descEl.textContent = eventData.desc;
-        const hasJoined = history.some(item => item.type === 'event' && item.eventId === eventId);
-        const isLevelAllowed = !eventData.allowedLevels || eventData.allowedLevels.length === 0 || eventData.allowedLevels.includes(userState.level);
-        if (hasJoined) { joinBtn.textContent = "รับพ้อยต์แล้ว"; joinBtn.disabled = true; }
-        else if (!isLevelAllowed) { joinBtn.textContent = `สำหรับระดับ ${eventData.allowedLevels.join(', ')}`; joinBtn.disabled = true; }
-        else {
-          joinBtn.onclick = async () => {
-            if (!(await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`))) return;
-            joinBtn.disabled = true;
-            try {
-              const res = await fetch(CONFIG.GAS_URL, { method: "POST", body: JSON.stringify({ action: "joinEvent", lineId: userState.lineId, eventId, title: eventData.title, point: eventData.point }) });
-              const text = await res.text();
-              showAlert("สถานะ", text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); joinBtn.textContent = "รับพ้อยต์แล้ว"; } });
-            } catch (e) { console.error("Join event failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมได้'); }
-            finally { if (joinBtn.textContent !== "รับพ้อยต์แล้ว") joinBtn.disabled = false; }
-          };
+
+      let eventData = dataCache.eventDetails[eventId]; // Try using cached data
+      if (!eventData) {
+        try {
+            const res = await fetch(`${CONFIG.GAS_URL}?action=getEventById&id=${eventId}`);
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            eventData = data;
+            dataCache.eventDetails[eventId] = eventData; // Cache fetched data
+        } catch (e) {
+            console.error("Error fetching event detail:", e);
+            eventData = { error: e.message || "ไม่สามารถโหลดรายละเอียดได้" }; // Set an error object
         }
       }
-      cardSkeleton.classList.add("hidden"); card.classList.remove("hidden");
+
+      const history = await getFreshOrCachedHistory(); // Get history to check if joined
+
+
+      // Update UI based on eventData
+      if (eventData.error) {
+          titleEl.textContent = "ไม่พบกิจกรรม";
+          descEl.textContent = eventData.error;
+          pointEl.textContent = 'N/A';
+          joinBtn.textContent = "ไม่สามารถเข้าร่วมได้";
+          joinBtn.disabled = true;
+      } else {
+          titleEl.textContent = eventData.title;
+          pointEl.textContent = `${eventData.point}+`;
+          descEl.textContent = eventData.desc;
+
+          // Check if user has already joined this event
+          const hasJoined = history.some(item => item.type === 'event' && String(item.eventId) === String(eventId));
+
+          // Check if user level is allowed
+          const isLevelAllowed = !eventData.allowedLevels || eventData.allowedLevels.length === 0 || eventData.allowedLevels.includes(userState.level);
+
+          if (hasJoined) {
+              joinBtn.textContent = "รับพ้อยต์แล้ว";
+              joinBtn.disabled = true;
+          } else if (!isLevelAllowed) {
+              joinBtn.textContent = `สำหรับระดับ ${eventData.allowedLevels.join(', ')}`;
+              joinBtn.disabled = true;
+          } else {
+              // Event can be joined
+              joinBtn.textContent = "เข้าร่วม";
+              joinBtn.disabled = false;
+              joinBtn.onclick = async () => {
+                if (!(await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`))) return;
+                joinBtn.disabled = true;
+                joinBtn.textContent = "กำลังเข้าร่วม...";
+                try {
+                  const res = await fetch(CONFIG.GAS_URL, { method: "POST", body: JSON.stringify({ action: "joinEvent", lineId: userState.lineId, eventId: eventId, title: eventData.title, point: eventData.point }) }); // Ensure eventId is sent
+                  const text = await res.text();
+                  showAlert("สถานะ", text, async () => {
+                       // Reload user state and history after successful join
+                      if (text.includes("สำเร็จ")) {
+                          await fetchAndUpdateUserState();
+                          // Update history cache directly or re-fetch for accuracy
+                           const newHistoryItem = {
+                                type: 'event',
+                                detail: `ร่วมกิจกรรม: ${eventData.title}`,
+                                amount: eventData.point,
+                                date: new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }), // Approximate date format
+                                eventId: eventId
+                            };
+                            if(dataCache.history) dataCache.history.push(newHistoryItem); else dataCache.history = [newHistoryItem];
+                            userState.pointsChanged = false; // Mark history as fresh
+
+                          joinBtn.textContent = "รับพ้อยต์แล้ว"; // Update button text
+                           joinBtn.disabled = true; // Disable button permanently
+                      } else {
+                           // If joining failed, re-enable button
+                           joinBtn.textContent = "เข้าร่วม";
+                           joinBtn.disabled = false;
+                      }
+                  });
+                } catch (e) {
+                    console.error("Join event failed:", e);
+                    showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมได้');
+                    joinBtn.textContent = "เข้าร่วม"; // Re-enable button on error
+                    joinBtn.disabled = false;
+                }
+              };
+          }
+      }
+
+      // Hide skeleton and show actual card
+      if(cardSkeleton && card) {
+          cardSkeleton.classList.add("hidden");
+          card.classList.remove("hidden");
+      }
     }
+
 
     async function initProfile() {
       const dpEl = document.getElementById('profileDisplayPicture'), dnEl = document.getElementById('profileDisplayName'), lineIdEl = document.getElementById('profileLineId'), levelBadgeEl = document.getElementById('profileLevelBadge'), tagBadgeEl = document.getElementById('profileCustomTagBadge'), progressEl = document.getElementById('profileProgressBar'), progressTextEl = document.getElementById('profilePointsToNextLevel'), totalPointsEl = document.getElementById('profileTotalPoints'), nameEl = document.getElementById('profileName'), phoneEl = document.getElementById('profilePhone'), emailEl = document.getElementById('profileEmail'), addressEl = document.getElementById('profileAddress'), noteEl = document.getElementById('profileNote'), editBtn = document.getElementById('editProfileBtn'), formContainer = document.getElementById('profileFormContainer'), editButtonsDiv = document.getElementById('profileEditButtons'), saveBtn = document.getElementById('saveProfileBtn'), cancelBtn = document.getElementById('cancelEditBtn');
       const editableInputs = [nameEl, phoneEl, emailEl, addressEl, noteEl]; let initialData = {};
 
-      dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/96'; dnEl.textContent = userState.profile.displayName || 'ผู้ใช้ LINE';
+      // Display basic profile info from LIFF and current points/level
+      dpEl.src = userState.profile?.pictureUrl || 'https://via.placeholder.com/96';
+      dnEl.textContent = userState.profile?.displayName || 'กำลังโหลด...';
+      lineIdEl.value = userState.lineId || 'กำลังโหลด...';
       totalPointsEl.textContent = userState.points.toLocaleString();
+
       const { level, progressValue, pointsToNext, nextLevelName } = calculateLevelAndProgress(userState.points);
       setBadgeContent(levelBadgeEl, LEVEL_STYLES[userState.level]?.text || userState.level, `badge badge-lg ${LEVEL_STYLES[userState.level]?.class || ''}`);
       const primaryTag = (userState.customTag.split(',')[0] || '').trim().toLowerCase();
@@ -498,70 +742,129 @@
       progressEl.value = progressValue;
       progressTextEl.textContent = nextLevelName ? `อีก ${pointsToNext.toLocaleString()} พ้อยต์สู่ ${nextLevelName}` : `คุณอยู่ระดับสูงสุดแล้ว!`;
 
-      let uData = dataCache.userProfileFull || {}; // Ensure uData is at least an empty object
-      if (!dataCache.userProfileFull) { // Only fetch if not already cached
+      // Fetch/Use cached full profile data for the form
+      let uData = dataCache.userProfileFull;
+      if (!uData) {
           try {
-              uData = await fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`).then(r => r.json());
+              const res = await fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`);
+              uData = await res.json();
               if (!uData.error) dataCache.userProfileFull = uData;
               else {
-                  // Handle case where user might be registered but data fetch fails somehow
-                  console.error("Failed to re-fetch profile data:", uData.error);
-                  showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้สมบูรณ์');
-                  uData = dataCache.userProfileFull || {}; // Use cached data even if partial, or empty
+                  console.error("Failed to fetch full profile data:", uData.error);
+                  showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์เพิ่มเติมได้');
+                  uData = dataCache.userProfileFull || {}; // Use partial cached or empty
               }
           } catch (e) {
-              console.error("Error re-fetching profile data:", e);
-               showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้สมบูรณ์');
-               uData = dataCache.userProfileFull || {}; // Use cached data or empty
+              console.error("Error fetching full profile data:", e);
+              showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์เพิ่มเติมได้');
+              uData = dataCache.userProfileFull || {}; // Use partial cached or empty
           }
       }
 
+      // Populate the form fields
+      initialData = {
+          name: uData.name || '',
+          phone: uData.phone || '',
+          email: uData.email || '',
+          address: uData.address || '',
+          note: uData.note || ''
+      };
+      nameEl.value = initialData.name;
+      phoneEl.value = initialData.phone;
+      emailEl.value = initialData.email;
+      addressEl.value = initialData.address;
+      noteEl.value = initialData.note;
 
-      initialData = { name: uData.name || '', phone: uData.phone || '', email: uData.email || '', address: uData.address || '', note: uData.note || '' };
-      lineIdEl.value = userState.lineId; nameEl.value = initialData.name; phoneEl.value = initialData.phone; emailEl.value = initialData.email; addressEl.value = initialData.address; noteEl.value = initialData.note;
 
       const toggleEditMode = (enable) => {
         editableInputs.forEach(input => { input.readOnly = !enable; input.classList.toggle('input-neutral', enable); input.classList.toggle('cursor-not-allowed', !enable); input.classList.toggle('text-gray-500', !enable); });
-        formContainer.classList.toggle('hidden', !enable); editBtn.classList.toggle('hidden', enable); editButtonsDiv.classList.toggle('hidden', !enable);
+        formContainer.classList.toggle('hidden', !enable);
+        editBtn.classList.toggle('hidden', enable);
+        editButtonsDiv.classList.toggle('hidden', !enable);
       };
 
       editBtn.onclick = () => toggleEditMode(true);
-      cancelBtn.onclick = () => { Object.keys(initialData).forEach(k => { const el = document.getElementById(`profile${k.charAt(0).toUpperCase() + k.slice(1)}`); if(el) el.value = initialData[k]; }); toggleEditMode(false); }; // Added check for element existence
+      cancelBtn.onclick = () => {
+          // Revert changes in form inputs
+          Object.keys(initialData).forEach(k => {
+              const el = document.getElementById(`profile${k.charAt(0).toUpperCase() + k.slice(1)}`);
+              if(el) el.value = initialData[k];
+          });
+          toggleEditMode(false); // Exit edit mode
+      };
+
       saveBtn.onclick = async () => {
-        saveBtn.disabled = true; cancelBtn.disabled = true;
+        saveBtn.disabled = true;
+        cancelBtn.disabled = true;
         try {
-          const body = { action: 'updateProfile', lineId: userState.lineId, name: nameEl.value, phone: phoneEl.value, email: emailEl.value, address: addressEl.value, note: noteEl.value };
+          const body = {
+              action: 'updateProfile',
+              lineId: userState.lineId,
+              name: nameEl.value,
+              phone: phoneEl.value,
+              email: emailEl.value,
+              address: addressEl.value,
+              note: noteEl.value
+          };
           const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify(body) });
           const text = await res.text();
-          showAlert("สถานะ", text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); toggleEditMode(false); } });
-        } catch (e) { console.error("Update profile failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถอัปเดตได้'); } finally { saveBtn.disabled = false; cancelBtn.disabled = false; }
+
+          showAlert("สถานะ", text, async () => {
+               // If update was successful according to GAS response
+              if (text.includes("สำเร็จ")) {
+                  // Refetch and update user state (including full profile data cache)
+                  await fetchAndUpdateUserState();
+                  // Update initialData with newly saved values for next edit session
+                  initialData = {
+                      name: nameEl.value,
+                      phone: phoneEl.value,
+                      email: emailEl.value,
+                      address: addressEl.value,
+                      note: noteEl.value
+                  };
+                  toggleEditMode(false); // Exit edit mode
+              }
+              // If update failed, keep the form open and re-enable buttons (handled in finally)
+          });
+        } catch (e) {
+            console.error("Update profile failed:", e);
+            showAlert('ข้อผิดพลาด', 'ไม่สามารถอัปเดตได้');
+        } finally {
+            saveBtn.disabled = false;
+            cancelBtn.disabled = false;
+        }
       };
+
+      // Initialize in view mode
       toggleEditMode(false);
+      formContainer.classList.remove('hidden'); // Ensure form container is visible in view mode too
     }
+
 
     async function initRedeem() {
         const redeemListEl = document.getElementById('redeemList');
-        if (redeemListEl) redeemListEl.innerHTML = generateCardSkeleton(4);
+         if (redeemListEl) redeemListEl.innerHTML = generateCardSkeleton(4); // Show skeleton
 
-        let items = dataCache.redeemItems || [];
-        if (!dataCache.redeemItems || dataCache.redeemItems.length === 0) {
+        let items = dataCache.redeemItems; // Use cached items first
+        if (!items) {
             try {
                 const res = await fetch(`${CONFIG.GAS_URL}?action=getItems`);
                 items = await res.json();
                 if (items.error) throw new Error(items.error);
-                dataCache.redeemItems = items;
+                dataCache.redeemItems = items; // Cache fetched items
             } catch (e) {
                 console.error("Error fetching items:", e);
                 if (redeemListEl) redeemListEl.innerHTML = `<li class="col-span-2 text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดของรางวัล</li>`;
-                return;
+                return; // Exit if fetch fails
             }
         }
 
         if (!items || items.length === 0) {
             redeemListEl.innerHTML = `<li class="col-span-2 text-center text-gray-400 py-4">ไม่มีของรางวัลให้แลก</li>`;
-            return;
+            return; // Exit if no items
         }
 
+        // Render the item list
         redeemListEl.innerHTML = items.map(item => `
             <li class="bg-white p-4 rounded shadow-sm text-center flex flex-col justify-between">
                 <div>
@@ -580,27 +883,31 @@
             </li>
         `).join('');
 
+        // Add event listeners to the buttons
         document.querySelectorAll('.redeem-btn').forEach(btn => {
             btn.addEventListener('click', handleRedeemClick);
         });
     }
+
 
     async function handleRedeemClick(event) {
         const btn = event.currentTarget;
         const { itemId, itemName, itemPoint, itemType } = btn.dataset;
         const point = parseInt(itemPoint, 10);
 
+        // Check if user has enough points
         if (userState.points < point) {
             showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points}) ไม่พอสำหรับแลก "${itemName}" ซึ่งใช้ ${point} พ้อยต์`);
             return;
         }
 
+        // If physical item, show shipping form
         if (itemType === 'physical') {
             showShippingForm({ itemId, itemName, point });
-        } else {
+        } else { // If digital or other type, confirm and redeem directly
             const confirmed = await showConfirm(`ยืนยันการแลก`, `แลก "${itemName}" ด้วย ${point} พ้อยต์ ใช่หรือไม่?`);
             if (!confirmed) return;
-            await executeRedemption(btn, { itemId, point });
+            await executeRedemption(btn, { itemId, point }); // No shipping info needed
         }
     }
 
@@ -615,12 +922,23 @@
 
         titleEl.textContent = `ข้อมูลจัดส่งสำหรับ: ${item.itemName}`;
 
+        // Populate form with cached profile data
         const profile = dataCache.userProfileFull || {};
         nameInput.value = profile.name || '';
         phoneInput.value = profile.phone || '';
         addressInput.value = profile.address || '';
 
         dialog.showModal();
+
+        // Remove previous listeners to prevent duplicates
+        const oldConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(oldConfirmBtn, confirmBtn);
+        const newConfirmBtn = oldConfirmBtn; // Renamed for clarity
+
+        const oldCancelBtn = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(oldCancelBtn, cancelBtn);
+        const newCancelBtn = oldCancelBtn; // Renamed for clarity
+
 
         const handleConfirm = async () => {
             const shippingName = nameInput.value.trim();
@@ -632,9 +950,11 @@
                 return;
             }
 
-            dialog.close();
+            dialog.close(); // Close form dialog
+            // Find the original redeem button based on itemId to update its state
             const originalButton = document.querySelector(`.redeem-btn[data-item-id="${item.itemId}"]`);
 
+            // Proceed with redemption including shipping info
             await executeRedemption(originalButton, {
                 itemId: item.itemId,
                 point: item.point,
@@ -642,13 +962,21 @@
             });
         };
 
-        confirmBtn.onclick = handleConfirm;
-        cancelBtn.onclick = () => dialog.close();
+        newConfirmBtn.addEventListener('click', handleConfirm);
+        newCancelBtn.addEventListener('click', () => dialog.close());
+
+        // Optional: Add a close listener to reset form or state if needed
+        // dialog.addEventListener('close', () => { ... });
     }
 
+
     async function executeRedemption(buttonElement, payload) {
-        buttonElement.disabled = true;
-        buttonElement.textContent = "กำลังแลก...";
+        // Disable the button during the process
+        if(buttonElement) {
+           buttonElement.disabled = true;
+           buttonElement.textContent = "กำลังแลก...";
+        }
+
 
         try {
             const body = {
@@ -656,6 +984,7 @@
                 lineId: userState.lineId,
                 itemId: payload.itemId,
                 point: payload.point,
+                // Include shippingInfo only if present
                 ...(payload.shippingInfo && { shippingInfo: payload.shippingInfo })
             };
 
@@ -664,39 +993,90 @@
 
             showAlert("สถานะการแลก", text, async () => {
                 if (text.includes("สำเร็จ")) {
+                    // On success, update user state (points will decrease) and refresh history cache
                     await fetchAndUpdateUserState();
-                    buttonElement.textContent = "แลกแล้ว";
+
+                    // Find and update the button state in the list
+                    const updatedButton = document.querySelector(`.redeem-btn[data-item-id="${payload.itemId}"]`);
+                    if(updatedButton) {
+                        updatedButton.textContent = "แลกแล้ว";
+                        updatedButton.disabled = true;
+                    }
+
+                    // If it was a physical item, user might want to go to warehouse view
+                    // Optional: Redirect to warehouse or suggest going there
+                    // if (payload.shippingInfo) {
+                    //    showConfirm("เพิ่มในคลังแล้ว", "รายการถูกเพิ่มในคลังของคุณแล้ว\nต้องการไปที่คลังเพื่อดู QR Code หรือไม่?").then(go => {
+                    //        if(go) window.location.hash = '#warehouse';
+                    //    });
+                    // }
+
                 } else {
-                    buttonElement.disabled = false;
-                    buttonElement.textContent = "แลกเลย";
+                    // On failure, re-enable the button if it exists
+                    if(buttonElement) {
+                        buttonElement.disabled = false;
+                        buttonElement.textContent = "แลกเลย";
+                    }
                 }
             });
         } catch (e) {
             console.error("Redemption failed:", e);
             showAlert('ข้อผิดพลาด', 'ไม่สามารถทำรายการแลกของได้ กรุณาลองใหม่');
-            buttonElement.disabled = false;
-            buttonElement.textContent = "แลกเลย";
+            // On error, re-enable the button if it exists
+            if(buttonElement) {
+               buttonElement.disabled = false;
+               buttonElement.textContent = "แลกเลย";
+            }
         }
     }
+
 
     async function initTransfer() {
       const toEl = document.getElementById('transferTo'), amountEl = document.getElementById('transferAmount'), transferBtn = document.getElementById('transferBtn');
       transferBtn.onclick = async () => {
           const to = toEl.value.trim(), amount = parseInt(amountEl.value, 10);
+
+          // Basic validation
           if (!to) { showAlert("ข้อผิดพลาด", "กรุณากรอก LINE ID / เบอร์โทรปลายทาง"); return; }
-          if (isNaN(amount) || amount <= 0) { showAlert("ข้อผิดพลาด", "กรอกจำนวนพ้อยต์ให้ถูกต้อง"); return; }
+          if (isNaN(amount) || amount <= 0) { showAlert("ข้อผิดพลาด", "กรุณากรอกจำนวนพ้อยต์ให้ถูกต้อง"); return; }
           if (to === userState.lineId) { showAlert("ข้อผิดพลาด", "ไม่สามารถโอนให้ตัวเอง"); return; }
           if (userState.points < amount) { showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points}) ไม่พอสำหรับโอน`); return; }
-          if (!(await showConfirm("ยืนยัน", `โอน ${amount} พ้อยต์ให้ ${to}?`))) return;
+
+          // Confirmation
+          if (!(await showConfirm("ยืนยัน", `โอน ${amount} พ้อยต์ให้ ${to} ใช่หรือไม่?`))) return;
+
+          // Disable button and show loading
           transferBtn.disabled = true;
+          transferBtn.textContent = "กำลังโอน...";
+
           try {
               const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'transferPoints', from: userState.lineId, to, amount }) });
               const txt = await res.text();
-              showAlert("สถานะ", txt, async () => { if (/สำเร็จ|เรียบร้อย/.test(txt)) { await fetchAndUpdateUserState(); toEl.value = ''; amountEl.value = ''; } });
-          } catch (e) { showAlert("ข้อผิดพลาด", "ไม่สามารถโอนได้"); }
-          finally { transferBtn.disabled = false; }
+
+              showAlert("สถานะ", txt, async () => {
+                   // On success, update user state and clear form fields
+                  if (/สำเร็จ|เรียบร้อย/.test(txt)) {
+                      await fetchAndUpdateUserState();
+                      toEl.value = '';
+                      amountEl.value = '';
+                      // Optional: Suggest going to dashboard to see history
+                       // showConfirm("โอนสำเร็จ", "โอนพ้อยท์สำเร็จแล้ว\nต้องการกลับหน้าหลักหรือไม่?").then(go => {
+                       //     if(go) window.location.hash = '#dashboard';
+                       // });
+                  }
+                  // If failed, show alert but don't clear form/state
+              });
+          } catch (e) {
+              console.error("Transfer failed:", e);
+              showAlert("ข้อผิดพลาด", "ไม่สามารถโอนได้");
+          } finally {
+              // Re-enable button
+              transferBtn.disabled = false;
+              transferBtn.textContent = "โอนพ้อย";
+          }
       };
     }
+
 
     async function initAddpoint() {
       const scanContainer = document.getElementById('scanContainer');
@@ -704,93 +1084,169 @@
       const enterBtn = document.getElementById('enterBtn');
       const manualInput = document.getElementById('manualCode');
 
+      // Ensure scanContainer is visible and shows initial inputs
+      scanContainer.innerHTML = `
+          <button id="scanBtn" class="btn btn-neutral w-full">สแกน QR Code</button>
+          <div class="flex space-x-2">
+            <input id="manualCode" type="text" placeholder="กรอกโค้ดที่นี่" class="input input-bordered input-neutral flex-1">
+            <button id="enterBtn" class="btn btn-neutral">รับโค้ด</button>
+          </div>`;
+
+      const currentScanBtn = document.getElementById('scanBtn');
+      const currentEnterBtn = document.getElementById('enterBtn');
+      const currentManualInput = document.getElementById('manualCode');
+
+
       async function processCode(code) {
-          if (!code) return;
+          if (!code) {
+              showAlert('ข้อผิดพลาด', 'ไม่พบข้อมูลในโค้ด');
+              return;
+          }
+
+          // Check if code is already used in history
           const history = await getFreshOrCachedHistory();
-          if (history.some(item => (item.type === 'code' || item.type === 'event') && item.eventId === code)) {
+           // Check against both 'code' and 'event' types if code IDs overlap
+          if (history.some(item => (item.type === 'code' || item.type === 'event') && String(item.eventId || item.id) === String(code))) { // Added item.id check
               showAlert('รับแล้ว', 'คุณเคยรับโค้ดนี้ไปแล้ว');
               return;
           }
+
+          // Fetch code details from GAS
           try {
               const res = await fetch(`${CONFIG.GAS_URL}?action=getCodeById&id=${code}`);
               const data = await res.json();
+
               if (data.error) {
                   showAlert('ไม่พบโค้ด', data.error);
                   return;
               }
+
+              // Display code details and accept button
               scanContainer.innerHTML = `
                 <div class="bg-white p-6 rounded shadow mb-4 text-center">
                   <div class="font-bold text-lg mb-2">${data.title}</div>
-                  <div class="text-sm text-gray-700 mb-4">${data.desc}</div>
+                  <div class="text-sm text-gray-700 mb-4">${data.desc || ''}</div>
                   <div class="font-bold text-yellow-600 mb-4 text-xl">คุณจะได้รับ: ${data.point} พ้อยต์</div>
                   <button id="acceptBtn" class="btn btn-neutral w-full">ยืนยันการรับพ้อยต์</button>
                 </div>`;
               document.getElementById('acceptBtn').addEventListener('click', () => joinCode(data));
+
           } catch (e) {
               console.error("Error processing code:", e);
               showAlert('ข้อผิดพลาด', 'ไม่สามารถประมวลผลโค้ดได้ กรุณาลองใหม่');
+               // Optional: Reset UI after error
+               // initAddpoint();
           }
       }
 
       async function joinCode(codeData) {
           const { id: scannedCode, title: codeTitle, point: codePoint } = codeData;
-          if (!(await showConfirm('ยืนยัน', `คุณต้องการรับพ้อยต์จาก "${codeTitle}" จำนวน ${codePoint} พ้อยต์ใช่หรือไม่?`))) return;
+
+          // Confirmation before joining
+          if (!(await showConfirm('ยืนยัน', `คุณต้องการรับพ้อยต์จาก "${codeTitle}" จำนวน ${codePoint} พ้อยต์ใช่หรือไม่?`))) {
+               // Optional: Reset UI if confirmation is cancelled
+               // initAddpoint();
+              return;
+          }
+
           const btn = document.getElementById("acceptBtn");
-          if (!btn) return;
+          if (!btn) return; // Should not happen if UI is set up correctly
           btn.disabled = true;
           btn.textContent = "กำลังดำเนินการ...";
-          let success = false;
+
           try {
               const res = await fetch(CONFIG.GAS_URL, {
                   method: "POST",
                   body: JSON.stringify({ action: "joinCode", lineId: userState.lineId, id: scannedCode, title: codeTitle, point: codePoint })
               });
               const text = await res.text();
+
               if (text.includes("สำเร็จ")) {
-                  success = true;
-                  btn.textContent = "รับพ้อยต์แล้ว";
-                  showAlert("สำเร็จ", text, async () => {
-                      await fetchAndUpdateUserState();
+                  btn.textContent = "รับพ้อยต์แล้ว"; // Update button text on success
+                   // Update user state and history
+                  await fetchAndUpdateUserState();
+                   const newHistoryItem = {
+                         type: 'code',
+                         detail: `โค้ด: ${codeTitle}`,
+                         amount: codePoint,
+                         date: new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
+                         eventId: scannedCode // Use id for code history
+                     };
+                     if(dataCache.history) dataCache.history.push(newHistoryItem); else dataCache.history = [newHistoryItem];
+                     userState.pointsChanged = false;
+
+                  showAlert("สำเร็จ", text, () => {
+                      // Redirect back to dashboard after successful claim
                       window.location.hash = '#dashboard';
                   });
               } else {
+                  // Show error message from GAS
                   showAlert("เกิดข้อผิดพลาด", text);
-                   window.location.hash = '#addpoint';
+                   // Re-initialize the view to allow trying again
+                  initAddpoint();
               }
           } catch (e) {
               console.error("Join code failed:", e);
               showAlert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเพื่อรับพ้อยต์ได้');
-          } finally {
-              if (!success && btn) {
-                  btn.disabled = false;
-                  btn.textContent = "ยืนยันการรับพ้อยต์";
-              }
+              // Re-initialize the view on network error
+              initAddpoint();
           }
       }
 
-      scanBtn.onclick = async () => {
-          try {
-              const result = await liff.scanCodeV2();
-              if (result && result.value) {
-                  await processCode(result.value);
+      // Add event listener for scan button
+      if (currentScanBtn) {
+          currentScanBtn.onclick = async () => {
+              try {
+                  // Check if scanning is available in current LIFF environment
+                  if (!liff.isApiAvailable('scanCodeV2')) {
+                       showAlert('ไม่รองรับ', 'คุณสมบัติการสแกน QR Code ไม่พร้อมใช้งานใน LIFF นี้');
+                       return;
+                  }
+                  const result = await liff.scanCodeV2();
+                  if (result && result.value) {
+                      console.log("Scanned QR code:", result.value);
+                      await processCode(result.value); // Process the scanned text
+                  } else {
+                      console.log("Scan cancelled or no result.");
+                      // Optional: Show a message if scan was cancelled
+                      // showAlert('แจ้งเตือน', 'ยกเลิกการสแกน');
+                  }
+              } catch (e) {
+                  // Handle specific user cancellation differently if desired
+                  if (e.code !== 'USER_CANCEL') {
+                     console.error("Scan failed:", e);
+                     showAlert('สแกนไม่สำเร็จ', e.message || 'กรุณาลองใหม่อีกครั้ง');
+                  } else {
+                      console.log("User cancelled scan.");
+                      // No need to show alert for user cancellation
+                  }
               }
-          } catch (e) {
-              if (e.code !== 'USER_CANCEL') {
-                 console.error("Scan failed:", e);
-                 showAlert('สแกนไม่สำเร็จ', e.message || 'กรุณาลองใหม่อีกครั้ง');
-              }
-          }
-      };
+          };
+      }
 
-      enterBtn.onclick = () => {
-        const codeValue = manualInput.value.trim();
-        if (codeValue) {
-          processCode(codeValue);
-        } else {
-          showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกโค้ด');
-        }
-      };
+
+      // Add event listener for manual entry button
+      if (currentEnterBtn && currentManualInput) {
+          currentEnterBtn.onclick = () => {
+            const codeValue = currentManualInput.value.trim();
+            if (codeValue) {
+              console.log("Manual code entered:", codeValue);
+              processCode(codeValue); // Process the manual code
+            } else {
+              showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกโค้ด');
+            }
+          };
+
+          // Optional: Allow pressing Enter key in the input field
+          currentManualInput.addEventListener('keypress', (event) => {
+              if (event.key === 'Enter') {
+                  event.preventDefault(); // Prevent default form submission
+                  currentEnterBtn.click(); // Trigger the click event on the button
+              }
+          });
+      }
     }
+
 
     // --- WAREHOUSE ---
     async function initWarehouse() {
@@ -798,15 +1254,18 @@
       if (warehousePollingInterval) {
          clearInterval(warehousePollingInterval);
          warehousePollingInterval = null;
-         // Ensure the dialog is closed if it was open
-          if (qrDialog && qrDialog.open) {
-             qrDialog.close();
-         }
          console.log("Polling stopped due to initWarehouse call.");
       }
+       // Close the QR dialog if it's open
+       if (qrDialog && qrDialog.open) {
+           qrDialog.close();
+           console.log("QR Dialog closed due to initWarehouse call.");
+       }
+
 
       const warehouseListEl = document.getElementById('warehouseList');
-      if (warehouseListEl) warehouseListEl.innerHTML = generateListSkeleton(3);
+      if (warehouseListEl) warehouseListEl.innerHTML = generateListSkeleton(3); // Show skeleton
+
       try {
         const res = await fetch(`${CONFIG.GAS_URL}?action=getWarehouseItems&lineId=${userState.lineId}`);
         const ownedItems = await res.json();
@@ -814,340 +1273,335 @@
 
         if (ownedItems.length === 0) {
           warehouseListEl.innerHTML = '<li class="text-center text-gray-400 py-4">ยังไม่มีของรางวัลในคลังของคุณ</li>';
-          return;
+          return; // Exit if no items
         }
 
+        // Render the list of owned items
         warehouseListEl.innerHTML = ownedItems.map(item => {
           const isClaimed = item.status === 'claimed';
           const statusBadge = `<span class="badge ${isClaimed ? 'badge-success' : 'badge-warning'}">${isClaimed ? 'รับแล้ว' : 'รอรับ'}</span>`;
-          // ใช้ uniqueId สำหรับ QR และ Polling
+          // Use uniqueId for QR and Polling
           const actionArea = isClaimed
             ? `<div class="text-xs text-gray-500 mt-1">วันที่รับ: ${item.claimDate || '-'}</div>`
-            : `<button class="btn btn-neutral btn-sm claim-btn" data-unique-id="${item.uniqueId}" data-item-name="${item.itemName}">รับของ</button>`; // ส่ง unique-id
+            : `<button class="btn btn-neutral btn-sm claim-btn" data-unique-id="${item.uniqueId}" data-item-name="${item.itemName}" data-warehouse-id="${item.warehouseId}">รับของ</button>`; // Pass unique-id and item-name
 
           return `<li class="bg-white rounded p-4 shadow-sm flex justify-between items-center">
                     <div><div class="font-semibold text-gray-800 text-sm">${item.itemName}</div><div class="text-xs text-gray-500 mt-1">วันที่แลก: ${item.redeemDate}</div>${statusBadge}</div>
                     <div class="text-right">${actionArea}</div></li>`;
         }).join('');
 
+        // Add event listeners to the claim buttons
         document.querySelectorAll('.claim-btn').forEach(button => button.addEventListener('click', handleClaimButtonClick));
 
       } catch (e) {
-        console.error("Error in initWarehouse:", e);
+        console.error("Error in initWarehouse fetch:", e);
         showAlert("เกิดข้อผิดพลาด", "ไม่สามารถโหลดคลังของรางวัลได้");
-        if (warehouseListEl) warehouseListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดคลัง</li>`;
+        if (warehouseListEl && warehouseListEl.innerHTML.includes('animate-pulse')) {
+            warehouseListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดคลัง</li>`;
+        }
       }
     }
 
-    // แก้ไขฟังก์ชัน handleClaimButtonClick
+    // Function to handle claim button click and show QR Modal
     function handleClaimButtonClick(event) {
         // Clear any existing interval before starting a new one
         if (warehousePollingInterval) {
             clearInterval(warehousePollingInterval);
             warehousePollingInterval = null;
+            console.log("Cleared previous polling interval.");
         }
 
         const btn = event.currentTarget;
-        const { uniqueId, itemName } = btn.dataset; // ดึง uniqueId และ itemName
+        const { uniqueId, itemName } = btn.dataset; // Get data from the button
 
-        // อ้างอิง UI Elements ของ Modal QR (ประกาศไว้ด้านบน)
-        // const qrDialog = document.getElementById('qrDialog'), ...
+        // Check if uniqueId is available
+        if (!uniqueId) {
+             console.error("Missing uniqueId on claim button dataset.");
+             showAlert("ข้อผิดพลาด", "ไม่พบข้อมูลสำหรับรับของรายการนี้");
+             return;
+        }
 
-        // ตั้งค่า Modal เริ่มต้น
-        qrConfirmBtn.classList.add('hidden'); // ปุ่มยืนยันยังคงซ่อนอยู่
-        // ตรวจสอบและซ่อนปุ่มแชร์ไว้ก่อน จนกว่าจะสร้าง QR เสร็จและ LIFF พร้อม
-        shareQrBtn.classList.add('hidden');
 
-        qrDialogTitle.textContent = `สแกนเพื่อรับ: ${itemName}`;
-        qrDialogItemName.textContent = `Unique ID: ${uniqueId}`; // เปลี่ยนเป็นแสดง Unique ID
-        qrDialogDescription.textContent = 'ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า'; // ตั้งข้อความเริ่มต้น
-        qrcodeContainer.innerHTML = ''; // ล้างเนื้อหาเก่าในคอนเทนเนอร์ QR
-        qrcodeContainer.classList.remove('text-center', 'text-green-600', 'font-bold', 'text-lg', 'p-4'); // ลบ Class สถานะออก
+        // --- Configure and Show QR Modal ---
+        qrConfirmBtn.classList.add('hidden'); // Ensure confirm button is hidden
+        // Check LIFF capability and show/hide share button
+        if (liff.isApiAvailable('shareTargetPicker') || liff.isApiAvailable('sendMessage')) {
+             shareQrBtn.classList.remove('hidden');
+        } else {
+             shareQrBtn.classList.add('hidden');
+        }
 
-        // สร้าง QR Code
+
+        qrDialogTitle.textContent = `สแกนเพื่อรับ: ${itemName}`; // Set modal title
+        qrDialogItemName.textContent = `Unique ID: ${uniqueId}`; // Display the Unique ID
+        qrDialogDescription.textContent = 'ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า'; // Default instruction
+        qrcodeContainer.innerHTML = ''; // Clear previous QR or status message
+        // Remove any status classes
+        qrcodeContainer.classList.remove('text-center', 'text-green-600', 'font-bold', 'text-lg', 'p-4');
+
+        // Generate and display QR Code
         try {
             const qr = qrcode(4, 'L');
-            qr.addData(uniqueId); // ใช้ uniqueId สร้าง QR
+            qr.addData(uniqueId); // Data for QR code is the Unique ID
             qr.make();
-            // แสดง QR Code
-            qrcodeContainer.innerHTML = qr.createImgTag(6, 4);
+            qrcodeContainer.innerHTML = qr.createImgTag(6, 4); // Display the QR code image
 
-            // *** Logic สำหรับปุ่มแชร์ QR Code ***
-            // ตรวจสอบว่า LIFF มีความสามารถ sendMessage หรือ shareTargetPicker ไหม
-            if (liff.isApiAvailable('shareTargetPicker') || liff.isApiAvailable('sendMessage')) {
-                 shareQrBtn.classList.remove('hidden'); // แสดงปุ่มแชร์
-                 // ลบ Listener เก่าเพื่อไม่ให้ซ้ำซ้อน
-                 shareQrBtn.replaceWith(shareQrBtn.cloneNode(true));
-                 const newShareQrBtn = document.getElementById('shareQrBtn'); // อ้างอิงปุ่มใหม่
+            // Add event listener for the Share button (if shown)
+            // Remove previous listener first to prevent duplicates
+            const oldShareQrBtn = document.getElementById('shareQrBtn');
+            const newShareQrBtn = oldShareQrBtn.cloneNode(true);
+            oldShareQrBtn.parentNode.replaceChild(newShareQrBtn, oldShareQrBtn);
 
-                 newShareQrBtn.addEventListener('click', async () => {
-                     newShareQrBtn.disabled = true; // ปิดปุ่มชั่วคราว
-                     newShareQrBtn.textContent = 'กำลังแชร์...';
+            newShareQrBtn.addEventListener('click', async () => {
+                 if (!liff.isApiAvailable('shareTargetPicker') && !liff.isApiAvailable('sendMessage')) {
+                     showAlert('ไม่รองรับ', 'คุณสมบัติการแชร์ไม่พร้อมใช้งานใน LIFF นี้');
+                     return;
+                 }
 
-                     // สร้าง URL ของ QR Code จากบริการภายนอก (เช่น Google Chart API)
-                     // https://developers.google.com/chart/infographics/docs/qr_codes
-                     const qrCodeApiUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(uniqueId)}`; // ใช้ uniqueId
+                 newShareQrBtn.disabled = true; // Disable button during share
+                 newShareQrBtn.textContent = 'กำลังแชร์...';
 
-                     const flexMessage = {
-                         "type": "flex",
-                         "altText": `QR Code รับสินค้า: ${itemName}`,
-                         "contents": {
-                             "type": "bubble",
-                             "header": {
-                                 "type": "box",
-                                 "layout": "vertical",
-                                 "contents": [
-                                     {
-                                         "type": "text",
-                                         "text": "QR Code รับสินค้า",
-                                         "weight": "bold",
-                                         "size": "md"
-                                     },
-                                     {
-                                         "type": "text",
-                                         "text": itemName, // ชื่อสินค้า
-                                         "size": "sm",
-                                         "color": "#999999",
-                                         "margin": "sm"
-                                     }
-                                 ]
-                             },
-                             "hero": {
-                                 "type": "image",
-                                 "url": qrCodeApiUrl, // ใช้ URL ของ QR Code API
-                                 "size": "full",
-                                 "aspectRatio": "1:1",
-                                 "aspectMode": "fit",
-                                 "action": { // Optional: ทำให้รูป QR คลิกได้ (อาจจะเปิดในเบราว์เซอร์หรือ copy text)
-                                     "type": "uri",
-                                     "label": "View QR",
-                                     "uri": qrCodeApiUrl
-                                     // หรือเป็น ClipboardAction ถ้าต้องการให้คัดลอก Unique ID
-                                     // "type": "clipboard",
-                                     // "label": "Copy ID",
-                                     // "clipboardText": uniqueId
-                                 }
-                             },
-                             "body": {
-                                 "type": "box",
-                                 "layout": "vertical",
-                                 "contents": [
-                                      {
-                                          "type": "text",
-                                          "text": `Unique ID: ${uniqueId}`, // แสดง Unique ID
-                                          "size": "sm",
-                                          "align": "center",
-                                          "color": "#666666"
-                                      },
-                                      {
-                                          "type": "text",
-                                          "text": `สำหรับรับสินค้าที่เคาน์เตอร์`,
-                                          "size": "xs",
-                                          "align": "center",
-                                          "color": "#888888",
-                                          "margin": "sm"
-                                      }
-                                  ],
-                                  "paddingAll": "sm",
-                                  "paddingTop": "none"
-                             },
-                             "footer": {
-                                 "type": "box",
-                                 "layout": "vertical",
-                                 "contents": [
-                                     {
-                                         "type": "text",
-                                         "text": "กรุณาแสดงหน้านี้ให้พนักงานสแกน",
-                                         "size": "sm",
-                                         "align": "center",
-                                         "color": "#555555"
-                                     }
-                                 ]
+                 // Construct QR Code Image URL (using Google Chart API as an example)
+                 const qrCodeApiUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(uniqueId)}`;
+
+                 // Create Flex Message object
+                 const flexMessage = {
+                     "type": "flex",
+                     "altText": `QR Code รับสินค้า: ${itemName}`,
+                     "contents": {
+                         "type": "bubble",
+                         "header": {
+                             "type": "box",
+                             "layout": "vertical",
+                             "contents": [
+                                 { "type": "text", "text": "QR Code รับสินค้า", "weight": "bold", "size": "md" },
+                                 { "type": "text", "text": itemName, "size": "sm", "color": "#999999", "margin": "sm" }
+                             ]
+                         },
+                         "hero": {
+                             "type": "image",
+                             "url": qrCodeApiUrl, // Use the QR image URL
+                             "size": "full",
+                             "aspectRatio": "1:1",
+                             "aspectMode": "fit",
+                             "action": { // Optional: Make image clickable
+                                 "type": "uri",
+                                 "label": "ดู QR Code",
+                                 "uri": qrCodeApiUrl
                              }
+                         },
+                         "body": {
+                             "type": "box",
+                             "layout": "vertical",
+                             "contents": [
+                                  { "type": "text", "text": `Unique ID: ${uniqueId}`, "size": "sm", "align": "center", "color": "#666666" },
+                                  { "type": "text", "text": `สำหรับรับสินค้าที่เคาน์เตอร์`, "size": "xs", "align": "center", "color": "#888888", "margin": "sm" }
+                              ],
+                              "paddingAll": "sm",
+                              "paddingTop": "none"
+                         },
+                         "footer": {
+                             "type": "box",
+                             "layout": "vertical",
+                             "contents": [
+                                 { "type": "text", "text": "กรุณาแสดงหน้านี้ให้พนักงานสแกน", "size": "sm", "align": "center", "color": "#555555" }
+                             ]
                          }
-                     };
-
-                     try {
-                        // ตรวจสอบว่าอยู่ใน External Browser ไหม
-                        if (!liff.isInClient()) {
-                             // ถ้าอยู่นอก LINE (External Browser) ให้ใช้ shareTargetPicker
-                             if (liff.isApiAvailable('shareTargetPicker')) {
-                                 await liff.shareTargetPicker([flexMessage]);
-                                  // ไม่ต้องปิด LIFF หลังจาก shareTargetPicker
-                                 showAlert('แชร์สำเร็จ', 'เลือกผู้รับแล้ว');
-                             } else {
-                                showAlert('ข้อผิดพลาด', 'ไม่รองรับการแชร์ในเบราว์เซอร์ภายนอก');
-                             }
-                        } else {
-                            // ถ้าอยู่ใน LINE ให้ใช้ sendMessage
-                             if (liff.isApiAvailable('sendMessage')) {
-                                 await liff.sendMessage([flexMessage]);
-                                 // อาจจะปิด LIFF หลังจากส่งข้อความสำเร็จ (หรือไม่ปิดก็ได้)
-                                 // liff.closeWindow();
-                                 showAlert('แชร์สำเร็จ', 'ส่งข้อความแล้ว');
-                             } else {
-                                 // ไม่น่าจะเกิดขึ้นเพราะเช็ค isApiAvailable ด้านบนแล้ว
-                                 showAlert('ข้อผิดพลาด', 'ไม่รองรับการส่งข้อความใน LIFF นี้');
-                             }
-                        }
-
-                     } catch (error) {
-                         console.error("Error sending message", error);
-                          // ตรวจสอบว่า error เกิดจากการยกเลิกโดยผู้ใช้หรือไม่
-                         if (error.code !== 'SHARE_TARGET_PICKER_CANCEL') {
-                             showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถแชร์ QR Code ได้: ' + (error.message || error));
-                         } else {
-                              console.log("Share cancelled by user");
-                         }
-                     } finally {
-                         newShareQrBtn.disabled = false;
-                         newShareQrBtn.textContent = 'แชร์ QR ไปยัง LINE OA';
                      }
-                 });
-            }
+                 };
+
+                 try {
+                    // Determine whether to use sendMessage or shareTargetPicker
+                    if (liff.isApiAvailable('shareTargetPicker') && !liff.isInClient()) {
+                         // If shareTargetPicker is available AND we are in an external browser, use shareTargetPicker
+                         await liff.shareTargetPicker([flexMessage]);
+                         // No need to close LIFF after shareTargetPicker
+                         // showAlert('แชร์สำเร็จ', 'เลือกผู้รับแล้ว'); // shareTargetPicker doesn't guarantee sending, so simpler alert
+                    } else if (liff.isApiAvailable('sendMessage')) {
+                         // If sendMessage is available (implies in-app), use sendMessage
+                         await liff.sendMessage([flexMessage]);
+                         // Consider closing window or showing confirmation after sendMessage
+                         // liff.closeWindow();
+                          showAlert('แชร์สำเร็จ', 'ส่งข้อความแล้ว');
+                    } else {
+                         // Fallback if neither is available in this context (should be caught by initial check, but defensive)
+                          showAlert('ไม่รองรับ', 'คุณสมบัติการแชร์ไม่พร้อมใช้งาน');
+                    }
+
+                 } catch (error) {
+                     console.error("Error sending message", error);
+                      // Handle specific user cancellation error for shareTargetPicker
+                     if (error.code !== 'SHARE_TARGET_PICKER_CANCEL') {
+                         showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถแชร์ QR Code ได้: ' + (error.message || error));
+                     } else {
+                          console.log("Share cancelled by user");
+                     }
+                 } finally {
+                     // Re-enable the share button
+                     newShareQrBtn.disabled = false;
+                     newShareQrBtn.textContent = 'แชร์ QR ไปยัง LINE OA';
+                 }
+            });
 
 
         } catch(e) {
+            // Error generating QR Code
             qrcodeContainer.innerHTML = `<p class="text-red-500">ไม่สามารถสร้าง QR Code ได้</p>`;
-            console.error(e);
-             shareQrBtn.classList.add('hidden'); // ซ่อนปุ่มแชร์ถ้าสร้าง QR ไม่ได้
+            qrcodeContainer.classList.add('text-center'); // Center the error message
+            console.error("Error generating QR Code:", e);
+            shareQrBtn.classList.add('hidden'); // Hide share button if QR cannot be generated
         }
 
-        // ฟังก์ชันสำหรับ Polling สถานะ
+
+        // --- Polling Logic ---
         async function checkClaimStatus() {
             console.log(`Polling status for UniqueID: ${uniqueId}...`);
             try {
-                // เรียก Apps Script โดยส่ง uniqueId ไป
+                // Fetch status from Apps Script using Unique ID
                 const res = await fetch(`${CONFIG.GAS_URL}?action=getWarehouseItemStatus&uniqueId=${uniqueId}`);
                 const data = await res.json();
 
                 if (data && data.status === 'claimed') {
                     console.log('Item has been claimed!');
-                    // เมื่อสถานะเปลี่ยนเป็น claimed ให้หยุด polling
+                    // Stop polling
                     clearInterval(warehousePollingInterval);
                     warehousePollingInterval = null;
+                    console.log("Polling stopped upon receiving 'claimed' status.");
 
-                    // อัปเดต UI ภายใน Modal
+                    // Update Modal UI to show claimed status
                     qrcodeContainer.innerHTML = `
                         <div class="text-center text-green-600 font-bold text-lg p-4">
                             ✅ สินค้า "${itemName}" ถูกรับแล้ว!
                         </div>
                     `;
-                    qrcodeContainer.classList.add('text-center', 'text-green-600', 'font-bold', 'text-lg', 'p-4'); // เพิ่ม Class จัดศูนย์และสี
+                     qrcodeContainer.classList.add('text-center', 'text-green-600', 'font-bold', 'text-lg', 'p-4');
+                    qrDialogDescription.textContent = 'รายการนี้ถูกบันทึกการรับเรียบร้อยแล้ว';
+                    shareQrBtn.classList.add('hidden'); // Hide share button once claimed
 
-                    qrDialogDescription.textContent = 'รายการนี้ถูกบันทึกการรับเรียบร้อยแล้ว'; // เปลี่ยนข้อความคำอธิบาย
-                    shareQrBtn.classList.add('hidden'); // ซ่อนปุ่มแชร์เมื่อรับแล้ว
-
-                    // อาจจะเปลี่ยนข้อความปุ่มปิดเป็น "ปิด"
+                    // Update the "Close" button text
                     qrCloseBtn.textContent = 'ปิด';
 
-                    // เรียกโหลดรายการคลังใหม่ในพื้นหลังเพื่ออัปเดตรายการ
-                     // setTimeout(() => initWarehouse(), 1000); // หน่วงเวลาเล็กน้อยก่อนโหลดใหม่ - ไม่ต้องเรียกซ้ำ เพราะ Modal ยังเปิดอยู่ อาจจะทำให้ UI กระพริบ
-
-                     // แจ้งเตือนเล็กน้อยว่าสถานะอัปเดต
-                     console.log("Status updated in modal.");
+                    // No need to immediately close the modal or reload the warehouse list here.
+                    // The user will close the modal when ready, and the list will refresh then.
 
                 } else if (data && data.status === 'not_found') {
-                     // กรณีไม่พบรายการ (ไม่ควรเกิดขึ้นหากรายการมาจาก getWarehouseItems)
+                     // Case where the item is not found (shouldn't happen if flow is correct)
                      console.error(`Polling: Warehouse item with UniqueID ${uniqueId} not found.`);
                      clearInterval(warehousePollingInterval);
                      warehousePollingInterval = null;
+                     console.log("Polling stopped due to 'not_found' status.");
                      qrcodeContainer.innerHTML = `<p class="text-red-500">รายการนี้ไม่ถูกต้องหรือไม่พบในระบบ</p>`;
+                      qrcodeContainer.classList.add('text-center');
                      qrDialogDescription.textContent = 'เกิดข้อผิดพลาดในการตรวจสอบรายการ';
                      shareQrBtn.classList.add('hidden');
-                     // อาจจะปิด Modal หลังจากหน่วงเวลา
+                     // Optionally close the modal after a short delay
                      // setTimeout(() => qrDialog.close(), 3000);
 
                 } else if (data && data.status === 'pending_claim') {
-                     // สถานะยังเป็นรอรับปกติ
+                     // Status is still pending, do nothing or update a "Waiting..." message
                      console.log(`Polling: Status is still pending.`);
-                     // Ensure the QR and instructions are shown if polling continues
+                      // Ensure UI is showing QR if it was changed due to a temp error
                      if (qrcodeContainer.innerHTML === '' || qrcodeContainer.querySelector('img') === null) {
+                          // Re-generate QR if somehow missing
                           try {
                             const qr = qrcode(4, 'L');
                             qr.addData(uniqueId);
                             qr.make();
                             qrcodeContainer.innerHTML = qr.createImgTag(6, 4);
-                            qrcodeContainer.classList.remove('text-center', 'text-green-600', 'font-bold', 'text-lg', 'p-4');
+                             qrcodeContainer.classList.remove('text-center', 'text-green-600', 'font-bold', 'text-lg', 'p-4');
                              qrDialogDescription.textContent = 'ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า';
-                             // Re-attach share listener if needed (though replacing button above handles this)
                              if (liff.isApiAvailable('shareTargetPicker') || liff.isApiAvailable('sendMessage')) {
                                  shareQrBtn.classList.remove('hidden');
                              }
                           } catch(e) {
                               qrcodeContainer.innerHTML = `<p class="text-red-500">ไม่สามารถสร้าง QR Code ได้</p>`;
+                               qrcodeContainer.classList.add('text-center');
                               shareQrBtn.classList.add('hidden');
                               console.error(e);
                           }
                      }
 
-
                 } else {
-                     // สถานะอื่นที่ไม่รู้จัก หรือ fetch ล้มเหลวชั่วคราว
+                     // Handle other unexpected statuses or transient errors
                      console.warn(`Polling: Received unexpected status or data:`, data);
-                     // อาจจะแสดงข้อความ "กำลังรอการยืนยัน..."
-                     // ไม่ต้องหยุด Polling ทันที นอกจาก error ที่ร้ายแรง
+                     // Continue polling, maybe show a temporary "Waiting..." message in description
+                     qrDialogDescription.textContent = 'กำลังรอการยืนยัน...';
                 }
 
             } catch (err) {
-                console.error('Polling failed:', err);
-                // หากเกิดข้อผิดพลาดในการ Polling ให้หยุด Timer
+                console.error('Polling fetch failed:', err);
+                // If network error during polling, stop the timer
                 clearInterval(warehousePollingInterval);
                 warehousePollingInterval = null;
-                qrcodeContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการตรวจสอบสถานะ. <br>กรุณาลองเปิดหน้านี้ใหม่</p>`;
+                console.log("Polling stopped due to fetch error.");
+                 qrcodeContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการตรวจสอบสถานะ. <br>กรุณาลองเปิดหน้านี้ใหม่</p>`;
+                  qrcodeContainer.classList.add('text-center');
                  qrDialogDescription.textContent = 'การเชื่อมต่อมีปัญหา';
                  shareQrBtn.classList.add('hidden');
-                 // อาจจะปิด Modal หลังจากหน่วงเวลา
+                 // Optionally close the modal after a short delay
                  // setTimeout(() => qrDialog.close(), 3000);
             }
         }
 
-        // เริ่ม Polling ทุก 1 วินาที (1000 มิลลิวินาที)
+        // Start Polling every 1 second (1000 milliseconds)
         warehousePollingInterval = setInterval(checkClaimStatus, 1000);
-         console.log(`Polling started for UniqueID: ${uniqueId} every 1 second.`);
+        console.log(`Polling started for UniqueID: ${uniqueId} every 1 second.`);
 
-        // Event Listener สำหรับปุ่มปิด Modal - ต้องเคลียร์ Timer ด้วย
-        // ใช้ { once: true } เพราะ Listener นี้จะถูกเพิ่มใหม่ทุกครั้งที่ handleClaimButtonClick ถูกเรียก
+
+        // --- Modal Close Handling ---
+        // Add event listener for the close button - Clears interval and reloads list
+        // Use { once: true } so this listener is only active for the current modal instance
         qrCloseBtn.addEventListener('click', () => {
             if (warehousePollingInterval) {
                 clearInterval(warehousePollingInterval);
                 warehousePollingInterval = null;
-                console.log("Polling stopped by Close button.");
+                console.log("Polling stopped by Close button click.");
             }
             qrDialog.close();
-            // เมื่อ Modal ปิดแล้วค่อยโหลดรายการคลังใหม่ เพื่อให้สถานะอัปเดต
-             initWarehouse();
-        }, { once: true }); // ใช้ { once: true }
+            // Reload warehouse list after modal is closed to reflect potential status change
+            initWarehouse();
+        }, { once: true });
 
-        // Event Listener สำหรับการปิด Modal ด้วยวิธีอื่น (เช่น คลิกพื้นหลัง, ปุ่ม ESC) - ต้องเคลียร์ Timer ด้วย
-        // ใช้ { once: true } เพราะ Listener นี้จะถูกเพิ่มใหม่ทุกครั้งที่ handleClaimButtonClick ถูกเรียก
+
+        // Add a generic listener for the 'close' event on the dialog - Clears interval and reloads list
+        // This handles closing via clicking the backdrop or pressing ESC
+        // Use { once: true } so this listener is only active for the current modal instance
          qrDialog.addEventListener('close', () => {
              if (warehousePollingInterval) {
                 clearInterval(warehousePollingInterval);
                 warehousePollingInterval = null;
-                console.log("Polling stopped due to modal close event.");
+                console.log("Polling stopped due to modal 'close' event.");
              }
-              // เมื่อ Modal ปิดแล้วค่อยโหลดรายการคลังใหม่ เพื่อให้สถานะอัปเดต
+             // Reload warehouse list after modal is closed
              initWarehouse();
-         }, { once: true }); // ใช้ { once: true }
+         }, { once: true });
 
 
-        // แสดง Modal
+        // Show the modal
         qrDialog.showModal();
     }
+
 
     // --- APP START ---
     async function initializeApp() {
       const liffReady = await ensureLIFFAndFetchInitialData();
-      if (!liffReady) return;
+      if (!liffReady) {
+          console.error("App initialization failed.");
+          // Depending on the failure cause, you might want to show a specific message or retry
+          // The showAlert in ensureLIFFAndFetchInitialData should cover basic messages.
+          return; // Stop execution if initial LIFF or data fetch fails
+      }
 
-      // Initial check for sendMessage capability - used in ensureLIFFAndFetchInitialData now
-
+      console.log("App initialized successfully. Setting up router.");
+      // Add event listener for hash change to handle routing
       window.addEventListener('hashchange', router);
+      // Initial route loading based on current hash
       router();
     }
 
+    // Start the application initialization process
     initializeApp();
+
 </script>
 </body>
 </html>
