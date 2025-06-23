@@ -85,7 +85,7 @@
       <p class="text-xs text-gray-500 mb-4">ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า</p>
       <div class="modal-action justify-around">
         <button id="qrDialogCloseBtn" class="btn btn-outline">ปิด</button>
-        <!-- ปุ่มยืนยันจะถูกซ่อนด้วย JavaScript เพราะเราจะใช้ระบบตรวจสอบอัตโนมัติ -->
+        <button id="sendMessageToOABtn" class="btn btn-info">แจ้งพนักงาน</button> 
         <button id="qrDialogConfirmBtn" class="btn btn-neutral hidden">ยืนยันการรับของ</button>
       </div>
     </div>
@@ -805,7 +805,7 @@
                     <div class="text-right">${actionArea}</div></li>`;
         }).join('');
 
-        document.querySelectorAll('.claim-btn').forEach(button => button.addEventListener('click', handleClaimButtonClick));
+        document.querySelectorAll('.claim-btn').forEach(button => button.addEventListener('click', ));
 
       } catch (e) {
         console.error("Error in initWarehouse:", e);
@@ -814,7 +814,7 @@
       }
     }
 
-    // แก้ไขฟังก์ชัน handleClaimButtonClick
+      // แก้ไขฟังก์ชัน handleClaimButtonClick ทั้งหมด
     function handleClaimButtonClick(event) {
         // Clear any existing interval before starting a new one
         if (warehousePollingInterval) {
@@ -823,83 +823,104 @@
         }
 
         const btn = event.currentTarget;
-        // ดึง uniqueId จาก dataset แทน warehouseId
         const { uniqueId, itemName } = btn.dataset;
 
-        // อ้างอิง UI Elements ของ Modal QR (ประกาศไว้ด้านบน)
-        // const qrDialog = document.getElementById('qrDialog'), ...
+        // อ้างอิง UI Elements ของ Modal QR
+        const qrDialog = document.getElementById('qrDialog');
+        const sendMessageToOABtn = document.getElementById('sendMessageToOABtn'); // *** เพิ่มบรรทัดนี้ ***
 
         // ตั้งค่า Modal เริ่มต้น
-        qrConfirmBtn.classList.add('hidden'); // ปุ่มยืนยันยังคงซ่อนอยู่
-        qrDialogTitle.textContent = `สแกนเพื่อรับ: ${itemName}`; // เปลี่ยนชื่อ
-        qrDialogItemName.textContent = `ID เฉพาะ: ${uniqueId}`; // แสดง Unique ID
-        qrcodeContainer.innerHTML = ''; // ล้างเนื้อหาเก่าในคอนเทนเนอร์ QR
+        qrConfirmBtn.classList.add('hidden');
+        qrDialogTitle.textContent = `สแกนเพื่อรับ: ${itemName}`;
+        qrDialogItemName.textContent = `ID เฉพาะ: ${uniqueId}`;
+        qrcodeContainer.innerHTML = '';
 
         // สร้าง QR Code
         try {
             const qr = qrcode(4, 'L');
-            qr.addData(uniqueId); // ใช้ uniqueId สร้าง QR
+            qr.addData(uniqueId);
             qr.make();
-            // แสดง QR Code
             qrcodeContainer.innerHTML = qr.createImgTag(6, 4);
         } catch(e) {
             qrcodeContainer.innerHTML = `<p class="text-red-500">ไม่สามารถสร้าง QR Code ได้</p>`;
             console.error(e);
         }
 
+        // --- ส่วนที่เพิ่มเข้ามา สำหรับปุ่มส่งข้อความ ---
+        sendMessageToOABtn.onclick = async () => {
+            // สร้างข้อความที่จะส่ง โดยใช้ข้อมูลจากสินค้า
+            const messageText = `สวัสดีครับ/ค่ะ\nฉันต้องการสอบถาม/แจ้งเกี่ยวกับการรับของรางวัล\n\n- สินค้า: ${itemName}\n- รหัสรับของ: ${uniqueId}`;
+
+            // สร้าง Object ของข้อความตามรูปแบบของ LIFF
+            const messagesToSend = [{
+                type: 'text',
+                text: messageText
+            }];
+
+            try {
+                // ตรวจสอบว่าผู้ใช้เปิด LIFF ใน LINE หรือไม่
+                if (!liff.isInClient()) {
+                    showAlert('ไม่สามารถส่งได้', 'ฟังก์ชันนี้ใช้ได้เมื่อเปิดผ่านแอป LINE เท่านั้น');
+                    return;
+                }
+                
+                // ส่งข้อความไปยังห้องแชทปัจจุบัน (LINE OA)
+                await liff.sendMessages(messagesToSend);
+                
+                // แจ้งเตือนผู้ใช้ว่าส่งสำเร็จ
+                showAlert('ส่งข้อความสำเร็จ', 'ข้อความของคุณถูกส่งไปยังพนักงานแล้ว');
+                
+                // อาจจะปิดหน้าต่าง LIFF หลังจากส่งข้อความก็ได้ (ถ้าต้องการ)
+                // liff.closeWindow();
+
+            } catch (error) {
+                console.error('Failed to send message:', error);
+                showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถส่งข้อความได้ กรุณาลองใหม่');
+            }
+        };
+        // --- จบส่วนที่เพิ่มเข้ามา ---
+
+
         // ฟังก์ชันสำหรับ Polling สถานะ
         async function checkClaimStatus() {
             console.log(`Polling status for UniqueID: ${uniqueId}...`);
             try {
-                // เรียก Apps Script โดยส่ง uniqueId ไป
                 const res = await fetch(`${CONFIG.GAS_URL}?action=getWarehouseItemStatus&uniqueId=${uniqueId}`);
                 const data = await res.json();
 
                 if (data && data.status === 'claimed') {
                     console.log('Item has been claimed!');
-                    // เมื่อสถานะเปลี่ยนเป็น claimed ให้หยุด polling
                     clearInterval(warehousePollingInterval);
                     warehousePollingInterval = null;
-
-                    // อัปเดต UI ภายใน Modal แทนการปิดทันที
                     qrcodeContainer.innerHTML = `
                         <div class="text-center text-green-600 font-bold text-lg p-4">
                             ✅ สินค้า "${itemName}" ถูกรับแล้ว!
                         </div>
                     `;
-                    // อาจจะเปลี่ยนข้อความปุ่มปิดเป็น "ปิด"
                     qrCloseBtn.textContent = 'ปิด';
-
-                    // เรียกโหลดรายการคลังใหม่ในพื้นหลังเพื่ออัปเดตรายการ
-                     setTimeout(() => initWarehouse(), 1000); // หน่วงเวลาเล็กน้อยก่อนโหลดใหม่
+                    setTimeout(() => initWarehouse(), 1000); 
 
                 } else if (data && data.status === 'not_found') {
-                     // กรณีไม่พบรายการ (ไม่ควรเกิดขึ้นหากรายการมาจาก getWarehouseItems)
                      console.error(`Polling: Warehouse item with UniqueID ${uniqueId} not found.`);
                      clearInterval(warehousePollingInterval);
                      warehousePollingInterval = null;
                      qrcodeContainer.innerHTML = `<p class="text-red-500">รายการนี้ไม่ถูกต้องหรือไม่พบในระบบ</p>`;
-                     // อาจจะปิด Modal หลังจากหน่วงเวลา
                      setTimeout(() => qrDialog.close(), 3000);
 
-                } else {
-                     console.log(`Polling: Status is still ${data?.status || 'unknown'}`);
                 }
             } catch (err) {
                 console.error('Polling failed:', err);
-                // หากเกิดข้อผิดพลาดในการ Polling ให้หยุด Timer
                 clearInterval(warehousePollingInterval);
                 warehousePollingInterval = null;
-                qrcodeContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการตรวจสอบสถานะ. <br>กรุณาลองเปิดหน้านี้ใหม่</p>`;
-                 // อาจจะปิด Modal หลังจากหน่วงเวลา
+                qrcodeContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการตรวจสอบสถานะ.</p>`;
                  setTimeout(() => qrDialog.close(), 3000);
             }
         }
 
-        // เริ่ม Polling ทุก 1 วินาที (1000 มิลลิวินาที)
+        // เริ่ม Polling ทุก 1 วินาที
         warehousePollingInterval = setInterval(checkClaimStatus, 1000);
 
-        // Event Listener สำหรับปุ่มปิด Modal - ต้องเคลียร์ Timer ด้วย
+        // Event Listener สำหรับปุ่มปิด Modal
         qrCloseBtn.onclick = () => {
             if (warehousePollingInterval) {
                 clearInterval(warehousePollingInterval);
@@ -909,16 +930,14 @@
             qrDialog.close();
         };
 
-        // Event Listener สำหรับการปิด Modal ด้วยวิธีอื่น (เช่น คลิกพื้นหลัง, ปุ่ม ESC) - ต้องเคลียร์ Timer ด้วย
+        // Event Listener สำหรับการปิด Modal ด้วยวิธีอื่น
          qrDialog.addEventListener('close', () => {
              if (warehousePollingInterval) {
                 clearInterval(warehousePollingInterval);
                 warehousePollingInterval = null;
                 console.log("Polling stopped due to modal close event.");
              }
-             // ลบ listener ตัวนี้ออกหลังจากทำงานแล้ว เพื่อไม่ให้มี listener ซ้ำซ้อนหากเปิด Modal ใหม่
-             // EventListener นี้ควรถูกเพิ่มใหม่ทุกครั้งที่ Modal เปิด
-         }, { once: true }); // ใช้ { once: true } เพื่อให้ listener ทำงานแค่ครั้งเดียวต่อการเปิด Modal
+         }, { once: true });
 
         // แสดง Modal
         qrDialog.showModal();
