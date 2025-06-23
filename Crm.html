@@ -838,38 +838,124 @@
             console.error(e);
         }
 
-        sendMessageToOABtn.onclick = async () => {
-            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(uniqueId)}`;
-            
+               sendMessageToOABtn.onclick = async () => {
+            // --- ส่วนที่แก้ไข ---
+            // 1. เพิ่ม parameter &margin=10 เพื่อสร้างขอบขาวรอบ QR Code ขนาด 10px
+            // 2. เพิ่ม &qzone=1 เพื่อให้มี Quiet Zone รอบ QR Code ทำให้สแกนง่ายขึ้น
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(uniqueId)}&margin=10&qzone=1`;
+
+            // --- ส่วนที่แก้ไข: ออกแบบ Flex Message ใหม่ทั้งหมด ---
             const flexMessage = {
                 "type": "bubble",
+                "styles": {
+                    "header": { "backgroundColor": "#000000" },
+                    "body": { "backgroundColor": "#FFFFFF" },
+                    "footer": { "backgroundColor": "#F5F5F5", "separator": true }
+                },
+                "header": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "paddingAll": "20px",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "NOTIFICATION",
+                            "color": "#FFFFFF",
+                            "size": "sm",
+                            "weight": "bold",
+                            "letterSpacing": "2px"
+                        },
+                        {
+                            "type": "text",
+                            "text": "แจ้งรับของรางวัล",
+                            "color": "#FFFFFF",
+                            "size": "xl",
+                            "weight": "bold",
+                            "margin": "md"
+                        }
+                    ]
+                },
                 "hero": {
-                    "type": "image", "url": qrImageUrl, "size": "full", "aspectRatio": "1:1", "aspectMode": "cover"
+                    "type": "image",
+                    "url": qrImageUrl,
+                    "size": "full",
+                    "aspectRatio": "1:1",
+                    "aspectMode": "fit", // เปลี่ยนเป็น fit เพื่อให้เห็นขอบขาวที่เพิ่มเข้ามา
+                    "backgroundColor": "#FFFFFF" // ตั้งพื้นหลังของรูปเป็นสีขาว
                 },
                 "body": {
-                    "type": "box", "layout": "vertical", "spacing": "md",
+                    "type": "box",
+                    "layout": "vertical",
+                    "spacing": "lg",
+                    "paddingAll": "20px",
                     "contents": [
-                        { "type": "text", "text": "แจ้งรับของรางวัล", "weight": "bold", "size": "xl", "color": "#1DB446" },
-                        { "type": "separator" },
                         {
-                            "type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm",
+                            "type": "box",
+                            "layout": "vertical",
+                            "spacing": "sm",
                             "contents": [
-                                { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [
-                                    { "type": "text", "text": "สินค้า", "color": "#aaaaaa", "size": "sm", "flex": 2 },
-                                    { "type": "text", "text": itemName, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 }
-                                ]},
-                                { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [
-                                    { "type": "text", "text": "รหัส", "color": "#aaaaaa", "size": "sm", "flex": 2 },
-                                    { "type": "text", "text": uniqueId, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 }
-                                ]}
+                                {
+                                    "type": "text",
+                                    "text": "สินค้า",
+                                    "size": "sm",
+                                    "color": "#757575"
+                                },
+                                {
+                                    "type": "text",
+                                    "text": itemName,
+                                    "wrap": true,
+                                    "size": "lg",
+                                    "weight": "bold",
+                                    "color": "#000000"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "box",
+                            "layout": "vertical",
+                            "spacing": "sm",
+                            "contents": [
+                                {
+                                    "type": "text",
+                                    "text": "รหัสรับของ (CODE)",
+                                    "size": "sm",
+                                    "color": "#757575"
+                                },
+                                {
+                                    "type": "box",
+                                    "layout": "horizontal",
+                                    "paddingAll": "10px",
+                                    "backgroundColor": "#EEEEEE",
+                                    "cornerRadius": "md",
+                                    "contents": [
+                                        {
+                                            "type": "text",
+                                            "text": uniqueId,
+                                            "wrap": true,
+                                            "weight": "bold",
+                                            "size": "md",
+                                            "color": "#000000",
+                                            "align": "center",
+                                            "gravity": "center"
+                                        }
+                                    ]
+                                }
                             ]
                         }
                     ]
                 },
                 "footer": {
-                    "type": "box", "layout": "vertical",
+                    "type": "box",
+                    "layout": "vertical",
+                    "paddingAll": "15px",
                     "contents": [
-                         { "type": "text", "text": `แจ้งจากคุณ: ${userState.profile.displayName}`, "size": "xs", "color": "#888888", "align": "center" }
+                        {
+                            "type": "text",
+                            "text": `แจ้งโดย: ${userState.profile.displayName}`,
+                            "align": "center",
+                            "size": "xs",
+                            "color": "#757575"
+                        }
                     ]
                 }
             };
