@@ -332,7 +332,7 @@
         const settingsData = await settingsRes.json();
         if (settingsData && !settingsData.error) { dataCache.levelSettings = { VIP_points: parseInt(settingsData.VIP_points || 0), SUPER_points: parseInt(settingsData.SUPER_points || 0) }; }
         else { console.warn("Failed to load level settings, using defaults."); dataCache.levelSettings = { VIP_points: 5000, SUPER_points: 10000 }; }
-        if (!userData || !userData.isRegistered) { window.location.href = 'register.html'; return false; }
+        if (!userData || !userData.isRegistered) { window.location.href = 'Register.html'; return false; }
         userState.points = parseInt(userData.point || 0, 10);
         userState.level = userData.level || 'Member'; userState.customTag = userData.customTag || '';
         dataCache.userProfileFull = userData; pointValEl.textContent = userState.points;
