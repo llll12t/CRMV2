@@ -814,7 +814,7 @@
       }
     }
 
-      // แก้ไขฟังก์ชัน handleClaimButtonClick ทั้งหมด
+      // *** แทนที่ฟังก์ชันนี้ทั้งหมดด้วยโค้ดใหม่ ***
     function handleClaimButtonClick(event) {
         // Clear any existing interval before starting a new one
         if (warehousePollingInterval) {
@@ -827,7 +827,7 @@
 
         // อ้างอิง UI Elements ของ Modal QR
         const qrDialog = document.getElementById('qrDialog');
-        const sendMessageToOABtn = document.getElementById('sendMessageToOABtn'); // *** เพิ่มบรรทัดนี้ ***
+        const sendMessageToOABtn = document.getElementById('sendMessageToOABtn');
 
         // ตั้งค่า Modal เริ่มต้น
         qrConfirmBtn.classList.add('hidden');
@@ -835,7 +835,7 @@
         qrDialogItemName.textContent = `ID เฉพาะ: ${uniqueId}`;
         qrcodeContainer.innerHTML = '';
 
-        // สร้าง QR Code
+        // *** ส่วนนี้ยังคงเหมือนเดิม: สร้าง QR Code สำหรับแสดงบนหน้าจอผู้ใช้ ***
         try {
             const qr = qrcode(4, 'L');
             qr.addData(uniqueId);
@@ -846,43 +846,135 @@
             console.error(e);
         }
 
-        // --- ส่วนที่เพิ่มเข้ามา สำหรับปุ่มส่งข้อความ ---
+        // --- *** ส่วนสำคัญที่แก้ไข: สร้าง Flex Message เมื่อกดปุ่ม "แจ้งพนักงาน" ---
         sendMessageToOABtn.onclick = async () => {
-            // สร้างข้อความที่จะส่ง โดยใช้ข้อมูลจากสินค้า
-            const messageText = `สวัสดีครับ/ค่ะ\nฉันต้องการสอบถาม/แจ้งเกี่ยวกับการรับของรางวัล\n\n- สินค้า: ${itemName}\n- รหัสรับของ: ${uniqueId}`;
+            
+            // สร้าง URL ของ QR Code ผ่าน API ภายนอก
+            // เราจำเป็นต้อง encodeURIComponent เพื่อให้แน่ใจว่า URL ถูกต้องเสมอ
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(uniqueId)}`;
 
+            // สร้าง JSON ของ Flex Message
+            const flexMessage = {
+                "type": "bubble",
+                "hero": {
+                    "type": "image",
+                    "url": qrImageUrl, // ใช้ URL ของรูป QR Code ที่สร้างจาก API
+                    "size": "full",
+                    "aspectRatio": "1:1",
+                    "aspectMode": "cover"
+                },
+                "body": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "spacing": "md",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "แจ้งรับของรางวัล",
+                            "weight": "bold",
+                            "size": "xl",
+                            "color": "#1DB446"
+                        },
+                        {
+                            "type": "separator"
+                        },
+                        {
+                            "type": "box",
+                            "layout": "vertical",
+                            "margin": "lg",
+                            "spacing": "sm",
+                            "contents": [
+                                {
+                                    "type": "box",
+                                    "layout": "baseline",
+                                    "spacing": "sm",
+                                    "contents": [
+                                        {
+                                            "type": "text",
+                                            "text": "สินค้า",
+                                            "color": "#aaaaaa",
+                                            "size": "sm",
+                                            "flex": 2
+                                        },
+                                        {
+                                            "type": "text",
+                                            "text": itemName, // ชื่อสินค้า
+                                            "wrap": true,
+                                            "color": "#666666",
+                                            "size": "sm",
+                                            "flex": 5
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "box",
+                                    "layout": "baseline",
+                                    "spacing": "sm",
+                                    "contents": [
+                                        {
+                                            "type": "text",
+                                            "text": "รหัส",
+                                            "color": "#aaaaaa",
+                                            "size": "sm",
+                                            "flex": 2
+                                        },
+                                        {
+                                            "type": "text",
+                                            "text": uniqueId, // รหัสรับของ
+                                            "wrap": true,
+                                            "color": "#666666",
+                                            "size": "sm",
+                                            "flex": 5
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "footer": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                         {
+                            "type": "text",
+                            "text": `แจ้งจากคุณ: ${userState.profile.displayName}`,
+                            "size": "xs",
+                            "color": "#888888",
+                            "align": "center"
+                        }
+                    ]
+                }
+            };
+            
             // สร้าง Object ของข้อความตามรูปแบบของ LIFF
             const messagesToSend = [{
-                type: 'text',
-                text: messageText
+                type: 'flex',
+                // altText คือข้อความที่จะแสดงในหน้า Chat list และ Notification
+                altText: `แจ้งรับของรางวัล: ${itemName}`, 
+                contents: flexMessage
             }];
 
             try {
-                // ตรวจสอบว่าผู้ใช้เปิด LIFF ใน LINE หรือไม่
                 if (!liff.isInClient()) {
                     showAlert('ไม่สามารถส่งได้', 'ฟังก์ชันนี้ใช้ได้เมื่อเปิดผ่านแอป LINE เท่านั้น');
                     return;
                 }
                 
-                // ส่งข้อความไปยังห้องแชทปัจจุบัน (LINE OA)
                 await liff.sendMessages(messagesToSend);
-                
-                // แจ้งเตือนผู้ใช้ว่าส่งสำเร็จ
                 showAlert('ส่งข้อความสำเร็จ', 'ข้อความของคุณถูกส่งไปยังพนักงานแล้ว');
-                
-                // อาจจะปิดหน้าต่าง LIFF หลังจากส่งข้อความก็ได้ (ถ้าต้องการ)
-                // liff.closeWindow();
 
             } catch (error) {
-                console.error('Failed to send message:', error);
+                console.error('Failed to send flex message:', error);
                 showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถส่งข้อความได้ กรุณาลองใหม่');
             }
         };
-        // --- จบส่วนที่เพิ่มเข้ามา ---
+        // --- จบส่วนที่แก้ไข ---
 
 
-        // ฟังก์ชันสำหรับ Polling สถานะ
+        // ฟังก์ชันสำหรับ Polling สถานะ (ส่วนนี้เหมือนเดิม)
         async function checkClaimStatus() {
+            //... (โค้ดส่วนนี้ไม่ต้องแก้ไข)
             console.log(`Polling status for UniqueID: ${uniqueId}...`);
             try {
                 const res = await fetch(`${CONFIG.GAS_URL}?action=getWarehouseItemStatus&uniqueId=${uniqueId}`);
@@ -917,29 +1009,23 @@
             }
         }
 
-        // เริ่ม Polling ทุก 1 วินาที
         warehousePollingInterval = setInterval(checkClaimStatus, 1000);
 
-        // Event Listener สำหรับปุ่มปิด Modal
         qrCloseBtn.onclick = () => {
             if (warehousePollingInterval) {
                 clearInterval(warehousePollingInterval);
                 warehousePollingInterval = null;
-                console.log("Polling stopped by Close button.");
             }
             qrDialog.close();
         };
 
-        // Event Listener สำหรับการปิด Modal ด้วยวิธีอื่น
          qrDialog.addEventListener('close', () => {
              if (warehousePollingInterval) {
                 clearInterval(warehousePollingInterval);
                 warehousePollingInterval = null;
-                console.log("Polling stopped due to modal close event.");
              }
          }, { once: true });
 
-        // แสดง Modal
         qrDialog.showModal();
     }
 
