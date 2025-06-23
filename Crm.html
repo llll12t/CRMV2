@@ -838,105 +838,36 @@
             console.error(e);
         }
 
-               sendMessageToOABtn.onclick = async () => {
-            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(uniqueId)}&margin=10&qzone=1`;
-
+        sendMessageToOABtn.onclick = async () => {
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(uniqueId)}`;
+            
             const flexMessage = {
                 "type": "bubble",
-                "styles": {
-                    "header": { "backgroundColor": "#000000" },
-                    "body": { "backgroundColor": "#FFFFFF" },
-                    "footer": { "backgroundColor": "#F5F5F5", "separator": true }
-                },
-                "header": {
-                    "type": "box",
-                    "layout": "vertical",
-                    "paddingAll": "20px",
-                    "contents": [
-                        {
-                            "type": "text",
-                            "text": "NOTIFICATION",
-                            "color": "#FFFFFF",
-                            "size": "sm",
-                            "weight": "bold",
-                            "letterSpacing": "2px"
-                        },
-                        {
-                            "type": "text",
-                            "text": "แจ้งรับของรางวัล",
-                            "color": "#FFFFFF",
-                            "size": "xl",
-                            "weight": "bold",
-                            "margin": "md"
-                        }
-                    ]
-                },
-                "hero": {
-                    "type": "image",
-                    "url": qrImageUrl,
-                    "size": "full",
-                    "aspectRatio": "1:1",
-                    "aspectMode": "fit",
-                    "backgroundColor": "#FFFFFF"
-                },
                 "body": {
-                    "type": "box",
-                    "layout": "vertical",
-                    "spacing": "lg",
-                    "paddingAll": "20px",
+                    "type": "box", "layout": "vertical", "spacing": "md",
                     "contents": [
+                        { "type": "image", "url": qrImageUrl, "size": "5xl", "aspectRatio": "1:1", "aspectMode": "cover"},
+                        { "type": "text", "text": "แจ้งรับของรางวัล", "weight": "bold", "size": "md", "color": "#1DB446" },
+                        { "type": "separator" },
                         {
-                            "type": "box",
-                            "layout": "vertical",
-                            "spacing": "sm",
+                            "type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm",
                             "contents": [
-                                { "type": "text", "text": "สินค้า", "size": "sm", "color": "#757575" },
-                                { "type": "text", "text": itemName, "wrap": true, "size": "lg", "weight": "bold", "color": "#000000" }
-                            ]
-                        },
-                        {
-                            "type": "box",
-                            "layout": "vertical",
-                            "spacing": "sm",
-                            "contents": [
-                                { "type": "text", "text": "รหัสรับของ (CODE)", "size": "sm", "color": "#757575" },
-                                {
-                                    "type": "box",
-                                    "layout": "horizontal",
-                                    "paddingAll": "10px",
-                                    "backgroundColor": "#EEEEEE",
-                                    "cornerRadius": "md",
-                                    // *** ส่วนที่แก้ไข ***
-                                    "justifyContent": "center", // จัดให้อยู่กลางแนวนอน
-                                    "alignItems": "center",     // จัดให้อยู่กลางแนวตั้ง
-                                    "contents": [
-                                        {
-                                            "type": "text",
-                                            "text": uniqueId,
-                                            "wrap": true,
-                                            "weight": "bold",
-                                            "size": "md",
-                                            "color": "#000000"
-                                            // ลบ align และ gravity ออกจาก text component
-                                        }
-                                    ]
-                                }
+                                { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [
+                                    { "type": "text", "text": "สินค้า", "color": "#aaaaaa", "size": "sm", "flex": 2 },
+                                    { "type": "text", "text": itemName, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 }
+                                ]},
+                                { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [
+                                    { "type": "text", "text": "รหัส", "color": "#aaaaaa", "size": "sm", "flex": 2 },
+                                    { "type": "text", "text": uniqueId, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 }
+                                ]}
                             ]
                         }
                     ]
                 },
                 "footer": {
-                    "type": "box",
-                    "layout": "vertical",
-                    "paddingAll": "15px",
+                    "type": "box", "layout": "vertical",
                     "contents": [
-                        {
-                            "type": "text",
-                            "text": `แจ้งโดย: ${userState.profile.displayName}`,
-                            "align": "center",
-                            "size": "xs",
-                            "color": "#757575"
-                        }
+                         { "type": "text", "text": `แจ้งจากคุณ: ${userState.profile.displayName}`, "size": "xs", "color": "#888888", "align": "center" }
                     ]
                 }
             };
