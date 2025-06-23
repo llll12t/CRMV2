@@ -76,14 +76,16 @@
     </div>
   </dialog>
 
-  <!-- QR Code Dialog (for Warehouse) -->
+    <!-- QR Code Dialog (for Warehouse) -->
   <dialog id="qrDialog" class="modal">
     <div class="modal-box text-center">
       <h3 id="qrDialogTitle" class="font-bold text-lg mb-2">สแกนเพื่อรับของ</h3>
-      <p id="qrDialogItemName" class="mb-4 text-sm text-gray-600"></p>
-      <div id="qrcode" class="flex justify-center mb-4 p-4 bg-white rounded-lg"></div> 
-      <p class="text-xs text-gray-500 mb-4">ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า</p>
+      <p id="qrDialogItemName" class="mb-4 text-sm text-gray-600"></p> <!-- ใช้แสดง Item Name และ ID การแลก -->
+      <div id="qrcode" class="flex justify-center mb-4 p-4 bg-white rounded-lg"></div>
+      <p class="text-xs text-gray-500 mb-4" id="qrDialogDescription">ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า</p> <!-- เพิ่ม ID -->
       <div class="modal-action justify-around">
+        <!-- เพิ่มปุ่มแชร์ -->
+        <button id="shareQrBtn" class="btn btn-outline btn-primary hidden">แชร์ QR ไปยัง LINE OA</button>
         <button id="qrDialogCloseBtn" class="btn btn-outline">ปิด</button>
         <!-- ปุ่มยืนยันจะถูกซ่อนด้วย JavaScript เพราะเราจะใช้ระบบตรวจสอบอัตโนมัติ -->
         <button id="qrDialogConfirmBtn" class="btn btn-neutral hidden">ยืนยันการรับของ</button>
@@ -239,20 +241,21 @@
     let liffInitialized = false;
     const userState = { profile: null, lineId: "", points: 0, pointsChanged: false, level: "Member", customTag: "" };
     const dataCache = { events: null, redeemItems: null, eventDetails: {}, userProfileFull: null, history: null, levelSettings: null };
-    // เพิ่มตัวแปรสำหรับเก็บ polling interval
-    let warehousePollingInterval = null;
+    let warehousePollingInterval = null; // ตัวแปรสำหรับเก็บ Polling interval
 
     // --- DIALOGS & UI ELEMENTS ---
     const alertDialog = document.getElementById('customAlertDialog'), alertT = document.getElementById('customAlertTitle'), alertM = document.getElementById('customAlertMessage'), alertBtn = document.getElementById('customAlertButton');
     const confirmDialog = document.getElementById('customConfirmDialog'), confT = document.getElementById('customConfirmTitle'), confM = document.getElementById('customConfirmMessage'), okBtn = document.getElementById('customConfirmConfirmButton'), noBtn = document.getElementById('customConfirmCancelButton');
     const pageTitleEl = document.getElementById('pageTitle'), pointValEl = document.getElementById('pointVal'), dpEl = document.getElementById('lineDisplayPicture');
-    // อ้างอิง Dialog QR
+    // อ้างอิง Dialog QR และ Element ภายใน
     const qrDialog = document.getElementById('qrDialog'),
           qrDialogTitle = document.getElementById('qrDialogTitle'),
-          qrDialogItemName = document.getElementById('qrDialogItemName'), // ใช้แสดง ID การแลก
-          qrcodeContainer = document.getElementById('qrcode'), // Div ที่จะใส่ QR หรือข้อความสถานะ
+          qrDialogItemName = document.getElementById('qrDialogItemName'),
+          qrcodeContainer = document.getElementById('qrcode'),
+          qrDialogDescription = document.getElementById('qrDialogDescription'), // เพิ่ม
           qrConfirmBtn = document.getElementById('qrDialogConfirmBtn'),
-          qrCloseBtn = document.getElementById('qrDialogCloseBtn');
+          qrCloseBtn = document.getElementById('qrDialogCloseBtn'),
+          shareQrBtn = document.getElementById('shareQrBtn'); // เพิ่มปุ่มแชร์
 
 
     // --- STYLES ---
@@ -338,6 +341,14 @@
         userState.level = userData.level || 'Member'; userState.customTag = userData.customTag || '';
         dataCache.userProfileFull = userData; pointValEl.textContent = userState.points;
         dataCache.history = historyData; userState.pointsChanged = false;
+
+        // Check if sendMessage is available and show the share button if needed in Warehouse
+         if (liff.isApiAvailable('shareTargetPicker') || liff.isApiAvailable('sendMessage')) { // Use shareTargetPicker or sendMessage
+             shareQrBtn.classList.remove('hidden');
+         } else {
+             shareQrBtn.classList.add('hidden');
+         }
+
       } catch (error) { console.error("Failed to fetch initial data:", error); pointValEl.textContent = 'N/A'; showAlert("ข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลผู้ใช้ได้ กรุณาลองใหม่"); return false; }
       return true;
     }
@@ -487,10 +498,24 @@
       progressEl.value = progressValue;
       progressTextEl.textContent = nextLevelName ? `อีก ${pointsToNext.toLocaleString()} พ้อยต์สู่ ${nextLevelName}` : `คุณอยู่ระดับสูงสุดแล้ว!`;
 
-      let uData = dataCache.userProfileFull;
-      if (!uData) { try { uData = await fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`).then(r => r.json()); if (!uData.error) dataCache.userProfileFull = uData; } catch (e) { uData = { error: 'โหลดข้อมูลล้มเหลว' }; } }
+      let uData = dataCache.userProfileFull || {}; // Ensure uData is at least an empty object
+      if (!dataCache.userProfileFull) { // Only fetch if not already cached
+          try {
+              uData = await fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`).then(r => r.json());
+              if (!uData.error) dataCache.userProfileFull = uData;
+              else {
+                  // Handle case where user might be registered but data fetch fails somehow
+                  console.error("Failed to re-fetch profile data:", uData.error);
+                  showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้สมบูรณ์');
+                  uData = dataCache.userProfileFull || {}; // Use cached data even if partial, or empty
+              }
+          } catch (e) {
+              console.error("Error re-fetching profile data:", e);
+               showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้สมบูรณ์');
+               uData = dataCache.userProfileFull || {}; // Use cached data or empty
+          }
+      }
 
-      if (uData.error) { showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้'); return; }
 
       initialData = { name: uData.name || '', phone: uData.phone || '', email: uData.email || '', address: uData.address || '', note: uData.note || '' };
       lineIdEl.value = userState.lineId; nameEl.value = initialData.name; phoneEl.value = initialData.phone; emailEl.value = initialData.email; addressEl.value = initialData.address; noteEl.value = initialData.note;
@@ -501,7 +526,7 @@
       };
 
       editBtn.onclick = () => toggleEditMode(true);
-      cancelBtn.onclick = () => { Object.keys(initialData).forEach(k => document.getElementById(`profile${k.charAt(0).toUpperCase() + k.slice(1)}`).value = initialData[k]); toggleEditMode(false); };
+      cancelBtn.onclick = () => { Object.keys(initialData).forEach(k => { const el = document.getElementById(`profile${k.charAt(0).toUpperCase() + k.slice(1)}`); if(el) el.value = initialData[k]; }); toggleEditMode(false); }; // Added check for element existence
       saveBtn.onclick = async () => {
         saveBtn.disabled = true; cancelBtn.disabled = true;
         try {
@@ -798,7 +823,7 @@
           // ใช้ uniqueId สำหรับ QR และ Polling
           const actionArea = isClaimed
             ? `<div class="text-xs text-gray-500 mt-1">วันที่รับ: ${item.claimDate || '-'}</div>`
-            : `<button class="btn btn-neutral btn-sm claim-btn" data-unique-id="${item.uniqueId}" data-item-name="${item.itemName}">รับของ</button>`; // ส่ง unique-id แทน warehouse-id
+            : `<button class="btn btn-neutral btn-sm claim-btn" data-unique-id="${item.uniqueId}" data-item-name="${item.itemName}">รับของ</button>`; // ส่ง unique-id
 
           return `<li class="bg-white rounded p-4 shadow-sm flex justify-between items-center">
                     <div><div class="font-semibold text-gray-800 text-sm">${item.itemName}</div><div class="text-xs text-gray-500 mt-1">วันที่แลก: ${item.redeemDate}</div>${statusBadge}</div>
@@ -823,17 +848,21 @@
         }
 
         const btn = event.currentTarget;
-        // ดึง uniqueId จาก dataset แทน warehouseId
-        const { uniqueId, itemName } = btn.dataset;
+        const { uniqueId, itemName } = btn.dataset; // ดึง uniqueId และ itemName
 
         // อ้างอิง UI Elements ของ Modal QR (ประกาศไว้ด้านบน)
         // const qrDialog = document.getElementById('qrDialog'), ...
 
         // ตั้งค่า Modal เริ่มต้น
         qrConfirmBtn.classList.add('hidden'); // ปุ่มยืนยันยังคงซ่อนอยู่
-        qrDialogTitle.textContent = `สแกนเพื่อรับ: ${itemName}`; // เปลี่ยนชื่อ
-        qrDialogItemName.textContent = `ID เฉพาะ: ${uniqueId}`; // แสดง Unique ID
+        // ตรวจสอบและซ่อนปุ่มแชร์ไว้ก่อน จนกว่าจะสร้าง QR เสร็จและ LIFF พร้อม
+        shareQrBtn.classList.add('hidden');
+
+        qrDialogTitle.textContent = `สแกนเพื่อรับ: ${itemName}`;
+        qrDialogItemName.textContent = `Unique ID: ${uniqueId}`; // เปลี่ยนเป็นแสดง Unique ID
+        qrDialogDescription.textContent = 'ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า'; // ตั้งข้อความเริ่มต้น
         qrcodeContainer.innerHTML = ''; // ล้างเนื้อหาเก่าในคอนเทนเนอร์ QR
+        qrcodeContainer.classList.remove('text-center', 'text-green-600', 'font-bold', 'text-lg', 'p-4'); // ลบ Class สถานะออก
 
         // สร้าง QR Code
         try {
@@ -842,9 +871,146 @@
             qr.make();
             // แสดง QR Code
             qrcodeContainer.innerHTML = qr.createImgTag(6, 4);
+
+            // *** Logic สำหรับปุ่มแชร์ QR Code ***
+            // ตรวจสอบว่า LIFF มีความสามารถ sendMessage หรือ shareTargetPicker ไหม
+            if (liff.isApiAvailable('shareTargetPicker') || liff.isApiAvailable('sendMessage')) {
+                 shareQrBtn.classList.remove('hidden'); // แสดงปุ่มแชร์
+                 // ลบ Listener เก่าเพื่อไม่ให้ซ้ำซ้อน
+                 shareQrBtn.replaceWith(shareQrBtn.cloneNode(true));
+                 const newShareQrBtn = document.getElementById('shareQrBtn'); // อ้างอิงปุ่มใหม่
+
+                 newShareQrBtn.addEventListener('click', async () => {
+                     newShareQrBtn.disabled = true; // ปิดปุ่มชั่วคราว
+                     newShareQrBtn.textContent = 'กำลังแชร์...';
+
+                     // สร้าง URL ของ QR Code จากบริการภายนอก (เช่น Google Chart API)
+                     // https://developers.google.com/chart/infographics/docs/qr_codes
+                     const qrCodeApiUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(uniqueId)}`; // ใช้ uniqueId
+
+                     const flexMessage = {
+                         "type": "flex",
+                         "altText": `QR Code รับสินค้า: ${itemName}`,
+                         "contents": {
+                             "type": "bubble",
+                             "header": {
+                                 "type": "box",
+                                 "layout": "vertical",
+                                 "contents": [
+                                     {
+                                         "type": "text",
+                                         "text": "QR Code รับสินค้า",
+                                         "weight": "bold",
+                                         "size": "md"
+                                     },
+                                     {
+                                         "type": "text",
+                                         "text": itemName, // ชื่อสินค้า
+                                         "size": "sm",
+                                         "color": "#999999",
+                                         "margin": "sm"
+                                     }
+                                 ]
+                             },
+                             "hero": {
+                                 "type": "image",
+                                 "url": qrCodeApiUrl, // ใช้ URL ของ QR Code API
+                                 "size": "full",
+                                 "aspectRatio": "1:1",
+                                 "aspectMode": "fit",
+                                 "action": { // Optional: ทำให้รูป QR คลิกได้ (อาจจะเปิดในเบราว์เซอร์หรือ copy text)
+                                     "type": "uri",
+                                     "label": "View QR",
+                                     "uri": qrCodeApiUrl
+                                     // หรือเป็น ClipboardAction ถ้าต้องการให้คัดลอก Unique ID
+                                     // "type": "clipboard",
+                                     // "label": "Copy ID",
+                                     // "clipboardText": uniqueId
+                                 }
+                             },
+                             "body": {
+                                 "type": "box",
+                                 "layout": "vertical",
+                                 "contents": [
+                                      {
+                                          "type": "text",
+                                          "text": `Unique ID: ${uniqueId}`, // แสดง Unique ID
+                                          "size": "sm",
+                                          "align": "center",
+                                          "color": "#666666"
+                                      },
+                                      {
+                                          "type": "text",
+                                          "text": `สำหรับรับสินค้าที่เคาน์เตอร์`,
+                                          "size": "xs",
+                                          "align": "center",
+                                          "color": "#888888",
+                                          "margin": "sm"
+                                      }
+                                  ],
+                                  "paddingAll": "sm",
+                                  "paddingTop": "none"
+                             },
+                             "footer": {
+                                 "type": "box",
+                                 "layout": "vertical",
+                                 "contents": [
+                                     {
+                                         "type": "text",
+                                         "text": "กรุณาแสดงหน้านี้ให้พนักงานสแกน",
+                                         "size": "sm",
+                                         "align": "center",
+                                         "color": "#555555"
+                                     }
+                                 ]
+                             }
+                         }
+                     };
+
+                     try {
+                        // ตรวจสอบว่าอยู่ใน External Browser ไหม
+                        if (!liff.isInClient()) {
+                             // ถ้าอยู่นอก LINE (External Browser) ให้ใช้ shareTargetPicker
+                             if (liff.isApiAvailable('shareTargetPicker')) {
+                                 await liff.shareTargetPicker([flexMessage]);
+                                  // ไม่ต้องปิด LIFF หลังจาก shareTargetPicker
+                                 showAlert('แชร์สำเร็จ', 'เลือกผู้รับแล้ว');
+                             } else {
+                                showAlert('ข้อผิดพลาด', 'ไม่รองรับการแชร์ในเบราว์เซอร์ภายนอก');
+                             }
+                        } else {
+                            // ถ้าอยู่ใน LINE ให้ใช้ sendMessage
+                             if (liff.isApiAvailable('sendMessage')) {
+                                 await liff.sendMessage([flexMessage]);
+                                 // อาจจะปิด LIFF หลังจากส่งข้อความสำเร็จ (หรือไม่ปิดก็ได้)
+                                 // liff.closeWindow();
+                                 showAlert('แชร์สำเร็จ', 'ส่งข้อความแล้ว');
+                             } else {
+                                 // ไม่น่าจะเกิดขึ้นเพราะเช็ค isApiAvailable ด้านบนแล้ว
+                                 showAlert('ข้อผิดพลาด', 'ไม่รองรับการส่งข้อความใน LIFF นี้');
+                             }
+                        }
+
+                     } catch (error) {
+                         console.error("Error sending message", error);
+                          // ตรวจสอบว่า error เกิดจากการยกเลิกโดยผู้ใช้หรือไม่
+                         if (error.code !== 'SHARE_TARGET_PICKER_CANCEL') {
+                             showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถแชร์ QR Code ได้: ' + (error.message || error));
+                         } else {
+                              console.log("Share cancelled by user");
+                         }
+                     } finally {
+                         newShareQrBtn.disabled = false;
+                         newShareQrBtn.textContent = 'แชร์ QR ไปยัง LINE OA';
+                     }
+                 });
+            }
+
+
         } catch(e) {
             qrcodeContainer.innerHTML = `<p class="text-red-500">ไม่สามารถสร้าง QR Code ได้</p>`;
             console.error(e);
+             shareQrBtn.classList.add('hidden'); // ซ่อนปุ่มแชร์ถ้าสร้าง QR ไม่ได้
         }
 
         // ฟังก์ชันสำหรับ Polling สถานะ
@@ -861,17 +1027,25 @@
                     clearInterval(warehousePollingInterval);
                     warehousePollingInterval = null;
 
-                    // อัปเดต UI ภายใน Modal แทนการปิดทันที
+                    // อัปเดต UI ภายใน Modal
                     qrcodeContainer.innerHTML = `
                         <div class="text-center text-green-600 font-bold text-lg p-4">
                             ✅ สินค้า "${itemName}" ถูกรับแล้ว!
                         </div>
                     `;
+                    qrcodeContainer.classList.add('text-center', 'text-green-600', 'font-bold', 'text-lg', 'p-4'); // เพิ่ม Class จัดศูนย์และสี
+
+                    qrDialogDescription.textContent = 'รายการนี้ถูกบันทึกการรับเรียบร้อยแล้ว'; // เปลี่ยนข้อความคำอธิบาย
+                    shareQrBtn.classList.add('hidden'); // ซ่อนปุ่มแชร์เมื่อรับแล้ว
+
                     // อาจจะเปลี่ยนข้อความปุ่มปิดเป็น "ปิด"
                     qrCloseBtn.textContent = 'ปิด';
 
                     // เรียกโหลดรายการคลังใหม่ในพื้นหลังเพื่ออัปเดตรายการ
-                     setTimeout(() => initWarehouse(), 1000); // หน่วงเวลาเล็กน้อยก่อนโหลดใหม่
+                     // setTimeout(() => initWarehouse(), 1000); // หน่วงเวลาเล็กน้อยก่อนโหลดใหม่ - ไม่ต้องเรียกซ้ำ เพราะ Modal ยังเปิดอยู่ อาจจะทำให้ UI กระพริบ
+
+                     // แจ้งเตือนเล็กน้อยว่าสถานะอัปเดต
+                     console.log("Status updated in modal.");
 
                 } else if (data && data.status === 'not_found') {
                      // กรณีไม่พบรายการ (ไม่ควรเกิดขึ้นหากรายการมาจาก getWarehouseItems)
@@ -879,46 +1053,84 @@
                      clearInterval(warehousePollingInterval);
                      warehousePollingInterval = null;
                      qrcodeContainer.innerHTML = `<p class="text-red-500">รายการนี้ไม่ถูกต้องหรือไม่พบในระบบ</p>`;
+                     qrDialogDescription.textContent = 'เกิดข้อผิดพลาดในการตรวจสอบรายการ';
+                     shareQrBtn.classList.add('hidden');
                      // อาจจะปิด Modal หลังจากหน่วงเวลา
-                     setTimeout(() => qrDialog.close(), 3000);
+                     // setTimeout(() => qrDialog.close(), 3000);
+
+                } else if (data && data.status === 'pending_claim') {
+                     // สถานะยังเป็นรอรับปกติ
+                     console.log(`Polling: Status is still pending.`);
+                     // Ensure the QR and instructions are shown if polling continues
+                     if (qrcodeContainer.innerHTML === '' || qrcodeContainer.querySelector('img') === null) {
+                          try {
+                            const qr = qrcode(4, 'L');
+                            qr.addData(uniqueId);
+                            qr.make();
+                            qrcodeContainer.innerHTML = qr.createImgTag(6, 4);
+                            qrcodeContainer.classList.remove('text-center', 'text-green-600', 'font-bold', 'text-lg', 'p-4');
+                             qrDialogDescription.textContent = 'ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า';
+                             // Re-attach share listener if needed (though replacing button above handles this)
+                             if (liff.isApiAvailable('shareTargetPicker') || liff.isApiAvailable('sendMessage')) {
+                                 shareQrBtn.classList.remove('hidden');
+                             }
+                          } catch(e) {
+                              qrcodeContainer.innerHTML = `<p class="text-red-500">ไม่สามารถสร้าง QR Code ได้</p>`;
+                              shareQrBtn.classList.add('hidden');
+                              console.error(e);
+                          }
+                     }
+
 
                 } else {
-                     console.log(`Polling: Status is still ${data?.status || 'unknown'}`);
+                     // สถานะอื่นที่ไม่รู้จัก หรือ fetch ล้มเหลวชั่วคราว
+                     console.warn(`Polling: Received unexpected status or data:`, data);
+                     // อาจจะแสดงข้อความ "กำลังรอการยืนยัน..."
+                     // ไม่ต้องหยุด Polling ทันที นอกจาก error ที่ร้ายแรง
                 }
+
             } catch (err) {
                 console.error('Polling failed:', err);
                 // หากเกิดข้อผิดพลาดในการ Polling ให้หยุด Timer
                 clearInterval(warehousePollingInterval);
                 warehousePollingInterval = null;
                 qrcodeContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการตรวจสอบสถานะ. <br>กรุณาลองเปิดหน้านี้ใหม่</p>`;
+                 qrDialogDescription.textContent = 'การเชื่อมต่อมีปัญหา';
+                 shareQrBtn.classList.add('hidden');
                  // อาจจะปิด Modal หลังจากหน่วงเวลา
-                 setTimeout(() => qrDialog.close(), 3000);
+                 // setTimeout(() => qrDialog.close(), 3000);
             }
         }
 
         // เริ่ม Polling ทุก 1 วินาที (1000 มิลลิวินาที)
         warehousePollingInterval = setInterval(checkClaimStatus, 1000);
+         console.log(`Polling started for UniqueID: ${uniqueId} every 1 second.`);
 
         // Event Listener สำหรับปุ่มปิด Modal - ต้องเคลียร์ Timer ด้วย
-        qrCloseBtn.onclick = () => {
+        // ใช้ { once: true } เพราะ Listener นี้จะถูกเพิ่มใหม่ทุกครั้งที่ handleClaimButtonClick ถูกเรียก
+        qrCloseBtn.addEventListener('click', () => {
             if (warehousePollingInterval) {
                 clearInterval(warehousePollingInterval);
                 warehousePollingInterval = null;
                 console.log("Polling stopped by Close button.");
             }
             qrDialog.close();
-        };
+            // เมื่อ Modal ปิดแล้วค่อยโหลดรายการคลังใหม่ เพื่อให้สถานะอัปเดต
+             initWarehouse();
+        }, { once: true }); // ใช้ { once: true }
 
         // Event Listener สำหรับการปิด Modal ด้วยวิธีอื่น (เช่น คลิกพื้นหลัง, ปุ่ม ESC) - ต้องเคลียร์ Timer ด้วย
+        // ใช้ { once: true } เพราะ Listener นี้จะถูกเพิ่มใหม่ทุกครั้งที่ handleClaimButtonClick ถูกเรียก
          qrDialog.addEventListener('close', () => {
              if (warehousePollingInterval) {
                 clearInterval(warehousePollingInterval);
                 warehousePollingInterval = null;
                 console.log("Polling stopped due to modal close event.");
              }
-             // ลบ listener ตัวนี้ออกหลังจากทำงานแล้ว เพื่อไม่ให้มี listener ซ้ำซ้อนหากเปิด Modal ใหม่
-             // EventListener นี้ควรถูกเพิ่มใหม่ทุกครั้งที่ Modal เปิด
-         }, { once: true }); // ใช้ { once: true } เพื่อให้ listener ทำงานแค่ครั้งเดียวต่อการเปิด Modal
+              // เมื่อ Modal ปิดแล้วค่อยโหลดรายการคลังใหม่ เพื่อให้สถานะอัปเดต
+             initWarehouse();
+         }, { once: true }); // ใช้ { once: true }
+
 
         // แสดง Modal
         qrDialog.showModal();
@@ -929,11 +1141,7 @@
       const liffReady = await ensureLIFFAndFetchInitialData();
       if (!liffReady) return;
 
-      // Add event listener for modal close ONCE during initial setup
-      // This handles closing via backdrop click or ESC key specifically for the qrDialog
-      // The {once: true} in handleClaimButtonClick might be enough, let's re-evaluate.
-      // Let's add it inside handleClaimButtonClick with { once: true } is better as it's tied to that specific modal instance.
-      // So, no need for a global close listener here.
+      // Initial check for sendMessage capability - used in ensureLIFFAndFetchInitialData now
 
       window.addEventListener('hashchange', router);
       router();
