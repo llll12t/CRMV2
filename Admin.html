@@ -15,7 +15,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- QR Code Scanner Library -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-
+  <!-- ADD THIS LINE: QR Code Generator Library -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <style>
     body { background-color: #f1f5f9; }
     #qr-shaded-region{ border-width:0 !important ; }
@@ -138,6 +139,17 @@
       <h2 class="text-2xl font-bold mb-4">ตั้งค่าระบบ</h2>
       <div class="card bg-base-100 shadow-xl max-w-lg mx-auto"><div class="card-body"><h3 class="card-title">การตั้งค่าระดับผู้ใช้</h3><p class="text-sm opacity-70 mb-4">กำหนดแต้มขั้นต่ำเพื่อเลื่อนระดับ</p><form id="levelSettingsForm" onsubmit="event.preventDefault()" class="space-y-4"><div class="form-control"><label class="label"><span class="label-text">แต้มสำหรับระดับ VIP</span></label><input type="number" id="vipPoints" placeholder="0" class="input input-bordered w-full" required min="0" /></div><div class="form-control"><label class="label"><span class="label-text">แต้มสำหรับระดับ SUPER</span></label><input type="number" id="superPoints" placeholder="0" class="input input-bordered w-full" required min="0" /></div><div class="mt-6"><button type="submit" id="saveLevelSettingsBtn" class="btn btn-primary w-full">บันทึก</button></div></form></div></div>
   </template>
+    <!-- MODALS -->
+  <dialog id="qrCodeModal" class="modal">
+    <div class="modal-box text-center">
+        <h3 id="qrCodeModalTitle" class="font-bold text-lg mb-3">QR Code</h3>
+        <div id="qrCodeCanvas" class="flex justify-center p-4 bg-white rounded-lg"></div>
+        <p class="mt-2 text-sm text-gray-500">สำหรับให้ลูกค้าสแกนเพื่อรับแต้ม</p>
+        <div class="modal-action justify-center">
+            <button class="btn btn-primary" onclick="qrCodeModal.close()">ปิด</button>
+        </div>
+    </div>
+  </dialog>
 
 <script>
     // ==========================================================
@@ -257,13 +269,105 @@
     }
 
     async function initCodes() {
-        const tableBody = document.getElementById('codeTableBody'); document.getElementById('addCodeBtn').onclick = () => showCodeFormModal(); await loadCodes();
-        async function loadCodes() { tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4"><div class="loading-spinner mx-auto"></div></td></tr>`; try { const codes = await fetchData('getCodes'); renderCodeTable(codes); } catch (e) { tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-error">Load failed</td></tr>`; } }
-        function renderCodeTable(codes) { if (!codes.length) { tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = codes.map(c => `<tr><td class="font-mono text-xs">${c.id}</td><td>${c.title}</td><td>${c.point}</td><td class="max-w-xs truncate">${c.desc || '-'}</td><td><button class="btn btn-xs btn-info edit-code-btn" data-id="${c.id}">แก้ไข</button> <button class="btn btn-xs btn-error delete-code-btn" data-id="${c.id}">ลบ</button></td></tr>`).join(''); tableBody.querySelectorAll('.edit-code-btn').forEach(b => b.onclick = () => showCodeFormModal(codes.find(c => c.id === b.dataset.id))); tableBody.querySelectorAll('.delete-code-btn').forEach(b => b.onclick = () => deleteCode(b.dataset.id)); }
-        function showCodeFormModal(code) { const isEdit = !!code; dataFormModalTitle.textContent = isEdit ? 'แก้ไขโค้ด' : 'เพิ่มโค้ด'; formFieldsContainer.innerHTML = `<input type="text" id="formCodeId" placeholder="ID (QR Value)" class="input input-bordered" ${isEdit ? 'readonly' : 'required'} value="${isEdit ? code.id : ''}" /><input type="text" id="formCodeTitle" placeholder="Title" class="input input-bordered" required value="${isEdit ? code.title : ''}" /><input type="number" id="formCodePoint" placeholder="Points" class="input input-bordered" required value="${isEdit ? code.point : 0}" /><textarea id="formCodeDesc" placeholder="Description" class="textarea textarea-bordered h-24">${isEdit ? code.desc : ''}</textarea>`; dataFormModal.showModal(); formSaveBtn.onclick = () => saveCode(isEdit); formCancelBtn.onclick = () => dataFormModal.close(); }
-        async function saveCode(isEdit) { const data = { id: document.getElementById('formCodeId').value.trim(), title: document.getElementById('formCodeTitle').value.trim(), point: parseInt(document.getElementById('formCodePoint').value, 10), desc: document.getElementById('formCodeDesc').value.trim() }; if (!data.id || !data.title) return showAlert('Error', 'ID and Title are required.'); formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateCode' : 'addCode', data); showAlert('Success', `Code ${isEdit ? 'updated' : 'added'}`, () => { dataFormModal.close(); loadCodes(); }); } finally { formSaveBtn.classList.remove('loading'); } }
-        async function deleteCode(id) { if (await showConfirm('Confirm', `ต้องการลบโค้ด ${id}?`)) { try { await postData('deleteCode', { id }); showAlert('Success', 'Code deleted', loadCodes); } catch (e) {} } }
+    const tableBody = document.getElementById('codeTableBody'); document.getElementById('addCodeBtn').onclick = () => showCodeFormModal();
+    await loadCodes();
+
+    async function loadCodes() {
+        tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4"><div class="loading-spinner mx-auto"></div></td></tr>`;
+        try {
+            const codes = await fetchData('getCodes');
+            renderCodeTable(codes);
+        } catch (e) {
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-error">Load failed</td></tr>`;
+        }
     }
+
+    function renderCodeTable(codes) {
+        if (!codes.length) {
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">ไม่พบข้อมูล</td></tr>`;
+            return;
+        }
+        // [MODIFIED] เพิ่มปุ่ม QR และ data-title สำหรับแสดงชื่อใน Modal
+        tableBody.innerHTML = codes.map(c => `<tr>
+            <td class="font-mono text-xs">${c.id}</td>
+            <td>${c.title}</td>
+            <td>${c.point}</td>
+            <td class="max-w-xs truncate">${c.desc || '-'}</td>
+            <td>
+                <button class="btn btn-xs btn-accent qr-gen-btn" data-id="${c.id}" data-title="${c.title}">QR</button>
+                <button class="btn btn-xs btn-info edit-code-btn" data-id="${c.id}">แก้ไข</button>
+                <button class="btn btn-xs btn-error delete-code-btn" data-id="${c.id}">ลบ</button>
+            </td>
+        </tr>`).join('');
+
+        // [ADDED] เพิ่ม Event Listener สำหรับปุ่มสร้าง QR Code
+        tableBody.querySelectorAll('.qr-gen-btn').forEach(b => {
+            b.onclick = () => {
+                const codeId = b.dataset.id;
+                const codeTitle = b.dataset.title;
+                const qrCanvas = document.getElementById('qrCodeCanvas');
+                const modalTitle = document.getElementById('qrCodeModalTitle');
+                
+                qrCanvas.innerHTML = ''; // ล้าง QR Code เก่าออกก่อน
+                modalTitle.textContent = `QR Code: ${codeTitle}`;
+                
+                // สร้าง QR Code ใหม่โดยใช้ library
+                new QRCode(qrCanvas, {
+                    text: codeId,
+                    width: 256,
+                    height: 256,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+                
+                // แสดง Modal
+                document.getElementById('qrCodeModal').showModal();
+            };
+        });
+
+        tableBody.querySelectorAll('.edit-code-btn').forEach(b => b.onclick = () => showCodeFormModal(codes.find(c => c.id === b.dataset.id)));
+        tableBody.querySelectorAll('.delete-code-btn').forEach(b => b.onclick = () => deleteCode(b.dataset.id));
+    }
+
+    function showCodeFormModal(code) {
+        const isEdit = !!code;
+        dataFormModalTitle.textContent = isEdit ? 'แก้ไขโค้ด' : 'เพิ่มโค้ด';
+        formFieldsContainer.innerHTML = `<input type="text" id="formCodeId" placeholder="ID (QR Value)" class="input input-bordered" ${isEdit ? 'readonly' : 'required'} value="${isEdit ? code.id : ''}" /><input type="text" id="formCodeTitle" placeholder="Title" class="input input-bordered" required value="${isEdit ? code.title : ''}" /><input type="number" id="formCodePoint" placeholder="Points" class="input input-bordered" required value="${isEdit ? code.point : 0}" /><textarea id="formCodeDesc" placeholder="Description" class="textarea textarea-bordered h-24">${isEdit ? (code.desc || '') : ''}</textarea>`;
+        dataFormModal.showModal();
+        formSaveBtn.onclick = () => saveCode(isEdit);
+        formCancelBtn.onclick = () => dataFormModal.close();
+    }
+
+    async function saveCode(isEdit) {
+        const data = {
+            id: document.getElementById('formCodeId').value.trim(),
+            title: document.getElementById('formCodeTitle').value.trim(),
+            point: parseInt(document.getElementById('formCodePoint').value, 10),
+            desc: document.getElementById('formCodeDesc').value.trim()
+        };
+        if (!data.id || !data.title) return showAlert('Error', 'ID and Title are required.');
+        formSaveBtn.classList.add('loading');
+        try {
+            await postData(isEdit ? 'updateCode' : 'addCode', data);
+            showAlert('Success', `Code ${isEdit ? 'updated' : 'added'}`, () => {
+                dataFormModal.close();
+                loadCodes();
+            });
+        } finally {
+            formSaveBtn.classList.remove('loading');
+        }
+    }
+
+    async function deleteCode(id) {
+        if (await showConfirm('Confirm', `ต้องการลบโค้ด ${id}?`)) {
+            try {
+                await postData('deleteCode', { id });
+                showAlert('Success', 'Code deleted', loadCodes);
+            } catch (e) {}
+        }
+    }
+}
 
     async function initHistory() {
         const tableBody = document.getElementById('historyTableBody'); const [lineIdInput, typeSelect, startDateInput, endDateInput, filterBtn, resetBtn] = ['historySearchLineId', 'historyFilterType', 'historyStartDate', 'historyEndDate', 'historyFilterBtn', 'historyResetBtn'].map(id => document.getElementById(id)); filterBtn.onclick = loadHistory; resetBtn.onclick = () => { lineIdInput.value = ''; typeSelect.value = ''; startDateInput.value = ''; endDateInput.value = ''; loadHistory(); }; await loadHistory();
