@@ -239,7 +239,7 @@
 <script>
     // --- GLOBAL STATE & CACHE ---
     let liffInitialized = false;
-    const userState = { profile: null, lineId: "", points: 0, pointsChanged: false, level: "Member", customTag: "" };
+    const userState = { profile: null, lineId: "", points: 0, pointsChanged: false, level: "MEMBER", customTag: "" };
     const dataCache = { events: null, redeemItems: null, eventDetails: {}, userProfileFull: null, history: null, levelSettings: null };
     let warehousePollingInterval = null;
 
@@ -255,7 +255,7 @@
           qrCloseBtn = document.getElementById('qrDialogCloseBtn');
 
     // --- STYLES ---
-    const LEVEL_STYLES = { 'Member': { text: 'Member', class: 'badge-info badge-outline' }, 'VIP': { text: 'VIP', class: 'badge-primary badge-outline' }, 'Super': { text: 'Super', class: 'badge-success badge-outline' } };
+    const LEVEL_STYLES = { 'MEMBER': { text: 'MEMBER', class: 'badge-info badge-outline' }, 'VIP': { text: 'VIP', class: 'badge-primary badge-outline' }, 'SUPER': { text: 'SUPER', class: 'badge-success badge-outline' } };
     const CUSTOM_TAG_STYLES = { 'newuser': { class: 'badge-warning', text: 'สมาชิกใหม่' }, 'ceo': { class: 'badge-accent', text: 'CEO' }, 'admin': { class: 'badge-error', text: 'ผู้ดูแล' }, 'tester': { class: 'badge-secondary', text: 'ผู้ทดสอบ' }, 'default': { class: 'badge-neutral', text: '' } };
 
     // --- COMMON UI FUNCTIONS ---
@@ -277,9 +277,9 @@
     function calculateLevelAndProgress(currentPoints) {
       const vipPoints = dataCache.levelSettings?.VIP_points || 5000;
       const superPoints = dataCache.levelSettings?.SUPER_points || 10000;
-      let level = 'Member', currentLevelMin = 0, nextLevelMin = vipPoints, nextLevelName = 'VIP';
-      if (currentPoints >= superPoints) { level = 'Super'; currentLevelMin = superPoints; nextLevelMin = currentPoints; nextLevelName = ''; }
-      else if (currentPoints >= vipPoints) { level = 'VIP'; currentLevelMin = vipPoints; nextLevelMin = superPoints; nextLevelName = 'Super'; }
+      let level = 'MEMBER', currentLevelMin = 0, nextLevelMin = vipPoints, nextLevelName = 'VIP';
+      if (currentPoints >= superPoints) { level = 'SUPER'; currentLevelMin = superPoints; nextLevelMin = currentPoints; nextLevelName = ''; }
+      else if (currentPoints >= vipPoints) { level = 'VIP'; currentLevelMin = vipPoints; nextLevelMin = superPoints; nextLevelName = 'SUPER'; }
       const pointsInCurrentTier = currentPoints - currentLevelMin; const pointsToNextTier = nextLevelMin - currentLevelMin;
       let progressValue = 0, pointsNeeded = 0;
       if (nextLevelName) { progressValue = (pointsInCurrentTier / pointsToNextTier) * 100; pointsNeeded = nextLevelMin - currentPoints; }
@@ -296,7 +296,7 @@
         const userData = await userRes.json();
         if (userData && !userData.error) {
           userState.points = parseInt(userData.point || 0, 10);
-          userState.level = userData.level || 'Member';
+          userState.level = userData.level || 'MEMBER';
           userState.customTag = userData.customTag || '';
           dataCache.userProfileFull = userData;
           pointValEl.textContent = userState.points;
@@ -334,7 +334,7 @@
         else { console.warn("Failed to load level settings, using defaults."); dataCache.levelSettings = { VIP_points: 5000, SUPER_points: 10000 }; }
         if (!userData || !userData.isRegistered) { window.location.href = 'Register.html'; return false; }
         userState.points = parseInt(userData.point || 0, 10);
-        userState.level = userData.level || 'Member'; userState.customTag = userData.customTag || '';
+        userState.level = userData.level || 'MEMBER'; userState.customTag = userData.customTag || '';
         dataCache.userProfileFull = userData; pointValEl.textContent = userState.points;
         dataCache.history = historyData; userState.pointsChanged = false;
       } catch (error) { console.error("Failed to fetch initial data:", error); pointValEl.textContent = 'N/A'; showAlert("ข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลผู้ใช้ได้ กรุณาลองใหม่"); return false; }
