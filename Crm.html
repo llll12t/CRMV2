@@ -85,9 +85,7 @@
       <p class="text-xs text-gray-500 mb-4">ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า</p>
       <div class="modal-action justify-around">
         <button id="qrDialogCloseBtn" class="btn btn-outline">ปิด</button>
-        <!-- ปุ่มใหม่สำหรับส่งข้อความ -->
         <button id="sendMessageToOABtn" class="btn btn-info">แจ้งพนักงาน</button> 
-        <!-- ปุ่มยืนยันจะถูกซ่อนด้วย JavaScript เพราะเราจะใช้ระบบตรวจสอบอัตโนมัติ -->
         <button id="qrDialogConfirmBtn" class="btn btn-neutral hidden">ยืนยันการรับของ</button>
       </div>
     </div>
@@ -168,7 +166,7 @@
         <div class="flex items-center justify-center space-x-2 mb-2"><span id="profileLevelBadge" class="badge badge-lg"></span><span id="profileCustomTagBadge" class="badge badge-lg"></span></div>
         <progress id="profileProgressBar" class="progress progress-warning w-full" value="0" max="100"></progress>
         <div id="profilePointsToNextLevel" class="text-sm text-gray-700 mt-1"></div>
-        <div class="font-bold text-xl mt-4">รวมพ้อยต์: <span id="profileTotalPoints">0</span></div>
+        <div class="font-bold text-xl mt-4">แต้มสะสมทั้งหมด: <span id="profileTotalPoints">0</span></div>
       </div>
       <div id="profileFormContainer" class="bg-white p-6 rounded-lg shadow-md space-y-4 hidden">
         <div><label class="block text-sm font-medium text-gray-700 mb-1">LINE ID</label><input id="profileLineId" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div>
@@ -236,10 +234,12 @@
     </div>
   </div>
 </dialog>
+
 <script>
     // --- GLOBAL STATE & CACHE ---
     let liffInitialized = false;
-    const userState = { profile: null, lineId: "", points: 0, pointsChanged: false, level: "Member", customTag: "" };
+    // [MODIFIED] Added totalPoints to user state
+    const userState = { profile: null, lineId: "", points: 0, totalPoints: 0, pointsChanged: false, level: "Member", customTag: "" };
     const dataCache = { events: null, redeemItems: null, eventDetails: {}, userProfileFull: null, history: null, levelSettings: null };
     let warehousePollingInterval = null;
 
@@ -274,34 +274,60 @@
     }
 
     // --- DATA & STATE MANAGEMENT ---
-    function calculateLevelAndProgress(currentPoints) {
+    // [MODIFIED] Calculates level progress based on total accumulated points.
+    function calculateLevelAndProgress(totalAccumulatedPoints) {
       const vipPoints = dataCache.levelSettings?.VIP_points || 5000;
       const superPoints = dataCache.levelSettings?.SUPER_points || 10000;
       let level = 'Member', currentLevelMin = 0, nextLevelMin = vipPoints, nextLevelName = 'VIP';
-      if (currentPoints >= superPoints) { level = 'Super'; currentLevelMin = superPoints; nextLevelMin = currentPoints; nextLevelName = ''; }
-      else if (currentPoints >= vipPoints) { level = 'VIP'; currentLevelMin = vipPoints; nextLevelMin = superPoints; nextLevelName = 'Super'; }
-      const pointsInCurrentTier = currentPoints - currentLevelMin; const pointsToNextTier = nextLevelMin - currentLevelMin;
-      let progressValue = 0, pointsNeeded = 0;
-      if (nextLevelName) { progressValue = (pointsInCurrentTier / pointsToNextTier) * 100; pointsNeeded = nextLevelMin - currentPoints; }
-      else { progressValue = 100; pointsNeeded = 0; }
+      
+      if (totalAccumulatedPoints >= superPoints) { 
+          level = 'Super'; 
+          currentLevelMin = superPoints; 
+          nextLevelMin = totalAccumulatedPoints; // At max level
+          nextLevelName = ''; 
+      } else if (totalAccumulatedPoints >= vipPoints) { 
+          level = 'VIP'; 
+          currentLevelMin = vipPoints; 
+          nextLevelMin = superPoints; 
+          nextLevelName = 'Super'; 
+      }
+      
+      const pointsInCurrentTier = totalAccumulatedPoints - currentLevelMin; 
+      const pointsToNextTier = nextLevelMin - currentLevelMin;
+      
+      let progressValue = 0;
+      let pointsNeeded = 0;
+
+      if (nextLevelName) { 
+          progressValue = (pointsToNextTier > 0) ? (pointsInCurrentTier / pointsToNextTier) * 100 : 100;
+          pointsNeeded = nextLevelMin - totalAccumulatedPoints; 
+      } else { 
+          progressValue = 100; 
+          pointsNeeded = 0; 
+      }
+
       return { level, progressValue: Math.min(100, Math.max(0, progressValue)), pointsToNext: pointsNeeded, nextLevelName };
     }
+    
     function setBadgeContent(badgeElement, text, className) {
       if (!badgeElement) return; badgeElement.textContent = text; badgeElement.className = className;
       if (text) badgeElement.classList.remove('hidden'); else badgeElement.classList.add('hidden');
     }
+
     async function fetchAndUpdateUserState() {
       try {
         const userRes = await fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`);
         const userData = await userRes.json();
         if (userData && !userData.error) {
+          // [MODIFIED] Update all relevant user states
           userState.points = parseInt(userData.point || 0, 10);
+          userState.totalPoints = parseInt(userData.totalPoints || 0, 10);
           userState.level = userData.level || 'Member';
           userState.customTag = userData.customTag || '';
           dataCache.userProfileFull = userData;
           pointValEl.textContent = userState.points;
           userState.pointsChanged = true;
-          console.log(`User state updated: Points=${userState.points}, Level=${userState.level}, Tag=${userState.customTag}`);
+          console.log(`User state updated: Points=${userState.points}, TotalPoints=${userState.totalPoints}, Level=${userState.level}`);
         } else { console.error("Failed to fetch user data after action:", userData?.error || "Unknown error"); }
       } catch (e) { console.error("Error fetching user info after action:", e); }
     }
@@ -333,10 +359,16 @@
         if (settingsData && !settingsData.error) { dataCache.levelSettings = { VIP_points: parseInt(settingsData.VIP_points || 0), SUPER_points: parseInt(settingsData.SUPER_points || 0) }; }
         else { console.warn("Failed to load level settings, using defaults."); dataCache.levelSettings = { VIP_points: 5000, SUPER_points: 10000 }; }
         if (!userData || !userData.isRegistered) { window.location.href = 'Register.html'; return false; }
+        
+        // [MODIFIED] Store both spendable and total points
         userState.points = parseInt(userData.point || 0, 10);
-        userState.level = userData.level || 'Member'; userState.customTag = userData.customTag || '';
-        dataCache.userProfileFull = userData; pointValEl.textContent = userState.points;
-        dataCache.history = historyData; userState.pointsChanged = false;
+        userState.totalPoints = parseInt(userData.totalPoints || 0, 10);
+        userState.level = userData.level || 'Member'; 
+        userState.customTag = userData.customTag || '';
+        dataCache.userProfileFull = userData; 
+        pointValEl.textContent = userState.points;
+        dataCache.history = historyData; 
+        userState.pointsChanged = false;
       } catch (error) { console.error("Failed to fetch initial data:", error); pointValEl.textContent = 'N/A'; showAlert("ข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลผู้ใช้ได้ กรุณาลองใหม่"); return false; }
       return true;
     }
@@ -417,74 +449,75 @@
       } catch (e) { console.error("Error in initDashboard:", e); if (historyListEl) historyListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาด</li>`; }
     }
 
-// โค้ดที่แก้ไขแล้วสำหรับ initEvent()
-async function initEvent() {
-    const eventListEl = document.getElementById('eventList');
-    if (eventListEl) eventListEl.innerHTML = generateListSkeleton(5);
-    
-    let events = dataCache.events || [];
-    if (!dataCache.events) {
-        try {
-            const res = await fetch(`${CONFIG.GAS_URL}?action=getEvents`);
-            events = await res.json();
-            dataCache.events = events;
-        } catch (e) {
-            console.error("Error fetching events:", e);
-            if (eventListEl) eventListEl.innerHTML = `<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดกิจกรรม</div>`;
+    // [LATEST VERSION] Displays all events with correct level tags and button states.
+    async function initEvent() {
+        const eventListEl = document.getElementById('eventList');
+        if (eventListEl) eventListEl.innerHTML = generateListSkeleton(5);
+        
+        let events = dataCache.events || [];
+        if (!dataCache.events) {
+            try {
+                const res = await fetch(`${CONFIG.GAS_URL}?action=getEvents`);
+                events = await res.json();
+                if (events.error) throw new Error(events.error);
+                dataCache.events = events;
+            } catch (e) {
+                console.error("Error fetching events:", e);
+                if (eventListEl) eventListEl.innerHTML = `<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดกิจกรรม</div>`;
+                return;
+            }
+        }
+
+        if (!events || events.length === 0) {
+            eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`;
             return;
         }
-    }
 
-    if (!events || events.length === 0) {
-        eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`;
-        return;
-    }
+        eventListEl.innerHTML = events.map(e => {
+            let isUserAllowed = false;
+            let levelTagHTML = '';
+            
+            // Check if allowedLevels is a non-empty string
+            const hasLevelRestriction = typeof e.allowedLevels === 'string' && e.allowedLevels.trim() !== '';
 
-    eventListEl.innerHTML = events.map(e => {
-        let isUserAllowed = false;
-        let levelTagHTML = '';
-        
-        // **[แก้ไข]** ตรวจสอบว่าเป็น String และมีข้อมูลหรือไม่
-        const hasLevelRestriction = typeof e.allowedLevels === 'string' && e.allowedLevels.trim() !== '';
-
-        if (hasLevelRestriction) {
-            const allowed = e.allowedLevels.split(',').map(level => level.trim().toUpperCase());
-            if (allowed.includes(userState.level.toUpperCase())) {
-                isUserAllowed = true;
+            if (hasLevelRestriction) {
+                const allowed = e.allowedLevels.split(',').map(level => level.trim().toUpperCase());
+                if (allowed.includes(userState.level.toUpperCase())) {
+                    isUserAllowed = true;
+                }
+                levelTagHTML = `<div class="badge badge-outline badge-sm mt-2">สำหรับ: ${e.allowedLevels}</div>`;
+            } else {
+                isUserAllowed = true; // No restriction
             }
-            levelTagHTML = `<div class="badge badge-outline badge-sm mt-2">สำหรับ: ${e.allowedLevels}</div>`;
-        } else {
-            // ไม่มีข้อจำกัดเรื่องระดับ หรือข้อมูลระดับไม่ถูกต้อง
-            isUserAllowed = true;
-        }
-        
-        const buttonHTML = isUserAllowed
-            ? `<a href="#event-detail?id=${e.id}" class="btn btn-neutral btn-sm">ดูรายละเอียด</a>`
-            : `<button class="btn btn-disabled btn-sm">ระดับไม่ถึง</button>`;
+            
+            const buttonHTML = isUserAllowed
+                ? `<a href="#event-detail?id=${e.id}" class="btn btn-neutral btn-sm">ดูรายละเอียด</a>`
+                : `<button class="btn btn-disabled btn-sm">ระดับไม่ถึง</button>`;
 
-        return `
-            <div class="bg-white rounded p-4 flex justify-between items-center shadow-sm">
-                <div>
-                    <div class="font-semibold text-gray-800 text-sm">${e.title}</div>
-                    <div class="text-xs text-gray-500">${e.detail || 'ดูรายละเอียดกิจกรรม'}</div>
-                    ${levelTagHTML}
+            return `
+                <div class="bg-white rounded p-4 flex justify-between items-center shadow-sm">
+                    <div>
+                        <div class="font-semibold text-gray-800 text-sm">${e.title}</div>
+                        <div class="text-xs text-gray-500">${e.detail || 'ดูรายละเอียดกิจกรรม'}</div>
+                        ${levelTagHTML}
+                    </div>
+                    <div class="text-right">
+                        ${buttonHTML}
+                    </div>
                 </div>
-                <div class="text-right">
-                    ${buttonHTML}
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-    // โค้ดที่แก้ไขแล้วสำหรับ initEventDetail()
-async function initEventDetail() {
-    const params = new URLSearchParams(window.location.hash.split('?')[1]);
-    const eventId = params.get("id");
-    const cardSkeleton = document.getElementById('cardSkeleton'), card = document.getElementById('card'), titleEl = document.getElementById('eventDetailTitle'), descEl = document.getElementById('eventDetailDesc'), pointEl = document.getElementById('eventPoint'), joinBtn = document.getElementById('joinBtn');
-    cardSkeleton.classList.remove('hidden'); card.classList.add('hidden');
+            `;
+        }).join('');
+    }
 
-    let eventData = dataCache.eventDetails[eventId];
-    if (!eventData) {
+    // [LATEST VERSION] Handles button clicks correctly and checks levels safely.
+    async function initEventDetail() {
+      const params = new URLSearchParams(window.location.hash.split('?')[1]);
+      const eventId = params.get("id");
+      const cardSkeleton = document.getElementById('cardSkeleton'), card = document.getElementById('card'), titleEl = document.getElementById('eventDetailTitle'), descEl = document.getElementById('eventDetailDesc'), pointEl = document.getElementById('eventPoint'), joinBtn = document.getElementById('joinBtn');
+      cardSkeleton.classList.remove('hidden'); card.classList.add('hidden');
+
+      let eventData = dataCache.eventDetails[eventId];
+      if (!eventData) {
         try { 
             const res = await fetch(`${CONFIG.GAS_URL}?action=getEventById&id=${eventId}`); 
             eventData = await res.json(); 
@@ -494,31 +527,26 @@ async function initEventDetail() {
             console.error("Error fetching event detail:", e); 
             eventData = { error: "ไม่สามารถโหลดรายละเอียดได้" }; 
         }
-    }
+      }
 
-    const history = await getFreshOrCachedHistory();
-    if (eventData.error) { 
-        titleEl.textContent = "ไม่พบกิจกรรม"; 
-        descEl.textContent = eventData.error; 
-        joinBtn.disabled = true; 
-    } else {
-        titleEl.textContent = eventData.title; 
-        pointEl.textContent = `${eventData.point}+`; 
-        descEl.textContent = eventData.desc;
+      const history = await getFreshOrCachedHistory();
+      if (eventData.error) { 
+        titleEl.textContent = "ไม่พบกิจกรรม"; descEl.textContent = eventData.error; joinBtn.disabled = true; 
+      } else {
+        titleEl.textContent = eventData.title; pointEl.textContent = `${eventData.point}+`; descEl.textContent = eventData.desc;
         
         const hasJoined = history.some(item => item.type === 'event' && item.eventId === eventId);
         
-        // **[แก้ไข]** ตรวจสอบระดับผู้ใช้ให้ปลอดภัย
         let isLevelAllowed = false;
         const hasLevelRestriction = typeof eventData.allowedLevels === 'string' && eventData.allowedLevels.trim() !== '';
-
+        
         if (hasLevelRestriction) {
             const allowed = eventData.allowedLevels.split(',').map(level => level.trim().toUpperCase());
             if (allowed.includes(userState.level.toUpperCase())) {
                 isLevelAllowed = true;
             }
         } else {
-            isLevelAllowed = true; // ไม่มีข้อจำกัด
+            isLevelAllowed = true; // No restriction
         }
 
         if (hasJoined) { 
@@ -528,32 +556,24 @@ async function initEventDetail() {
             joinBtn.textContent = `สำหรับระดับ ${eventData.allowedLevels}`; 
             joinBtn.disabled = true; 
         } else {
-            // ส่วนของ joinBtn.onclick เหมือนเดิม ไม่ต้องแก้ไข
+            // Correct button click logic
             joinBtn.onclick = async () => {
                 if (!(await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`))) return;
-                
                 joinBtn.disabled = true;
                 joinBtn.textContent = "กำลังดำเนินการ...";
-
                 try {
                     const res = await fetch(CONFIG.GAS_URL, {
                         method: "POST",
-                        body: JSON.stringify({
-                            action: "joinEvent",
-                            lineId: userState.lineId,
-                            eventId,
-                            title: eventData.title,
-                            point: eventData.point
-                        })
+                        body: JSON.stringify({ action: "joinEvent", lineId: userState.lineId, eventId, title: eventData.title, point: eventData.point })
                     });
                     const text = await res.text();
-
                     showAlert("สถานะ", text, async () => {
                         if (text.includes("สำเร็จ")) {
                             await fetchAndUpdateUserState();
                             joinBtn.textContent = "รับพ้อยต์แล้ว";
-                            joinBtn.disabled = true;
+                            joinBtn.disabled = true; // Keep it disabled
                         } else {
+                            // Also keep it disabled if already claimed
                             joinBtn.textContent = "รับพ้อยต์แล้ว";
                             joinBtn.disabled = true;
                         }
@@ -562,26 +582,34 @@ async function initEventDetail() {
                     console.error("Join event failed:", e);
                     showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมได้');
                     joinBtn.textContent = "เข้าร่วม";
-                    joinBtn.disabled = false;
+                    joinBtn.disabled = false; // Re-enable only on network error
                 }
             };
         }
+      }
+      cardSkeleton.classList.add("hidden"); card.classList.remove("hidden");
     }
-    cardSkeleton.classList.add("hidden"); card.classList.remove("hidden");
-}
 
+    // [MODIFIED] Uses totalPoints for level calculation and display.
     async function initProfile() {
       const dpEl = document.getElementById('profileDisplayPicture'), dnEl = document.getElementById('profileDisplayName'), lineIdEl = document.getElementById('profileLineId'), levelBadgeEl = document.getElementById('profileLevelBadge'), tagBadgeEl = document.getElementById('profileCustomTagBadge'), progressEl = document.getElementById('profileProgressBar'), progressTextEl = document.getElementById('profilePointsToNextLevel'), totalPointsEl = document.getElementById('profileTotalPoints'), nameEl = document.getElementById('profileName'), phoneEl = document.getElementById('profilePhone'), emailEl = document.getElementById('profileEmail'), addressEl = document.getElementById('profileAddress'), noteEl = document.getElementById('profileNote'), editBtn = document.getElementById('editProfileBtn'), formContainer = document.getElementById('profileFormContainer'), editButtonsDiv = document.getElementById('profileEditButtons'), saveBtn = document.getElementById('saveProfileBtn'), cancelBtn = document.getElementById('cancelEditBtn');
       const editableInputs = [nameEl, phoneEl, emailEl, addressEl, noteEl]; let initialData = {};
 
-      dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/96'; dnEl.textContent = userState.profile.displayName || 'ผู้ใช้ LINE';
-      totalPointsEl.textContent = userState.points.toLocaleString();
-      const { level, progressValue, pointsToNext, nextLevelName } = calculateLevelAndProgress(userState.points);
+      dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/96';
+      dnEl.textContent = userState.profile.displayName || 'ผู้ใช้ LINE';
+      
+      // Display total accumulated points for level context
+      totalPointsEl.textContent = userState.totalPoints.toLocaleString();
+      
+      // Calculate level and progress based on total accumulated points
+      const { progressValue, pointsToNext, nextLevelName } = calculateLevelAndProgress(userState.totalPoints);
+      
       setBadgeContent(levelBadgeEl, LEVEL_STYLES[userState.level]?.text || userState.level, `badge badge-lg ${LEVEL_STYLES[userState.level]?.class || ''}`);
       const primaryTag = (userState.customTag.split(',')[0] || '').trim().toLowerCase();
       const tagInfo = CUSTOM_TAG_STYLES[primaryTag] || CUSTOM_TAG_STYLES['default'];
       const tagText = tagInfo.text || (primaryTag ? primaryTag.charAt(0).toUpperCase() + primaryTag.slice(1) : '');
       if (!tagText) tagBadgeEl.classList.add('hidden'); else setBadgeContent(tagBadgeEl, tagText, `badge badge-lg ${tagInfo.class}`);
+      
       progressEl.value = progressValue;
       progressTextEl.textContent = nextLevelName ? `อีก ${pointsToNext.toLocaleString()} พ้อยต์สู่ ${nextLevelName}` : `คุณอยู่ระดับสูงสุดแล้ว!`;
 
@@ -615,7 +643,6 @@ async function initEventDetail() {
     async function initRedeem() {
         const redeemListEl = document.getElementById('redeemList');
         if (redeemListEl) redeemListEl.innerHTML = generateCardSkeleton(4);
-
         let items = dataCache.redeemItems || [];
         if (!dataCache.redeemItems || dataCache.redeemItems.length === 0) {
             try {
@@ -629,12 +656,10 @@ async function initEventDetail() {
                 return;
             }
         }
-
         if (!items || items.length === 0) {
             redeemListEl.innerHTML = `<li class="col-span-2 text-center text-gray-400 py-4">ไม่มีของรางวัลให้แลก</li>`;
             return;
         }
-
         redeemListEl.innerHTML = items.map(item => `
             <li class="bg-white p-4 rounded shadow-sm text-center flex flex-col justify-between">
                 <div>
@@ -643,31 +668,21 @@ async function initEventDetail() {
                   <div class="text-sm text-gray-600 mb-2">${item.point} พ้อยต์</div>
                 </div>
                 <button
-                    data-item-id="${item.id}"
-                    data-item-name="${item.name}"
-                    data-item-point="${item.point}"
-                    data-item-type="${item.type}"
-                    class="redeem-btn btn btn-neutral btn-sm mt-2">
-                    แลกเลย
-                </button>
+                    data-item-id="${item.id}" data-item-name="${item.name}" data-item-point="${item.point}" data-item-type="${item.type}"
+                    class="redeem-btn btn btn-neutral btn-sm mt-2">แลกเลย</button>
             </li>
         `).join('');
-
-        document.querySelectorAll('.redeem-btn').forEach(btn => {
-            btn.addEventListener('click', handleRedeemClick);
-        });
+        document.querySelectorAll('.redeem-btn').forEach(btn => btn.addEventListener('click', handleRedeemClick));
     }
 
     async function handleRedeemClick(event) {
         const btn = event.currentTarget;
         const { itemId, itemName, itemPoint, itemType } = btn.dataset;
         const point = parseInt(itemPoint, 10);
-
         if (userState.points < point) {
             showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points}) ไม่พอสำหรับแลก "${itemName}" ซึ่งใช้ ${point} พ้อยต์`);
             return;
         }
-
         if (itemType === 'physical') {
             showShippingForm({ itemId, itemName, point });
         } else {
@@ -685,36 +700,27 @@ async function initEventDetail() {
         const addressInput = document.getElementById('shippingAddress');
         const confirmBtn = document.getElementById('shippingFormConfirmBtn');
         const cancelBtn = document.getElementById('shippingFormCancelBtn');
-
         titleEl.textContent = `ข้อมูลจัดส่งสำหรับ: ${item.itemName}`;
-
         const profile = dataCache.userProfileFull || {};
         nameInput.value = profile.name || '';
         phoneInput.value = profile.phone || '';
         addressInput.value = profile.address || '';
-
         dialog.showModal();
-
         const handleConfirm = async () => {
             const shippingName = nameInput.value.trim();
             const shippingPhone = phoneInput.value.trim();
             const shippingAddress = addressInput.value.trim();
-
             if (!shippingName || !shippingPhone || !shippingAddress) {
                 showAlert("ข้อมูลไม่ครบ", "กรุณากรอกชื่อ, เบอร์โทร, และที่อยู่ให้ครบถ้วน");
                 return;
             }
-
             dialog.close();
             const originalButton = document.querySelector(`.redeem-btn[data-item-id="${item.itemId}"]`);
-
             await executeRedemption(originalButton, {
-                itemId: item.itemId,
-                point: item.point,
+                itemId: item.itemId, point: item.point,
                 shippingInfo: { name: shippingName, phone: shippingPhone, address: shippingAddress }
             });
         };
-
         confirmBtn.onclick = handleConfirm;
         cancelBtn.onclick = () => dialog.close();
     }
@@ -722,19 +728,10 @@ async function initEventDetail() {
     async function executeRedemption(buttonElement, payload) {
         buttonElement.disabled = true;
         buttonElement.textContent = "กำลังแลก...";
-
         try {
-            const body = {
-                action: 'redeemItem',
-                lineId: userState.lineId,
-                itemId: payload.itemId,
-                point: payload.point,
-                ...(payload.shippingInfo && { shippingInfo: payload.shippingInfo })
-            };
-
+            const body = { action: 'redeemItem', lineId: userState.lineId, itemId: payload.itemId, point: payload.point, ...(payload.shippingInfo && { shippingInfo: payload.shippingInfo }) };
             const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify(body) });
             const text = await res.text();
-
             showAlert("สถานะการแลก", text, async () => {
                 if (text.includes("สำเร็จ")) {
                     await fetchAndUpdateUserState();
@@ -772,11 +769,7 @@ async function initEventDetail() {
     }
 
     async function initAddpoint() {
-      const scanContainer = document.getElementById('scanContainer');
-      const scanBtn = document.getElementById('scanBtn');
-      const enterBtn = document.getElementById('enterBtn');
-      const manualInput = document.getElementById('manualCode');
-
+      const scanContainer = document.getElementById('scanContainer'), scanBtn = document.getElementById('scanBtn'), enterBtn = document.getElementById('enterBtn'), manualInput = document.getElementById('manualCode');
       async function processCode(code) {
           if (!code) return;
           const history = await getFreshOrCachedHistory();
@@ -787,123 +780,51 @@ async function initEventDetail() {
           try {
               const res = await fetch(`${CONFIG.GAS_URL}?action=getCodeById&id=${code}`);
               const data = await res.json();
-              if (data.error) {
-                  showAlert('ไม่พบโค้ด', data.error);
-                  return;
-              }
-              scanContainer.innerHTML = `
-                <div class="bg-white p-6 rounded shadow mb-4 text-center">
-                  <div class="font-bold text-lg mb-2">${data.title}</div>
-                  <div class="text-sm text-gray-700 mb-4">${data.desc}</div>
-                  <div class="font-bold text-yellow-600 mb-4 text-xl">คุณจะได้รับ: ${data.point} พ้อยต์</div>
-                  <button id="acceptBtn" class="btn btn-neutral w-full">ยืนยันการรับพ้อยต์</button>
-                </div>`;
+              if (data.error) { showAlert('ไม่พบโค้ด', data.error); return; }
+              scanContainer.innerHTML = `<div class="bg-white p-6 rounded shadow mb-4 text-center"><div class="font-bold text-lg mb-2">${data.title}</div><div class="text-sm text-gray-700 mb-4">${data.desc}</div><div class="font-bold text-yellow-600 mb-4 text-xl">คุณจะได้รับ: ${data.point} พ้อยต์</div><button id="acceptBtn" class="btn btn-neutral w-full">ยืนยันการรับพ้อยต์</button></div>`;
               document.getElementById('acceptBtn').addEventListener('click', () => joinCode(data));
-          } catch (e) {
-              console.error("Error processing code:", e);
-              showAlert('ข้อผิดพลาด', 'ไม่สามารถประมวลผลโค้ดได้ กรุณาลองใหม่');
-          }
+          } catch (e) { console.error("Error processing code:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถประมวลผลโค้ดได้'); }
       }
-
       async function joinCode(codeData) {
           const { id: scannedCode, title: codeTitle, point: codePoint } = codeData;
-          if (!(await showConfirm('ยืนยัน', `คุณต้องการรับพ้อยต์จาก "${codeTitle}" จำนวน ${codePoint} พ้อยต์ใช่หรือไม่?`))) return;
+          if (!(await showConfirm('ยืนยัน', `รับพ้อยต์จาก "${codeTitle}" จำนวน ${codePoint} พ้อยต์?`))) return;
           const btn = document.getElementById("acceptBtn");
           if (!btn) return;
-          btn.disabled = true;
-          btn.textContent = "กำลังดำเนินการ...";
-          let success = false;
+          btn.disabled = true; btn.textContent = "กำลังดำเนินการ..."; let success = false;
           try {
-              const res = await fetch(CONFIG.GAS_URL, {
-                  method: "POST",
-                  body: JSON.stringify({ action: "joinCode", lineId: userState.lineId, id: scannedCode, title: codeTitle, point: codePoint })
-              });
+              const res = await fetch(CONFIG.GAS_URL, { method: "POST", body: JSON.stringify({ action: "joinCode", lineId: userState.lineId, id: scannedCode, title: codeTitle, point: codePoint }) });
               const text = await res.text();
               if (text.includes("สำเร็จ")) {
-                  success = true;
-                  btn.textContent = "รับพ้อยต์แล้ว";
-                  showAlert("สำเร็จ", text, async () => {
-                      await fetchAndUpdateUserState();
-                      window.location.hash = '#dashboard';
-                  });
-              } else {
-                  showAlert("เกิดข้อผิดพลาด", text);
-                   window.location.hash = '#addpoint';
-              }
-          } catch (e) {
-              console.error("Join code failed:", e);
-              showAlert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเพื่อรับพ้อยต์ได้');
-          } finally {
-              if (!success && btn) {
-                  btn.disabled = false;
-                  btn.textContent = "ยืนยันการรับพ้อยต์";
-              }
-          }
+                  success = true; btn.textContent = "รับพ้อยต์แล้ว";
+                  showAlert("สำเร็จ", text, async () => { await fetchAndUpdateUserState(); window.location.hash = '#dashboard'; });
+              } else { showAlert("เกิดข้อผิดพลาด", text); window.location.hash = '#addpoint'; }
+          } catch (e) { console.error("Join code failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อได้'); } 
+          finally { if (!success && btn) { btn.disabled = false; btn.textContent = "ยืนยันการรับพ้อยต์"; } }
       }
-
       scanBtn.onclick = async () => {
-          try {
-              const result = await liff.scanCodeV2();
-              if (result && result.value) {
-                  await processCode(result.value);
-              }
-          } catch (e) {
-              if (e.code !== 'USER_CANCEL') {
-                 console.error("Scan failed:", e);
-                 showAlert('สแกนไม่สำเร็จ', e.message || 'กรุณาลองใหม่อีกครั้ง');
-              }
-          }
+          try { const result = await liff.scanCodeV2(); if (result && result.value) await processCode(result.value); } 
+          catch (e) { if (e.code !== 'USER_CANCEL') { console.error("Scan failed:", e); showAlert('สแกนไม่สำเร็จ', e.message || 'กรุณาลองใหม่'); } }
       };
-
-      enterBtn.onclick = () => {
-        const codeValue = manualInput.value.trim();
-        if (codeValue) {
-          processCode(codeValue);
-        } else {
-          showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกโค้ด');
-        }
-      };
+      enterBtn.onclick = () => { const codeValue = manualInput.value.trim(); if (codeValue) processCode(codeValue); else showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกโค้ด'); };
     }
 
     // --- WAREHOUSE ---
     async function initWarehouse() {
-      if (warehousePollingInterval) {
-         clearInterval(warehousePollingInterval);
-         warehousePollingInterval = null;
-          if (qrDialog && qrDialog.open) {
-             qrDialog.close();
-         }
-         console.log("Polling stopped due to initWarehouse call.");
-      }
-
+      if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; if (qrDialog.open) qrDialog.close(); console.log("Polling stopped due to initWarehouse call."); }
       const warehouseListEl = document.getElementById('warehouseList');
       if (warehouseListEl) warehouseListEl.innerHTML = generateListSkeleton(3);
       try {
         const res = await fetch(`${CONFIG.GAS_URL}?action=getWarehouseItems&lineId=${userState.lineId}`);
         const ownedItems = await res.json();
         if (!ownedItems || ownedItems.error) throw new Error(ownedItems.error || 'Failed to load data');
-
-        if (ownedItems.length === 0) {
-          warehouseListEl.innerHTML = '<li class="text-center text-gray-400 py-4">ยังไม่มีของรางวัลในคลังของคุณ</li>';
-          return;
-        }
-
+        if (ownedItems.length === 0) { warehouseListEl.innerHTML = '<li class="text-center text-gray-400 py-4">ยังไม่มีของรางวัลในคลัง</li>'; return; }
         warehouseListEl.innerHTML = ownedItems.map(item => {
           const isClaimed = item.status === 'claimed';
           const statusBadge = `<span class="badge ${isClaimed ? 'badge-success' : 'badge-warning'}">${isClaimed ? 'รับแล้ว' : 'รอรับ'}</span>`;
-          const actionArea = isClaimed
-            ? `<div class="text-xs text-gray-500 mt-1">วันที่รับ: ${item.claimDate || '-'}</div>`
-            : `<button class="btn btn-neutral btn-sm claim-btn" data-unique-id="${item.uniqueId}" data-item-name="${item.itemName}">รับของ</button>`;
-
-          return `<li class="bg-white rounded p-4 shadow-sm flex justify-between items-center">
-                    <div><div class="font-semibold text-gray-800 text-sm">${item.itemName}</div><div class="text-xs text-gray-500 mt-1">วันที่แลก: ${item.redeemDate}</div>${statusBadge}</div>
-                    <div class="text-right">${actionArea}</div></li>`;
+          const actionArea = isClaimed ? `<div class="text-xs text-gray-500 mt-1">วันที่รับ: ${item.claimDate || '-'}</div>` : `<button class="btn btn-neutral btn-sm claim-btn" data-unique-id="${item.uniqueId}" data-item-name="${item.itemName}">รับของ</button>`;
+          return `<li class="bg-white rounded p-4 shadow-sm flex justify-between items-center"><div><div class="font-semibold text-gray-800 text-sm">${item.itemName}</div><div class="text-xs text-gray-500 mt-1">วันที่แลก: ${item.redeemDate}</div>${statusBadge}</div><div class="text-right">${actionArea}</div></li>`;
         }).join('');
-
-        document.querySelectorAll('.claim-btn').forEach(button => {
-            button.addEventListener('click', handleClaimButtonClick);
-        });
-
+        document.querySelectorAll('.claim-btn').forEach(button => button.addEventListener('click', handleClaimButtonClick));
       } catch (e) {
         console.error("Error in initWarehouse:", e);
         showAlert("เกิดข้อผิดพลาด", "ไม่สามารถโหลดคลังของรางวัลได้");
@@ -912,120 +833,41 @@ async function initEventDetail() {
     }
 
     function handleClaimButtonClick(event) {
-        if (warehousePollingInterval) {
-            clearInterval(warehousePollingInterval);
-            warehousePollingInterval = null;
-        }
-
+        if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; }
         const btn = event.currentTarget;
         const { uniqueId, itemName } = btn.dataset;
-
-        const qrDialog = document.getElementById('qrDialog');
-        const sendMessageToOABtn = document.getElementById('sendMessageToOABtn');
-
         qrConfirmBtn.classList.add('hidden');
         qrDialogTitle.textContent = `สแกนเพื่อรับ: ${itemName}`;
         qrDialogItemName.textContent = `ID เฉพาะ: ${uniqueId}`;
         qrcodeContainer.innerHTML = '';
-
-        try {
-            const qr = qrcode(4, 'L');
-            qr.addData(uniqueId);
-            qr.make();
-            qrcodeContainer.innerHTML = qr.createImgTag(6, 4);
-        } catch(e) {
-            qrcodeContainer.innerHTML = `<p class="text-red-500">ไม่สามารถสร้าง QR Code ได้</p>`;
-            console.error(e);
-        }
-
-        sendMessageToOABtn.onclick = async () => {
+        try { const qr = qrcode(4, 'L'); qr.addData(uniqueId); qr.make(); qrcodeContainer.innerHTML = qr.createImgTag(6, 4); } 
+        catch(e) { qrcodeContainer.innerHTML = `<p class="text-red-500">ไม่สามารถสร้าง QR Code ได้</p>`; console.error(e); }
+        document.getElementById('sendMessageToOABtn').onclick = async () => {
             const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(uniqueId)}`;
-            
-            const flexMessage = {
-                "type": "bubble",
-                "body": {
-                    "type": "box", "layout": "vertical", "spacing": "md",
-                    "contents": [
-                        { "type": "image", "url": qrImageUrl, "size": "5xl", "aspectRatio": "1:1", "aspectMode": "cover"},
-                        { "type": "text", "text": "แจ้งรับของรางวัล", "weight": "bold","align": "center", "size": "md", "color": "#000000" },
-                        { "type": "separator" },
-                        {
-                            "type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm",
-                            "contents": [
-                                { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [
-                                    { "type": "text", "text": "สินค้า", "color": "#aaaaaa", "size": "sm", "flex": 2 },
-                                    { "type": "text", "text": itemName, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 }
-                                ]},
-                                { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [
-                                    { "type": "text", "text": "รหัส", "color": "#aaaaaa", "size": "sm", "flex": 2 },
-                                    { "type": "text", "text": uniqueId, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 }
-                                ]}
-                            ]
-                        }
-                    ]
-                },
-                "footer": {
-                    "type": "box", "layout": "vertical",
-                    "contents": [
-                         { "type": "text", "text": `แจ้งจากคุณ: ${userState.profile.displayName}`, "size": "xs", "color": "#888888", "align": "center" }
-                    ]
-                }
-            };
-            
-            const messagesToSend = [{ type: 'flex', altText: `แจ้งรับของรางวัล: ${itemName}`, contents: flexMessage }];
-
-            try {
-                if (!liff.isInClient()) {
-                    showAlert('ไม่สามารถส่งได้', 'ฟังก์ชันนี้ใช้ได้เมื่อเปิดผ่านแอป LINE เท่านั้น');
-                    return;
-                }
-                await liff.sendMessages(messagesToSend);
-                showAlert('ส่งข้อความสำเร็จ', 'ข้อความของคุณถูกส่งไปยังพนักงานแล้ว');
-            } catch (error) {
-                console.error('Failed to send flex message:', error);
-                showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถส่งข้อความได้ กรุณาลองใหม่');
-            }
+            const flexMessage = { "type": "bubble", "body": { "type": "box", "layout": "vertical", "spacing": "md", "contents": [ { "type": "image", "url": qrImageUrl, "size": "5xl", "aspectRatio": "1:1", "aspectMode": "cover"}, { "type": "text", "text": "แจ้งรับของรางวัล", "weight": "bold","align": "center", "size": "md", "color": "#000000" }, { "type": "separator" }, { "type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm", "contents": [ { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [ { "type": "text", "text": "สินค้า", "color": "#aaaaaa", "size": "sm", "flex": 2 }, { "type": "text", "text": itemName, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 } ]}, { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [ { "type": "text", "text": "รหัส", "color": "#aaaaaa", "size": "sm", "flex": 2 }, { "type": "text", "text": uniqueId, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 } ]} ] } ] }, "footer": { "type": "box", "layout": "vertical", "contents": [ { "type": "text", "text": `แจ้งจากคุณ: ${userState.profile.displayName}`, "size": "xs", "color": "#888888", "align": "center" } ] } };
+            try { if (!liff.isInClient()) { showAlert('ไม่สามารถส่งได้', 'ฟังก์ชันนี้ใช้ได้เมื่อเปิดผ่านแอป LINE เท่านั้น'); return; } await liff.sendMessages([{ type: 'flex', altText: `แจ้งรับของรางวัล: ${itemName}`, contents: flexMessage }]); showAlert('ส่งข้อความสำเร็จ', 'ข้อความของคุณถูกส่งไปยังพนักงานแล้ว'); } 
+            catch (error) { console.error('Failed to send flex message:', error); showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถส่งข้อความได้'); }
         };
-
         async function checkClaimStatus() {
-            console.log(`Polling status for UniqueID: ${uniqueId}...`);
             try {
                 const res = await fetch(`${CONFIG.GAS_URL}?action=getWarehouseItemStatus&uniqueId=${uniqueId}`);
                 const data = await res.json();
                 if (data && data.status === 'claimed') {
-                    console.log('Item has been claimed!');
-                    clearInterval(warehousePollingInterval);
-                    warehousePollingInterval = null;
+                    console.log('Item has been claimed!'); clearInterval(warehousePollingInterval); warehousePollingInterval = null;
                     qrcodeContainer.innerHTML = `<div class="text-center text-green-600 font-bold text-lg p-4">✅ สินค้า "${itemName}" ถูกรับแล้ว!</div>`;
-                    qrCloseBtn.textContent = 'ปิด';
-                    setTimeout(() => initWarehouse(), 1000); 
+                    qrCloseBtn.textContent = 'ปิด'; setTimeout(() => { qrDialog.close(); initWarehouse(); }, 2000); 
                 } else if (data && data.status === 'not_found') {
-                     console.error(`Polling: Warehouse item with UniqueID ${uniqueId} not found.`);
-                     clearInterval(warehousePollingInterval);
-                     warehousePollingInterval = null;
-                     qrcodeContainer.innerHTML = `<p class="text-red-500">รายการนี้ไม่ถูกต้องหรือไม่พบในระบบ</p>`;
-                     setTimeout(() => qrDialog.close(), 3000);
+                     console.error(`Polling: Warehouse item with UniqueID ${uniqueId} not found.`); clearInterval(warehousePollingInterval); warehousePollingInterval = null;
+                     qrcodeContainer.innerHTML = `<p class="text-red-500">รายการนี้ไม่ถูกต้องหรือไม่พบในระบบ</p>`; setTimeout(() => qrDialog.close(), 3000);
                 }
             } catch (err) {
-                console.error('Polling failed:', err);
-                clearInterval(warehousePollingInterval);
-                warehousePollingInterval = null;
-                qrcodeContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการตรวจสอบสถานะ.</p>`;
-                 setTimeout(() => qrDialog.close(), 3000);
+                console.error('Polling failed:', err); clearInterval(warehousePollingInterval); warehousePollingInterval = null;
+                qrcodeContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการตรวจสอบสถานะ.</p>`; setTimeout(() => qrDialog.close(), 3000);
             }
         }
-        
-        warehousePollingInterval = setInterval(checkClaimStatus, 1000);
-
-        qrCloseBtn.onclick = () => {
-            if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; }
-            qrDialog.close();
-        };
-
-        qrDialog.addEventListener('close', () => {
-             if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; }
-        }, { once: true });
-
+        warehousePollingInterval = setInterval(checkClaimStatus, 2000); // Poll every 2 seconds
+        qrCloseBtn.onclick = () => { if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; } qrDialog.close(); };
+        qrDialog.addEventListener('close', () => { if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; } }, { once: true });
         qrDialog.showModal();
     }
 
