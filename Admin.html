@@ -5,18 +5,20 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRM-3RN Admin</title>
-  <!-- Load config before main script -->
+  <title>CRM-3RN Admin Panel</title>
+  
+  <!-- Load config before main script (If you have one) -->
   <script src="config-admin.js"></script>
+  
   <!-- DaisyUI CDN (includes Tailwind CSS) -->
   <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet" type="text/css" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js CDN for graphs -->
+  
+  <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- QR Code Scanner Library -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <!-- ADD THIS LINE: QR Code Generator Library -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
   <style>
     body { background-color: #f1f5f9; }
     #qr-shaded-region{ border-width:0 !important ; }
@@ -50,7 +52,7 @@
     <div class="drawer-content flex flex-col">
       <header class="navbar bg-base-100 shadow-md p-4 mb-6 sticky top-0 z-40">
         <div class="flex-none lg:hidden"><label for="my-drawer-2" aria-label="open sidebar" class="btn btn-square btn-ghost"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-6 h-6 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></label></div>
-        <div class="flex-1 px-2 mx-2"><h1 class="text-xl font-bold">CRM-3RN Admin</h1></div>
+        <div class="flex-1 px-2 mx-2"><h1 class="text-xl font-bold">CRM Admin</h1></div>
         <div class="flex-none"><button id="logoutBtn" class="btn btn-sm btn-ghost">Logout</button></div>
       </header>
       <main class="container mx-auto p-4 flex-grow">
@@ -63,8 +65,9 @@
         <li class="menu-title text-lg font-bold p-4">เมนูผู้ดูแลระบบ</li>
         <li><a href="#dashboard" class="nav-link">ภาพรวม</a></li>
         <li><a href="#users" class="nav-link">จัดการผู้ใช้</a></li>
+        <li><a href="#add-points" class="nav-link">เพิ่มแต้ม (POS)</a></li>
         <li><a href="#items" class="nav-link">จัดการของรางวัล</a></li>
-        <li><a href="#add-points" class="nav-link">เพิ่มแต้มให้ลูกค้า</a></li> 
+        <li><a href="#products" class="nav-link">จัดการสินค้า</a></li>
         <li><a href="#warehouse" class="nav-link">คลังสินค้า</a></li>
         <li><a href="#scan-claim" class="nav-link">สแกนรับของ</a></li>
         <li><a href="#events" class="nav-link">จัดการกิจกรรม</a></li>
@@ -76,9 +79,10 @@
   </div>
 
   <!-- MODALS -->
-  <dialog id="customAlertDialog" class="modal"><div class="modal-box text-center"><h3 id="customAlertTitle" class="font-bold text-lg mb-3"></h3><p id="customAlertMessage" class="py-4 whitespace-pre-line"></p><div class="modal-action justify-center"><button id="customAlertButton" class="btn btn-primary w-full">ตกลง</button></div></div></dialog>
-  <dialog id="customConfirmDialog" class="modal"><div class="modal-box text-center"><h3 id="customConfirmTitle" class="font-bold text-lg mb-3"></h3><p id="customConfirmMessage" class="py-4"></p><div class="modal-action justify-around"><button id="customConfirmCancelButton" class="btn btn-outline">ยกเลิก</button><button id="customConfirmConfirmButton" class="btn btn-primary">ยืนยัน</button></div></div></dialog>
+  <dialog id="customAlertDialog" class="modal"><div class="modal-box text-center"><h3 id="customAlertTitle" class="font-bold text-lg mb-3"></h3><p id="customAlertMessage" class="py-4 whitespace-pre-line"></p><div class="modal-action justify-center"><form method="dialog"><button class="btn btn-primary w-full">ตกลง</button></form></div></div></dialog>
+  <dialog id="customConfirmDialog" class="modal"><div class="modal-box text-center"><h3 id="customConfirmTitle" class="font-bold text-lg mb-3"></h3><p id="customConfirmMessage" class="py-4 whitespace-pre-line"></p><div class="modal-action justify-around"><button id="customConfirmCancelButton" class="btn btn-outline">ยกเลิก</button><button id="customConfirmConfirmButton" class="btn btn-primary">ยืนยัน</button></div></div></dialog>
   <dialog id="dataFormModal" class="modal"><div class="modal-box"><h3 id="dataFormModalTitle" class="font-bold text-lg mb-4"></h3><form id="dataForm" method="dialog" onsubmit="event.preventDefault()"><div id="formFields" class="space-y-4"></div><div class="modal-action mt-6"><button type="button" id="formCancelBtn" class="btn btn-ghost">ยกเลิก</button><button type="submit" id="formSaveBtn" class="btn btn-primary">บันทึก</button></div></form></div></dialog>
+  <dialog id="qrCodeModal" class="modal"><div class="modal-box text-center"><h3 id="qrCodeModalTitle" class="font-bold text-lg mb-3">QR Code</h3><div id="qrCodeCanvas" class="flex justify-center p-4 bg-white rounded-lg my-4"></div><p class="text-sm text-gray-500">คลิกขวาที่รูปเพื่อบันทึก</p><div class="modal-action justify-center"><form method="dialog"><button class="btn btn-primary">ปิด</button></form></div></div></dialog>
 
   <!-- TEMPLATES -->
   <template id="view-dashboard">
@@ -93,21 +97,75 @@
         <div class="card bg-base-100 shadow-xl"><div class="card-body"><h3 class="card-title">สถิติพ้อยต์ (รับ/ใช้)</h3><div class="relative h-64"><canvas id="pointStatsChart"></canvas></div></div></div>
     </div>
   </template>
+  
   <template id="view-users">
       <h2 class="text-2xl font-bold mb-4">จัดการผู้ใช้</h2>
       <div class="flex flex-col md:flex-row gap-4 mb-4"><input type="text" id="userSearchInput" placeholder="ค้นหา (LINE ID / ชื่อ / เบอร์โทร)" class="input input-bordered flex-grow" /><button id="userSearchBtn" class="btn btn-primary">ค้นหา</button><button id="addUserBtn" class="btn btn-secondary">เพิ่มผู้ใช้ใหม่</button></div>
       <div class="table-responsive rounded-lg bg-base-100 shadow-md"><table class="table w-full table-zebra"><thead class="bg-base-200"><tr><th>LINE ID</th><th>ชื่อ</th><th>เบอร์โทร</th><th>พ้อยต์</th><th>ระดับ</th><th>Tags</th><th>จัดการ</th></tr></thead><tbody id="userTableBody"></tbody></table></div>
   </template>
+
+  <template id="view-add-points">
+    <h2 class="text-2xl font-bold mb-4">เพิ่มแต้มจากการซื้อ (POS)</h2>
+    <div class="card bg-base-100 shadow-xl max-w-2xl mx-auto">
+        <div class="card-body">
+            <form id="addPointsForm" onsubmit="event.preventDefault()" class="space-y-4">
+                <div class="form-control">
+                    <label class="label"><span class="label-text font-semibold text-lg">1. ระบุลูกค้า</span></label>
+                    <input type="text" id="addPointsIdentifier" placeholder="กรอก Line ID, เบอร์โทร หรือสแกน QR ลูกค้า" class="input input-bordered w-full input-lg" required />
+                </div>
+                <div class="form-control mt-6">
+                    <label class="label"><span class="label-text font-semibold text-lg">2. เลือกวิธีให้แต้ม</span></label>
+                    <div role="tablist" class="tabs tabs-boxed">
+                        <a role="tab" class="tab tab-active" data-mode="product">จากรายการสินค้า</a>
+                        <a role="tab" class="tab" data-mode="manual">กรอกแต้มเอง</a>
+                    </div>
+                </div>
+                <div id="productModeSection" class="space-y-4">
+                    <div class="divider">รายการสินค้าในบิล</div>
+                    <div id="billItemsContainer" class="space-y-2 max-h-60 overflow-y-auto pr-2"><p class="text-center text-gray-400">ยังไม่มีรายการ</p></div>
+                    <div class="divider"></div>
+                    <div class="flex items-end gap-2 p-2 bg-base-200 rounded-lg">
+                        <div class="flex-grow"><label class="label-text">เลือกสินค้า</label><select id="productList" class="select select-bordered w-full"><option disabled selected>กำลังโหลด...</option></select></div>
+                        <div><label class="label-text">จำนวน</label><input type="number" id="productQuantity" value="1" min="1" class="input input-bordered w-20" /></div>
+                        <button type="button" id="addItemToBillBtn" class="btn btn-secondary">เพิ่ม</button>
+                    </div>
+                    <div class="text-right text-xl font-bold">แต้มที่จะได้รับรวม: <span id="totalPointsDisplay" class="text-primary">0</span> แต้ม</div>
+                </div>
+                <div id="manualModeSection" class="space-y-4 hidden">
+                    <div class="form-control"><label class="label"><span class="label-text">จำนวนแต้ม</span></label><input type="number" id="addPointsAmount" placeholder="เช่น 50" class="input input-bordered w-full" min="1" /></div>
+                    <div class="form-control"><label class="label"><span class="label-text">เหตุผล</span></label><input type="text" id="addPointsReason" placeholder="เช่น ของขวัญพิเศษ" class="input input-bordered w-full" /></div>
+                </div>
+                <div class="mt-8"><button type="submit" id="addPointsSubmitBtn" class="btn btn-primary w-full btn-lg">ยืนยันและให้แต้ม</button></div>
+            </form>
+        </div>
+    </div>
+  </template>
+
   <template id="view-items">
       <h2 class="text-2xl font-bold mb-4">จัดการของรางวัล</h2>
       <button id="addItemBtn" class="btn btn-secondary mb-4">เพิ่มของรางวัลใหม่</button>
       <div class="table-responsive rounded-lg bg-base-100 shadow-md"><table class="table w-full table-zebra"><thead class="bg-base-200"><tr><th>ID</th><th>ชื่อ</th><th>พ้อยต์</th><th>ประเภท</th><th>รูปภาพ</th><th>จัดการ</th></tr></thead><tbody id="itemTableBody"></tbody></table></div>
   </template>
+
+  <template id="view-products">
+      <h2 class="text-2xl font-bold mb-4">จัดการสินค้า</h2>
+      <button id="addProductBtn" class="btn btn-secondary mb-4">เพิ่มสินค้าใหม่</button>
+      <div class="table-responsive rounded-lg bg-base-100 shadow-md">
+          <table class="table w-full table-zebra">
+              <thead class="bg-base-200">
+                  <tr><th>ID</th><th>ชื่อสินค้า</th><th>หมวดหมู่</th><th>ราคา</th><th>แต้ม/หน่วย</th><th>จัดการ</th></tr>
+              </thead>
+              <tbody id="productTableBody"></tbody>
+          </table>
+      </div>
+  </template>
+
   <template id="view-warehouse">
       <h2 class="text-2xl font-bold mb-4">คลังสินค้า (รายการที่แลกแล้ว)</h2>
       <div class="flex flex-col md:flex-row gap-4 mb-4"><input type="text" id="warehouseSearchInput" placeholder="ค้นหา (Line ID, ชื่อผู้รับ, ชื่อของ)" class="input input-bordered flex-grow" /><select id="warehouseStatusFilter" class="select select-bordered w-full md:w-auto"><option value="">-- ทุกสถานะ --</option><option value="pending_claim" selected>รอรับ/จัดส่ง</option><option value="claimed">รับแล้ว</option></select><button id="warehouseSearchBtn" class="btn btn-primary">ค้นหา</button></div>
       <div class="table-responsive rounded-lg bg-base-100 shadow-md"><table class="table w-full table-zebra"><thead class="bg-base-200"><tr><th>ID</th><th>ของรางวัล</th><th>ผู้ใช้ (Line ID)</th><th>ข้อมูลจัดส่ง</th><th>วันที่แลก</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="warehouseTableBody"></tbody></table></div>
   </template>
+  
   <template id="view-scan-claim">
       <h2 class="text-2xl font-bold mb-4">สแกน QR Code เพื่อยืนยันการรับของ</h2>
       <div class="card bg-base-100 shadow-xl max-w-lg mx-auto">
@@ -121,93 +179,31 @@
           </div>
       </div>
   </template>
+  
   <template id="view-events">
       <h2 class="text-2xl font-bold mb-4">จัดการกิจกรรม</h2>
       <button id="addEventBtn" class="btn btn-secondary mb-4">เพิ่มกิจกรรมใหม่</button>
       <div class="table-responsive rounded-lg bg-base-100 shadow-md"><table class="table w-full table-zebra"><thead class="bg-base-200"><tr><th>ID</th><th>ชื่อกิจกรรม</th><th>พ้อยต์</th><th>ระดับที่เข้าร่วมได้</th><th>รายละเอียด</th><th>รูปภาพ</th><th>จัดการ</th></tr></thead><tbody id="eventTableBody"></tbody></table></div>
   </template>
+  
   <template id="view-codes">
       <h2 class="text-2xl font-bold mb-4">จัดการโค้ด</h2>
       <button id="addCodeBtn" class="btn btn-secondary mb-4">เพิ่มโค้ดใหม่</button>
       <div class="table-responsive rounded-lg bg-base-100 shadow-md"><table class="table w-full table-zebra"><thead class="bg-base-200"><tr><th>ID (QR Code)</th><th>ชื่อโค้ด</th><th>พ้อยต์</th><th>รายละเอียด</th><th>จัดการ</th></tr></thead><tbody id="codeTableBody"></tbody></table></div>
   </template>
+  
   <template id="view-history">
       <h2 class="text-2xl font-bold mb-4">ประวัติการทำรายการ</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 items-end"><input type="text" id="historySearchLineId" placeholder="ค้นหาด้วย Line ID" class="input input-bordered w-full" /><select id="historyFilterType" class="select select-bordered w-full"><option value="">-- ประเภททั้งหมด --</option><option value="checkin">เช็คอิน</option><option value="event">กิจกรรม</option><option value="code">โค้ด</option><option value="redeem">แลกของ</option><option value="transfer_in">รับโอน</option><option value="transfer_out">โอนออก</option></select><input type="date" id="historyStartDate" class="input input-bordered w-full" placeholder="จากวันที่"><input type="date" id="historyEndDate" class="input input-bordered w-full" placeholder="ถึงวันที่"><div class="flex gap-2"><button id="historyFilterBtn" class="btn btn-primary flex-grow">กรอง</button><button id="historyResetBtn" class="btn btn-ghost flex-grow">รีเซ็ต</button></div></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 items-end"><input type="text" id="historySearchLineId" placeholder="ค้นหาด้วย Line ID" class="input input-bordered w-full" /><select id="historyFilterType" class="select select-bordered w-full"><option value="">-- ประเภททั้งหมด --</option><option value="purchase">การซื้อสินค้า</option><option value="admin_add">Admin เพิ่มแต้ม</option><option value="checkin">เช็คอิน</option><option value="event">กิจกรรม</option><option value="code">โค้ด</option><option value="redeem">แลกของ</option><option value="transfer_in">รับโอน</option><option value="transfer_out">โอนออก</option></select><input type="date" id="historyStartDate" class="input input-bordered w-full" placeholder="จากวันที่"><input type="date" id="historyEndDate" class="input input-bordered w-full" placeholder="ถึงวันที่"><div class="flex gap-2"><button id="historyFilterBtn" class="btn btn-primary flex-grow">กรอง</button><button id="historyResetBtn" class="btn btn-ghost flex-grow">รีเซ็ต</button></div></div>
       <div class="table-responsive rounded-lg bg-base-100 shadow-md"><table class="table w-full table-zebra"><thead class="bg-base-200"><tr><th>Line ID</th><th>ประเภท</th><th>รายละเอียด</th><th>จำนวน</th><th>วันที่</th><th>ID อ้างอิง</th></tr></thead><tbody id="historyTableBody"></tbody></table></div>
   </template>
+  
   <template id="view-settings">
       <h2 class="text-2xl font-bold mb-4">ตั้งค่าระบบ</h2>
       <div class="card bg-base-100 shadow-xl max-w-lg mx-auto"><div class="card-body"><h3 class="card-title">การตั้งค่าระดับผู้ใช้</h3><p class="text-sm opacity-70 mb-4">กำหนดแต้มขั้นต่ำเพื่อเลื่อนระดับ</p><form id="levelSettingsForm" onsubmit="event.preventDefault()" class="space-y-4"><div class="form-control"><label class="label"><span class="label-text">แต้มสำหรับระดับ VIP</span></label><input type="number" id="vipPoints" placeholder="0" class="input input-bordered w-full" required min="0" /></div><div class="form-control"><label class="label"><span class="label-text">แต้มสำหรับระดับ SUPER</span></label><input type="number" id="superPoints" placeholder="0" class="input input-bordered w-full" required min="0" /></div><div class="mt-6"><button type="submit" id="saveLevelSettingsBtn" class="btn btn-primary w-full">บันทึก</button></div></form></div></div>
   </template>
-    <!-- MODALS -->
-  <dialog id="qrCodeModal" class="modal">
-    <div class="modal-box text-center">
-        <h3 id="qrCodeModalTitle" class="font-bold text-lg mb-3">QR Code</h3>
-        <div id="qrCodeCanvas" class="flex justify-center p-4 bg-white rounded-lg"></div>
-        <p class="mt-2 text-sm text-gray-500">สำหรับให้ลูกค้าสแกนเพื่อรับแต้ม</p>
-        <div class="modal-action justify-center">
-            <button class="btn btn-primary" onclick="qrCodeModal.close()">ปิด</button>
-        </div>
-    </div>
-  </dialog>
-<!-- TEMPLATES -->
-<template id="view-add-points">
-  <h2 class="text-2xl font-bold mb-4">เพิ่มแต้มให้ลูกค้า</h2>
-  <div class="card bg-base-100 shadow-xl max-w-lg mx-auto">
-      <div class="card-body">
-          <form id="addPointsForm" onsubmit="event.preventDefault()" class="space-y-4">
-              <!-- User Identifier -->
-              <div class="form-control">
-                  <label class="label"><span class="label-text font-semibold">1. ระบุลูกค้า</span></label>
-                  <input type="text" id="addPointsIdentifier" placeholder="กรอก Line ID, เบอร์โทร หรือสแกน QR ลูกค้า" class="input input-bordered w-full" required />
-              </div>
 
-              <!-- Point Addition Mode Toggle -->
-              <div class="form-control">
-                  <label class="label"><span class="label-text font-semibold">2. เลือกวิธีให้แต้ม</span></label>
-                  <div role="tablist" class="tabs tabs-bordered">
-                      <input type="radio" name="point_mode" role="tab" class="tab" aria-label="จากการซื้อสินค้า" value="product" checked />
-                      <input type="radio" name="point_mode" role="tab" class="tab" aria-label="กรอกแต้มเอง" value="manual" />
-                  </div>
-              </div>
 
-              <!-- Mode 1: Product Purchase -->
-              <div id="productModeSection" class="space-y-4 border-l-4 border-primary pl-4 py-2">
-                  <div class="form-control">
-                      <label class="label"><span class="label-text">เลือกสินค้า</span></label>
-                      <select id="productList" class="select select-bordered w-full">
-                          <option disabled selected>กำลังโหลดรายการสินค้า...</option>
-                      </select>
-                  </div>
-                  <div class="form-control">
-                      <label class="label"><span class="label-text">จำนวน</span></label>
-                      <input type="number" id="productQuantity" placeholder="1" class="input input-bordered w-full" min="1" value="1" />
-                  </div>
-              </div>
-
-              <!-- Mode 2: Manual Entry -->
-              <div id="manualModeSection" class="space-y-4 border-l-4 border-secondary pl-4 py-2 hidden">
-                  <div class="form-control">
-                      <label class="label"><span class="label-text">จำนวนแต้มที่ให้</span></label>
-                      <input type="number" id="addPointsAmount" placeholder="เช่น 20" class="input input-bordered w-full" min="1" />
-                  </div>
-                  <div class="form-control">
-                      <label class="label"><span class="label-text">เหตุผลที่ให้แต้ม</span></label>
-                      <input type="text" id="addPointsReason" placeholder="เช่น โปรโมชั่นพิเศษ" class="input input-bordered w-full" />
-                  </div>
-              </div>
-
-              <!-- Submit Button -->
-              <div class="mt-6">
-                  <button type="submit" id="addPointsSubmitBtn" class="btn btn-primary w-full">
-                      ยืนยันและส่งการแจ้งเตือน
-                  </button>
-              </div>
-          </form>
-      </div>
-  </div>
-</template>
 <script>
     // ==========================================================
     // ===                 GLOBAL VARIABLES                   ===
@@ -229,10 +225,70 @@
     // ==========================================================
     // ===                 HELPER FUNCTIONS                   ===
     // ==========================================================
-    function showAlert(title, message, cb) { const dialog = document.getElementById('customAlertDialog'); document.getElementById('customAlertTitle').textContent = title; document.getElementById('customAlertMessage').textContent = message; dialog.showModal(); const btn = document.getElementById('customAlertButton'); const handler = () => { dialog.close(); btn.removeEventListener('click', handler); cb && cb(); }; btn.addEventListener('click', handler); }
-    function showConfirm(title, message) { return new Promise(res => { const dialog = document.getElementById('customConfirmDialog'); document.getElementById('customConfirmTitle').textContent = title; document.getElementById('customConfirmMessage').textContent = message; dialog.showModal(); const ok = document.getElementById('customConfirmConfirmButton'), no = document.getElementById('customConfirmCancelButton'); const onOk = () => { cleanup(); res(true); }; const onNo = () => { cleanup(); res(false); }; function cleanup() { dialog.close(); ok.removeEventListener('click', onOk); no.removeEventListener('click', onNo); } ok.addEventListener('click', onOk); no.addEventListener('click', onNo); }); }
-    async function fetchData(action, params = {}) { const url = new URL(CONFIG.GAS_URL_ADMIN); url.searchParams.append('action', action); for (const k in params) { if (params[k]) url.searchParams.append(k, params[k]); } try { const r = await fetch(url); if (!r.ok) throw new Error(await r.text()); return await r.json(); } catch (e) { showAlert('Error', `Fetch failed: ${e.message}`); throw e; } }
-    async function postData(action, data) { try { const r = await fetch(CONFIG.GAS_URL_ADMIN, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action, ...data }) }); if (!r.ok) throw new Error(await r.text()); return await r.text(); } catch (e) { showAlert('Error', `Post failed: ${e.message}`); throw e; } }
+    function showAlert(title, message, cb) { 
+        const dialog = document.getElementById('customAlertDialog'); 
+        document.getElementById('customAlertTitle').textContent = title; 
+        document.getElementById('customAlertMessage').textContent = message; 
+        dialog.showModal(); 
+        
+        const closeHandler = () => {
+            dialog.close();
+            dialog.removeEventListener('close', closeHandler);
+            if (cb) cb();
+        };
+        dialog.addEventListener('close', closeHandler);
+    }
+    
+    function showConfirm(title, message) { 
+        return new Promise(res => { 
+            const dialog = document.getElementById('customConfirmDialog'); 
+            document.getElementById('customConfirmTitle').textContent = title; 
+            document.getElementById('customConfirmMessage').textContent = message; 
+            dialog.showModal(); 
+            const ok = document.getElementById('customConfirmConfirmButton');
+            const no = document.getElementById('customConfirmCancelButton');
+            const onOk = () => { cleanup(); res(true); }; 
+            const onNo = () => { cleanup(); res(false); }; 
+            function cleanup() { dialog.close(); ok.removeEventListener('click', onOk); no.removeEventListener('click', onNo); } 
+            ok.addEventListener('click', onOk, { once: true }); 
+            no.addEventListener('click', onNo, { once: true }); 
+        }); 
+    }
+    
+    async function fetchData(action, params = {}) { 
+        const url = new URL(CONFIG.GAS_URL_ADMIN); 
+        url.searchParams.append('action', action); 
+        for (const k in params) { if (params[k]) url.searchParams.append(k, params[k]); } 
+        try { 
+            const r = await fetch(url); 
+            if (!r.ok) throw new Error(`Server responded with status: ${r.status}`);
+            const data = await r.json();
+            if(data.error) throw new Error(data.error);
+            return data;
+        } catch (e) { 
+            showAlert('Error', `Fetch failed: ${e.message}`); 
+            throw e; 
+        } 
+    }
+    
+    async function postData(action, data) { 
+        try { 
+            const r = await fetch(CONFIG.GAS_URL_ADMIN, { method: 'POST', body: JSON.stringify({ action, ...data }) }); 
+            if (!r.ok) throw new Error(`Server responded with status: ${r.status}`);
+            const responseText = await r.text();
+            try {
+                const jsonData = JSON.parse(responseText);
+                if(jsonData.success === false) throw new Error(jsonData.error);
+                return jsonData.message || responseText;
+            } catch (jsonError) {
+                // If not JSON, it's a plain text success message
+                return responseText;
+            }
+        } catch (e) { 
+            showAlert('Error', `Request failed: ${e.message}`); 
+            throw e; 
+        } 
+    }
 
 
     // ==========================================================
@@ -242,9 +298,9 @@
         '': { tpl: 'view-dashboard', init: initDashboard },
         '#dashboard': { tpl: 'view-dashboard', init: initDashboard },
         '#users': { tpl: 'view-users', init: initUsers },
-         '#add-points': { tpl: 'view-add-points', init: initAddPoints }, // <-- เพิ่มบรรทัดนี้
- 
+        '#add-points': { tpl: 'view-add-points', init: initAddPoints },
         '#items': { tpl: 'view-items', init: initItems },
+        '#products': { tpl: 'view-products', init: initProducts },
         '#warehouse': { tpl: 'view-warehouse', init: initWarehouse },
         '#scan-claim': { tpl: 'view-scan-claim', init: initScanClaim },
         '#events': { tpl: 'view-events', init: initEvents },
@@ -254,6 +310,7 @@
     };
 
     function setActiveNavLink() { const hash = window.location.hash || '#dashboard'; document.querySelectorAll('.nav-link').forEach(l => { l.classList.toggle('active', l.getAttribute('href') === hash); }); if (drawerToggle.checked) drawerToggle.checked = false; }
+    
     async function router() {
         if (!sessionStorage.getItem('isLoggedIn')) return;
         try { const config = await fetchData('getLevelConfig'); if (config) levelConfig = { VIP_points: parseInt(config.VIP_points, 10), SUPER_points: parseInt(config.SUPER_points, 10) }; } catch (e) { console.warn("Using default level config."); }
@@ -264,9 +321,30 @@
         if (template) { appContainer.innerHTML = ''; appContainer.appendChild(template.content.cloneNode(true)); try { await route.init(); } catch (e) { appContainer.innerHTML = `<p class="text-error text-center">Error loading page: ${e.message}</p>`; }
         } else { appContainer.innerHTML = `<p class="text-error text-center">Page not found</p>`; }
     }
+    
     function handleLogin() {
         const loginOverlay = document.getElementById('login-overlay'); const loginBtn = document.getElementById('loginBtn'); const userInput = document.getElementById('username'); const passInput = document.getElementById('password'); const loginError = document.getElementById('login-error');
-        async function attemptLogin() { loginBtn.classList.add('loading'); loginError.classList.add('hidden'); try { const res = await postData('login', { username: userInput.value, password: passInput.value }); const data = JSON.parse(res); if (data.success) { sessionStorage.setItem('isLoggedIn', 'true'); loginOverlay.classList.add('hidden'); mainApp.classList.remove('hidden'); await router(); } else { loginError.textContent = data.message || "Invalid credentials"; loginError.classList.remove('hidden'); } } catch (e) { loginError.textContent = 'Login request failed.'; loginError.classList.remove('hidden'); } finally { loginBtn.classList.remove('loading'); } }
+        async function attemptLogin() { 
+            loginBtn.classList.add('loading'); loginError.classList.add('hidden'); 
+            try { 
+                const res = await fetch(CONFIG.GAS_URL_ADMIN, { method: 'POST', body: JSON.stringify({ action: 'login', username: userInput.value, password: passInput.value }) });
+                const data = await res.json();
+                if (data.success) { 
+                    sessionStorage.setItem('isLoggedIn', 'true'); 
+                    loginOverlay.classList.add('hidden'); 
+                    mainApp.classList.remove('hidden'); 
+                    await router(); 
+                } else { 
+                    loginError.textContent = data.message || "Invalid credentials"; 
+                    loginError.classList.remove('hidden'); 
+                } 
+            } catch (e) { 
+                loginError.textContent = 'Login request failed.'; 
+                loginError.classList.remove('hidden'); 
+            } finally { 
+                loginBtn.classList.remove('loading'); 
+            } 
+        }
         loginBtn.onclick = attemptLogin; passInput.addEventListener('keypress', (e) => e.key === 'Enter' && attemptLogin());
         document.getElementById('logoutBtn').onclick = () => { sessionStorage.removeItem('isLoggedIn'); location.reload(); };
         if (sessionStorage.getItem('isLoggedIn')) { loginOverlay.classList.add('hidden'); mainApp.classList.remove('hidden'); router(); }
@@ -279,16 +357,136 @@
     async function initDashboard() {
         const [sTotalUsers, sNewUsers, sTotalItems, sRedeemed, sTotalEvents, sTotalCodes] = ['statTotalUsers', 'statNewUsersToday', 'statTotalItems', 'statRedeemedItems', 'statTotalEvents', 'statTotalCodes'].map(id => document.getElementById(id));
         const userLevelChartCtx = document.getElementById('userLevelChart').getContext('2d'); const pointStatsChartCtx = document.getElementById('pointStatsChart').getContext('2d');
-        try { const data = await fetchData('getDashboardData'); sTotalUsers.textContent = data.users.length; const todayStr = new Date().toDateString(); sNewUsers.textContent = `+${data.users.filter(u => u.signupDate && new Date(u.signupDate).toDateString() === todayStr).length} วันนี้`; sTotalItems.textContent = data.items.length; sRedeemed.textContent = `แลกแล้ว ${data.allHistory.filter(h => h.type === 'redeem').length} ครั้ง`; sTotalEvents.textContent = data.events.length; sTotalCodes.textContent = `${data.codes.length} โค้ด`; const levelCounts = data.users.reduce((acc, user) => { acc[user.level.toUpperCase()] = (acc[user.level.toUpperCase()] || 0) + 1; return acc; }, { MEMBER: 0, VIP: 0, SUPER: 0 }); if (window.userLevelChartInstance) window.userLevelChartInstance.destroy(); window.userLevelChartInstance = new Chart(userLevelChartCtx, { type: 'bar', data: { labels: ['MEMBER', 'VIP', 'SUPER'], datasets: [{ label: 'จำนวน', data: [levelCounts.MEMBER, levelCounts.VIP, levelCounts.SUPER], backgroundColor: ['#a7d3f2', '#61a6d9', '#1e75b9'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } } }); const { earned, spent } = data.allHistory.reduce((acc, h) => { if (h.amount > 0) acc.earned += h.amount; else acc.spent += Math.abs(h.amount); return acc; }, { earned: 0, spent: 0 }); if (window.pointStatsChartInstance) window.pointStatsChartInstance.destroy(); window.pointStatsChartInstance = new Chart(pointStatsChartCtx, { type: 'doughnut', data: { labels: ['ได้รับ', 'ใช้ไป'], datasets: [{ data: [earned, spent], backgroundColor: ['#36d399', '#f87272'] }] }, options: { responsive: true, maintainAspectRatio: false } }); } catch (e) { /* Error handled */ }
+        try { 
+            const data = await fetchData('getDashboardData'); 
+            sTotalUsers.textContent = data.users.length; 
+            const todayStr = new Date().toDateString(); 
+            sNewUsers.textContent = `+${data.users.filter(u => u.signupDate && new Date(u.signupDate).toDateString() === todayStr).length} วันนี้`; 
+            sTotalItems.textContent = data.items.length; 
+            sRedeemed.textContent = `แลกแล้ว ${data.allHistory.filter(h => h.type === 'redeem').length} ครั้ง`; 
+            sTotalEvents.textContent = data.events.length; sTotalCodes.textContent = `${data.codes.length} โค้ด`; 
+            const levelCounts = data.users.reduce((acc, user) => { const level = user.level || 'MEMBER'; acc[level.toUpperCase()] = (acc[level.toUpperCase()] || 0) + 1; return acc; }, { MEMBER: 0, VIP: 0, SUPER: 0 }); 
+            if (window.userLevelChartInstance) window.userLevelChartInstance.destroy(); 
+            window.userLevelChartInstance = new Chart(userLevelChartCtx, { type: 'bar', data: { labels: ['MEMBER', 'VIP', 'SUPER'], datasets: [{ label: 'จำนวน', data: [levelCounts.MEMBER, levelCounts.VIP, levelCounts.SUPER], backgroundColor: ['#a7d3f2', '#61a6d9', '#1e75b9'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } } }); 
+            const { earned, spent } = data.allHistory.reduce((acc, h) => { if (h.amount > 0) acc.earned += h.amount; else acc.spent += Math.abs(h.amount); return acc; }, { earned: 0, spent: 0 }); 
+            if (window.pointStatsChartInstance) window.pointStatsChartInstance.destroy(); 
+            window.pointStatsChartInstance = new Chart(pointStatsChartCtx, { type: 'doughnut', data: { labels: ['ได้รับ', 'ใช้ไป'], datasets: [{ data: [earned, spent], backgroundColor: ['#36d399', '#f87272'] }] }, options: { responsive: true, maintainAspectRatio: false } }); 
+        } catch (e) { /* Error handled by fetchData */ }
     }
 
     async function initUsers() {
-        const tableBody = document.getElementById('userTableBody'); const searchInput = document.getElementById('userSearchInput'); const searchBtn = document.getElementById('userSearchBtn'); document.getElementById('addUserBtn').onclick = () => showUserFormModal(); searchBtn.onclick = () => loadUsers(searchInput.value); searchInput.addEventListener('keypress', e => e.key === 'Enter' && searchBtn.click()); await loadUsers();
-        async function loadUsers(query) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4"><div class="loading-spinner mx-auto"></div></td></tr>`; try { const users = await fetchData('getUsers', { query }); renderUserTable(users); } catch (e) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-error">Load failed</td></tr>`; } }
-        function renderUserTable(users) { if (!users.length) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = users.map(u => `<tr><td>${u.lineId}</td><td>${u.name}</td><td>${u.phone || '-'}</td><td>${u.point.toLocaleString()}</td><td><span class="badge ${u.level.toUpperCase() === 'SUPER' ? 'badge-primary' : u.level.toUpperCase() === 'VIP' ? 'badge-secondary' : 'badge-ghost'}">${u.level}</span></td><td>${(u.tags || []).map(t => `<span class="badge badge-outline">${t}</span>`).join(' ')}</td><td><button class="btn btn-xs btn-info edit-user-btn" data-id='${u.lineId}'>แก้ไข</button> <button class="btn btn-xs btn-error delete-user-btn" data-id='${u.lineId}'>ลบ</button></td></tr>`).join(''); tableBody.querySelectorAll('.edit-user-btn').forEach(b => b.onclick = async () => { try { const user = await fetchData('getUserInfo', { lineId: b.dataset.id }); showUserFormModal(user); } catch (e) { } }); tableBody.querySelectorAll('.delete-user-btn').forEach(b => b.onclick = () => deleteUser(b.dataset.id)); }
-        function showUserFormModal(user) { const isEdit = !!user; dataFormModalTitle.textContent = isEdit ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้'; formFieldsContainer.innerHTML = `<input type="text" id="formLineId" placeholder="Line ID" class="input input-bordered" ${isEdit ? 'readonly' : 'required'} value="${isEdit ? user.id : ''}" /><input type="text" id="formName" placeholder="Name" class="input input-bordered" required value="${isEdit ? user.name : ''}" /><input type="tel" id="formPhone" placeholder="Phone" class="input input-bordered" value="${isEdit ? user.phone : ''}" /><input type="number" id="formPoint" placeholder="Points" class="input input-bordered" required value="${isEdit ? user.point : 0}" /><input type="text" id="formTags" placeholder="Tags (คั่นด้วย ,)" class="input input-bordered" value="${isEdit ? (user.tags || []).join(', ') : ''}" />`; dataFormModal.showModal(); formSaveBtn.onclick = () => saveUser(isEdit); formCancelBtn.onclick = () => dataFormModal.close(); }
-        async function saveUser(isEdit) { const data = { lineId: document.getElementById('formLineId').value.trim(), name: document.getElementById('formName').value.trim(), phone: document.getElementById('formPhone').value.trim(), point: parseInt(document.getElementById('formPoint').value), tags: document.getElementById('formTags').value.split(',').map(t => t.trim()).filter(Boolean) }; if (!data.lineId || !data.name) return showAlert('Error', 'Line ID และชื่อห้ามว่าง'); formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateUserAdmin' : 'registerAdmin', data); showAlert('Success', `User ${isEdit ? 'updated' : 'added'}`, () => { dataFormModal.close(); loadUsers(); }); } finally { formSaveBtn.classList.remove('loading'); } }
-        async function deleteUser(lineId) { if (await showConfirm('Confirm', `ต้องการลบผู้ใช้ ${lineId}?`)) { try { await postData('deleteUser', { lineId }); showAlert('Success', 'User deleted', () => loadUsers()); } catch (e) { } } }
+        const tableBody = document.getElementById('userTableBody'); const searchInput = document.getElementById('userSearchInput'); const searchBtn = document.getElementById('userSearchBtn'); 
+        document.getElementById('addUserBtn').onclick = () => showUserFormModal(); 
+        searchBtn.onclick = () => loadUsers(searchInput.value); 
+        searchInput.addEventListener('keypress', e => e.key === 'Enter' && searchBtn.click()); 
+        await loadUsers();
+        async function loadUsers(query) { 
+            tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4"><div class="loading-spinner mx-auto"></div></td></tr>`; 
+            try { const users = await fetchData('getUsers', { query }); renderUserTable(users); } catch (e) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-error">Load failed</td></tr>`; } 
+        }
+        function renderUserTable(users) { 
+            if (!users.length) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } 
+            tableBody.innerHTML = users.map(u => `<tr><td>${u.lineId}</td><td>${u.name}</td><td>${u.phone || '-'}</td><td>${u.point.toLocaleString()}</td><td><span class="badge ${u.level.toUpperCase() === 'SUPER' ? 'badge-primary' : u.level.toUpperCase() === 'VIP' ? 'badge-secondary' : 'badge-ghost'}">${u.level}</span></td><td>${(u.tags || []).map(t => `<span class="badge badge-outline">${t}</span>`).join(' ')}</td><td><button class="btn btn-xs btn-info edit-user-btn" data-id='${u.lineId}'>แก้ไข</button> <button class="btn btn-xs btn-error delete-user-btn" data-id='${u.lineId}'>ลบ</button></td></tr>`).join(''); 
+            tableBody.querySelectorAll('.edit-user-btn').forEach(b => b.onclick = async () => { try { const user = await fetchData('getUserInfo', { lineId: b.dataset.id }); showUserFormModal(user); } catch (e) { /* handled */ } }); 
+            tableBody.querySelectorAll('.delete-user-btn').forEach(b => b.onclick = () => deleteUser(b.dataset.id)); 
+        }
+        function showUserFormModal(user) { 
+            const isEdit = !!user; 
+            dataFormModalTitle.textContent = isEdit ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้'; 
+            formFieldsContainer.innerHTML = `<input type="text" id="formLineId" placeholder="Line ID" class="input input-bordered" ${isEdit ? 'readonly' : 'required'} value="${isEdit ? user.id : ''}" /><input type="text" id="formName" placeholder="Name" class="input input-bordered" required value="${isEdit ? user.name : ''}" /><input type="tel" id="formPhone" placeholder="Phone" class="input input-bordered" value="${isEdit ? (user.phone || '') : ''}" /><input type="number" id="formPoint" placeholder="Points" class="input input-bordered" required value="${isEdit ? user.point : 0}" /><input type="text" id="formTags" placeholder="Tags (คั่นด้วย ,)" class="input input-bordered" value="${isEdit ? (user.tags || []).join(', ') : ''}" />`; 
+            dataFormModal.showModal(); 
+            formSaveBtn.onclick = () => saveUser(isEdit); 
+            formCancelBtn.onclick = () => dataFormModal.close(); 
+        }
+        async function saveUser(isEdit) { 
+            const data = { lineId: document.getElementById('formLineId').value.trim(), name: document.getElementById('formName').value.trim(), phone: document.getElementById('formPhone').value.trim(), point: parseInt(document.getElementById('formPoint').value), tags: document.getElementById('formTags').value.split(',').map(t => t.trim()).filter(Boolean) }; 
+            if (!data.lineId || !data.name) return showAlert('Error', 'Line ID และชื่อห้ามว่าง'); 
+            formSaveBtn.classList.add('loading'); 
+            try { await postData(isEdit ? 'updateUserAdmin' : 'registerAdmin', data); showAlert('Success', `User ${isEdit ? 'updated' : 'added'}`, () => { dataFormModal.close(); loadUsers(); }); } catch(e) {/* handled */ } finally { formSaveBtn.classList.remove('loading'); } 
+        }
+        async function deleteUser(lineId) { if (await showConfirm('Confirm', `ต้องการลบผู้ใช้ ${lineId}?`)) { try { await postData('deleteUser', { lineId }); showAlert('Success', 'User deleted', () => loadUsers()); } catch (e) { /* handled */ } } }
+    }
+
+    async function initAddPoints() {
+        const form = document.getElementById('addPointsForm'), submitBtn = document.getElementById('addPointsSubmitBtn'), productModeSection = document.getElementById('productModeSection'), manualModeSection = document.getElementById('manualModeSection'), productListSelect = document.getElementById('productList'), quantityInput = document.getElementById('productQuantity'), addItemBtn = document.getElementById('addItemToBillBtn'), billContainer = document.getElementById('billItemsContainer'), totalPointsDisplay = document.getElementById('totalPointsDisplay'), modeTabs = document.querySelectorAll('.tabs .tab');
+        let allProducts = [], billItems = [], currentMode = 'product';
+
+        try { allProducts = await fetchData('getProducts'); updateProductDropdown(); } catch (e) { productListSelect.innerHTML = `<option disabled selected>โหลดสินค้าล้มเหลว</option>`; }
+        
+        function updateProductDropdown() {
+            const productIdsInBill = billItems.map(item => item.id);
+            const availableProducts = allProducts.filter(p => !productIdsInBill.includes(p.id));
+            productListSelect.innerHTML = '';
+            if (availableProducts.length > 0) {
+                availableProducts.forEach(p => { const option = document.createElement('option'); option.value = p.id; option.textContent = `${p.name} (${p.points} แต้ม)`; productListSelect.appendChild(option); });
+            } else { productListSelect.innerHTML = '<option disabled selected>เพิ่มสินค้าครบแล้ว</option>'; }
+        }
+
+        function renderBill() {
+            billContainer.innerHTML = ''; let totalPoints = 0;
+            if (billItems.length === 0) { billContainer.innerHTML = '<p class="text-center text-gray-400">ยังไม่มีรายการ</p>'; totalPointsDisplay.textContent = '0'; return; }
+            billItems.forEach(item => {
+                const itemPoints = item.points * item.quantity; totalPoints += itemPoints;
+                const itemDiv = document.createElement('div'); itemDiv.className = 'flex items-center justify-between p-2 bg-base-200 rounded-md';
+                itemDiv.innerHTML = `<div><span class="font-semibold">${item.name}</span> <span class="text-sm text-gray-500">x ${item.quantity}</span></div><div><span class="font-bold text-secondary">${itemPoints} แต้ม</span><button type="button" class="btn btn-xs btn-ghost btn-circle remove-item-btn" data-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div>`;
+                billContainer.appendChild(itemDiv);
+            });
+            totalPointsDisplay.textContent = totalPoints.toLocaleString();
+            document.querySelectorAll('.remove-item-btn').forEach(btn => {
+                btn.onclick = (e) => { billItems = billItems.filter(item => item.id !== e.currentTarget.dataset.id); renderBill(); updateProductDropdown(); };
+            });
+        }
+
+        modeTabs.forEach(tab => {
+            tab.onclick = () => {
+                currentMode = tab.dataset.mode;
+                modeTabs.forEach(t => t.classList.remove('tab-active'));
+                tab.classList.add('tab-active');
+                productModeSection.classList.toggle('hidden', currentMode !== 'product');
+                manualModeSection.classList.toggle('hidden', currentMode !== 'manual');
+            };
+        });
+
+        addItemBtn.onclick = () => {
+            const selectedId = productListSelect.value; if (!selectedId) return;
+            const product = allProducts.find(p => p.id === selectedId);
+            const quantity = parseInt(quantityInput.value, 10);
+            if (product && quantity > 0) { billItems.push({ ...product, quantity }); renderBill(); updateProductDropdown(); quantityInput.value = 1; }
+        };
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const identifier = document.getElementById('addPointsIdentifier').value.trim();
+            if (!identifier) return showAlert('ข้อมูลไม่ครบ', 'กรุณาระบุลูกค้า');
+            let payload = { identifier }, confirmMessage = '', totalPoints = 0;
+
+            if (currentMode === 'product') {
+                if (billItems.length === 0) return showAlert('ข้อมูลไม่ครบ', 'กรุณาเพิ่มสินค้าลงในบิล');
+                payload.itemsPurchased = billItems.map(item => ({ productId: item.id, quantity: item.quantity }));
+                totalPoints = billItems.reduce((sum, item) => sum + (item.points * item.quantity), 0);
+                const itemSummary = billItems.map(item => `${item.name} x${item.quantity}`).join(',\n');
+                confirmMessage = `ยืนยันให้ ${totalPoints} แต้ม\nจาก:\n${itemSummary}\n\nสำหรับผู้ใช้: "${identifier}"?`;
+            } else {
+                const points = document.getElementById('addPointsAmount').value;
+                const reason = document.getElementById('addPointsReason').value.trim();
+                if (!points || parseInt(points) < 1 || !reason) return showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกแต้มและเหตุผล');
+                payload.points = parseInt(points, 10); payload.reason = reason;
+                totalPoints = payload.points;
+                confirmMessage = `ยืนยันให้ ${totalPoints} แต้ม\nเหตุผล: ${payload.reason}\n\nสำหรับผู้ใช้: "${identifier}"?`;
+            }
+
+            if (await showConfirm('ยืนยันการให้แต้ม', confirmMessage)) {
+                submitBtn.classList.add('loading'); submitBtn.disabled = true;
+                try {
+                    const message = await postData('addPointsToUser', payload);
+                    showAlert('สำเร็จ', message || 'เพิ่มแต้มเรียบร้อยแล้ว');
+                    form.reset(); billItems = []; renderBill(); updateProductDropdown();
+                } catch(e) { /* handled */ } finally {
+                    submitBtn.classList.remove('loading'); submitBtn.disabled = false;
+                }
+            }
+        };
+        renderBill();
     }
     
     async function initItems() {
@@ -296,8 +494,44 @@
         async function loadItems() { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4"><div class="loading-spinner mx-auto"></div></td></tr>`; try { const items = await fetchData('getItems'); renderItemTable(items); } catch (e) { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-error">Load failed</td></tr>`; } }
         function renderItemTable(items) { if (!items.length) { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = items.map(i => `<tr><td>${i.id}</td><td>${i.name}</td><td>${i.point.toLocaleString()}</td><td><span class="badge badge-accent">${i.type}</span></td><td>${i.image ? `<img src="${i.image}" class="w-12 h-12 object-cover rounded">` : '-'}</td><td><button class="btn btn-xs btn-info edit-item-btn" data-id='${i.id}'>แก้ไข</button> <button class="btn btn-xs btn-error delete-item-btn" data-id='${i.id}'>ลบ</button></td></tr>`).join(''); tableBody.querySelectorAll('.edit-item-btn').forEach(b => b.onclick = () => showItemFormModal(items.find(i => i.id === b.dataset.id))); tableBody.querySelectorAll('.delete-item-btn').forEach(b => b.onclick = () => deleteItem(b.dataset.id)); }
         function showItemFormModal(item) { const isEdit = !!item; dataFormModalTitle.textContent = isEdit ? 'แก้ไขของรางวัล' : 'เพิ่มของรางวัล'; formFieldsContainer.innerHTML = `<input type="text" id="formId" placeholder="ID (auto)" class="input input-bordered" ${isEdit ? 'readonly' : ''} value="${isEdit ? item.id : ''}" /><input type="text" id="formName" placeholder="Name" class="input input-bordered" required value="${isEdit ? item.name : ''}" /><input type="number" id="formPoint" placeholder="Points" class="input input-bordered" required value="${isEdit ? item.point : ''}" /><select id="formType" class="select select-bordered"><option value="digital" ${isEdit && item.type === 'digital' ? 'selected' : ''}>Digital</option><option value="physical" ${isEdit && item.type === 'physical' ? 'selected' : ''}>Physical</option></select><input type="url" id="formImage" placeholder="Image URL" class="input input-bordered" value="${isEdit ? item.image : ''}" />`; dataFormModal.showModal(); formSaveBtn.onclick = () => saveItem(isEdit); formCancelBtn.onclick = () => dataFormModal.close(); }
-        async function saveItem(isEdit) { const data = { id: document.getElementById('formId').value.trim() || undefined, name: document.getElementById('formName').value.trim(), point: parseInt(document.getElementById('formPoint').value), type: document.getElementById('formType').value, image: document.getElementById('formImage').value.trim() }; if (!data.name) return showAlert('Error', 'Name is required.'); formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateItem' : 'addItem', data); showAlert('Success', `Item ${isEdit ? 'updated' : 'added'}`, () => { dataFormModal.close(); loadItems(); }); } finally { formSaveBtn.classList.remove('loading'); } }
-        async function deleteItem(id) { if (await showConfirm('Confirm', `ต้องการลบของรางวัล ${id}?`)) { try { await postData('deleteItem', { id }); showAlert('Success', 'Item deleted', () => loadItems()); } catch (e) { } } }
+        async function saveItem(isEdit) { const data = { id: document.getElementById('formId').value.trim() || undefined, name: document.getElementById('formName').value.trim(), point: parseInt(document.getElementById('formPoint').value), type: document.getElementById('formType').value, image: document.getElementById('formImage').value.trim() }; if (!data.name) return showAlert('Error', 'Name is required.'); formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateItem' : 'addItem', data); showAlert('Success', `Item ${isEdit ? 'updated' : 'added'}`, () => { dataFormModal.close(); loadItems(); }); } catch(e) {/* handled */ } finally { formSaveBtn.classList.remove('loading'); } }
+        async function deleteItem(id) { if (await showConfirm('Confirm', `ต้องการลบของรางวัล ${id}?`)) { try { await postData('deleteItem', { id }); showAlert('Success', 'Item deleted', () => loadItems()); } catch (e) { /* handled */ } } }
+    }
+
+    async function initProducts() {
+        const tableBody = document.getElementById('productTableBody');
+        document.getElementById('addProductBtn').onclick = () => showProductFormModal();
+        await loadProducts();
+
+        async function loadProducts() {
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4"><div class="loading-spinner mx-auto"></div></td></tr>`;
+            try { const products = await fetchData('getProducts'); renderProductTable(products); } catch (e) { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-error">Load failed: ${e.message}</td></tr>`; }
+        }
+
+        function renderProductTable(products) {
+            if (!products || !products.length) { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4">ไม่พบข้อมูลสินค้า</td></tr>`; return; }
+            tableBody.innerHTML = products.map(p => `<tr><td class="font-mono text-xs">${p.id}</td><td><div class="font-bold">${p.name}</div><div class="text-xs opacity-70 truncate max-w-xs">${p.description || '-'}</div></td><td><span class="badge badge-ghost">${p.category || '-'}</span></td><td>${p.price.toLocaleString()}</td><td><span class="font-bold text-success">${p.points}</span></td><td><button class="btn btn-xs btn-info edit-product-btn" data-id='${p.id}'>แก้ไข</button> <button class="btn btn-xs btn-error delete-product-btn" data-id='${p.id}'>ลบ</button></td></tr>`).join('');
+            tableBody.querySelectorAll('.edit-product-btn').forEach(b => b.onclick = () => showProductFormModal(products.find(p => p.id === b.dataset.id)));
+            tableBody.querySelectorAll('.delete-product-btn').forEach(b => b.onclick = () => deleteProduct(b.dataset.id));
+        }
+
+        function showProductFormModal(product) {
+            const isEdit = !!product; dataFormModalTitle.textContent = isEdit ? 'แก้ไขสินค้า' : 'เพิ่มสินค้าใหม่';
+            formFieldsContainer.innerHTML = `<input type="text" id="formProductId" placeholder="ID (auto-generate if empty)" class="input input-bordered" ${isEdit ? 'readonly' : ''} value="${isEdit ? product.id : ''}" /><input type="text" id="formProductName" placeholder="ชื่อสินค้า" class="input input-bordered" required value="${isEdit ? product.name : ''}" /><textarea id="formProductDesc" placeholder="รายละเอียดสินค้า (ไม่บังคับ)" class="textarea textarea-bordered h-20">${isEdit ? (product.description || '') : ''}</textarea><input type="text" id="formProductCategory" placeholder="หมวดหมู่ (เช่น เครื่องดื่ม)" class="input input-bordered" value="${isEdit ? (product.category || '') : ''}" /><div class="grid grid-cols-2 gap-4"><div class="form-control"><label class="label"><span class="label-text">ราคา (บาท)</span></label><input type="number" id="formProductPrice" placeholder="0" class="input input-bordered" required value="${isEdit ? product.price : '0'}" min="0" step="any" /></div><div class="form-control"><label class="label"><span class="label-text">แต้มที่ได้/หน่วย</span></label><input type="number" id="formProductPoints" placeholder="0" class="input input-bordered" required value="${isEdit ? product.points : '0'}" min="0" /></div></div>`;
+            dataFormModal.showModal();
+            formSaveBtn.onclick = () => saveProduct(isEdit);
+            formCancelBtn.onclick = () => dataFormModal.close();
+        }
+
+        async function saveProduct(isEdit) {
+            const data = { id: document.getElementById('formProductId').value.trim() || undefined, name: document.getElementById('formProductName').value.trim(), description: document.getElementById('formProductDesc').value.trim(), category: document.getElementById('formProductCategory').value.trim(), price: parseFloat(document.getElementById('formProductPrice').value), points: parseInt(document.getElementById('formProductPoints').value, 10) };
+            if (!data.name) return showAlert('Error', 'กรุณากรอกชื่อสินค้า');
+            if (isNaN(data.price) || isNaN(data.points)) return showAlert('Error', 'ราคาและแต้มต้องเป็นตัวเลข');
+            formSaveBtn.classList.add('loading');
+            try { await postData(isEdit ? 'updateProduct' : 'addProduct', data); showAlert('สำเร็จ', `สินค้าถูก${isEdit ? 'แก้ไข' : 'เพิ่ม'}แล้ว`, () => { dataFormModal.close(); loadProducts(); }); } catch(e) {/* handled */ } finally { formSaveBtn.classList.remove('loading'); }
+        }
+
+        async function deleteProduct(id) { if (await showConfirm('ยืนยันการลบ', `คุณต้องการลบสินค้า ID: ${id} ใช่หรือไม่?`)) { try { await postData('deleteProduct', { id }); showAlert('สำเร็จ', 'ลบสินค้าเรียบร้อยแล้ว', loadProducts); } catch (e) { /* handled */ } } }
     }
 
     async function initWarehouse() {
@@ -305,14 +539,14 @@
         searchBtn.onclick = () => loadWarehouseItems(); searchInput.addEventListener('keypress', e => e.key === 'Enter' && searchBtn.click()); statusFilter.onchange = () => loadWarehouseItems(); await loadWarehouseItems();
         async function loadWarehouseItems() { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4"><div class="loading-spinner mx-auto"></div></td></tr>`; try { const items = await fetchData('getWarehouseItems', { query: searchInput.value, status: statusFilter.value }); renderWarehouseTable(items); } catch (e) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-error">Load failed</td></tr>`; } }
         function renderWarehouseTable(items) { if (!items.length) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = items.map(i => { const shippingInfo = i.shippingName ? `<div class="text-xs"><strong>${i.shippingName}</strong><br>${i.shippingPhone}<br><div class="whitespace-normal">${i.shippingAddress}</div></div>` : '-'; const actionBtn = i.status === 'claimed' ? `<div class="text-xs text-success font-semibold">ยืนยันแล้ว<br>${i.claimDate}</div>` : `<button class="btn btn-xs btn-success claim-item-btn" data-id="${i.warehouseId}">ยืนยัน</button>`; return `<tr><td>${i.warehouseId}</td><td>${i.itemName}</td><td class="font-mono text-xs">${i.lineId}</td><td>${shippingInfo}</td><td>${i.redeemDate}</td><td><span class="badge ${i.status === 'claimed' ? 'badge-success' : 'badge-warning'}">${i.status.replace('_', ' ')}</span></td><td>${actionBtn}</td></tr>`; }).join(''); tableBody.querySelectorAll('.claim-item-btn').forEach(b => b.onclick = () => claimItem(b.dataset.id)); }
-        async function claimItem(id) { if (await showConfirm('Confirm', `ยืนยันการรับ/จัดส่งสำหรับ ${id}?`)) { try { await postData('claimWarehouseItemAdmin', { warehouseId: id }); showAlert('Success', 'อัปเดตสถานะสำเร็จ', () => loadWarehouseItems()); } catch (e) { } } }
+        async function claimItem(id) { if (await showConfirm('Confirm', `ยืนยันการรับ/จัดส่งสำหรับ ${id}?`)) { try { await postData('claimWarehouseItemAdmin', { warehouseId: id }); showAlert('Success', 'อัปเดตสถานะสำเร็จ', () => loadWarehouseItems()); } catch (e) { /* handled */ } } }
     }
 
     async function initScanClaim() {
-        const readerElement = document.getElementById('qr-reader'); const startBtn = document.getElementById('startScanBtn'); const stopBtn = document.getElementById('stopScanBtn'); const resultElement = document.getElementById('scan-result');
+        const readerElement = document.getElementById('qr-reader'), startBtn = document.getElementById('startScanBtn'), stopBtn = document.getElementById('stopScanBtn'), resultElement = document.getElementById('scan-result');
         let html5QrCode = null;
-        const onScanSuccess = async (decodedText, decodedResult) => { await stopScanning(); resultElement.innerHTML = `<span class="loading loading-dots loading-md"></span> กำลังตรวจสอบ...`; resultElement.className = 'mt-4 text-lg font-semibold text-info'; try { const responseText = await postData('claimItemByUniqueId', { uniqueId: decodedText }); showAlert('ผลการยืนยัน', responseText); if (responseText.includes('สำเร็จ')) { resultElement.innerHTML = `✅ ${responseText}`; resultElement.className = 'mt-4 text-lg font-semibold text-success'; } else { resultElement.innerHTML = `⚠️ ${responseText}`; resultElement.className = 'mt-4 text-lg font-semibold text-warning'; } } catch (error) { const errorMessage = `เกิดข้อผิดพลาด: ${error.message}`; showAlert('ข้อผิดพลาด', errorMessage); resultElement.innerHTML = `❌ ${errorMessage}`; resultElement.className = 'mt-4 text-lg font-semibold text-error'; } };
-        const startScanning = () => { if (!html5QrCode) { html5QrCode = new Html5Qrcode("qr-reader"); } const config = { fps: 10, qrbox: { width: 250, height: 250 } }; html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, () => {}) .then(() => { startBtn.classList.add('hidden'); stopBtn.classList.remove('hidden'); resultElement.textContent = 'กรุณาหันกล้องไปที่ QR Code'; resultElement.className = 'mt-4 text-lg font-semibold text-base-content'; }).catch(err => { showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบการอนุญาต"); }); };
+        const onScanSuccess = async (decodedText) => { await stopScanning(); resultElement.innerHTML = `<span class="loading loading-dots loading-md"></span>`; try { const responseText = await postData('claimItemByUniqueId', { uniqueId: decodedText }); showAlert('ผลการยืนยัน', responseText); resultElement.innerHTML = responseText.includes('สำเร็จ') ? `✅ ${responseText}` : `⚠️ ${responseText}`; } catch (error) { resultElement.innerHTML = `❌ ${error.message}`; } };
+        const startScanning = () => { if (!html5QrCode) { html5QrCode = new Html5Qrcode("qr-reader"); } html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, ()=>{}) .then(() => { startBtn.classList.add('hidden'); stopBtn.classList.remove('hidden'); resultElement.textContent = 'กรุณาหันกล้องไปที่ QR Code'; }).catch(err => showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องได้")); };
         const stopScanning = async () => { if (html5QrCode && html5QrCode.isScanning) { try { await html5QrCode.stop(); startBtn.classList.remove('hidden'); stopBtn.classList.add('hidden'); } catch (err) { console.error("Failed to stop scanning.", err); } } };
         startBtn.onclick = startScanning; stopBtn.onclick = stopScanning;
         window.addEventListener('hashchange', stopScanning, { once: true });
@@ -323,110 +557,18 @@
         async function loadEvents() { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4"><div class="loading-spinner mx-auto"></div></td></tr>`; try { const events = await fetchData('getEvents'); renderEventTable(events); } catch (e) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-error">Load failed</td></tr>`; } }
         function renderEventTable(events) { if (!events.length) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = events.map(event => `<tr><td>${event.id}</td><td>${event.title}</td><td>${event.point}</td><td>${(event.allowedLevels || []).map(l => `<span class="badge badge-outline">${l}</span>`).join(' ') || 'ทุกคน'}</td><td class="max-w-xs truncate">${event.desc || '-'}</td><td>${event.image ? `<img src="${event.image}" class="w-12 h-12 object-cover rounded">` : '-'}</td><td><button class="btn btn-xs btn-info edit-event-btn" data-id="${event.id}">แก้ไข</button> <button class="btn btn-xs btn-error delete-event-btn" data-id="${event.id}">ลบ</button></td></tr>`).join(''); tableBody.querySelectorAll('.edit-event-btn').forEach(b => b.onclick = () => showEventFormModal(events.find(e => e.id === b.dataset.id))); tableBody.querySelectorAll('.delete-event-btn').forEach(b => b.onclick = () => deleteEvent(b.dataset.id)); }
         function showEventFormModal(event) { const isEdit = !!event; dataFormModalTitle.textContent = isEdit ? 'แก้ไขกิจกรรม' : 'เพิ่มกิจกรรม'; const levelsHtml = USER_LEVELS.map(l => `<label class="label cursor-pointer justify-start gap-2"><input type="checkbox" name="allowedLevels" value="${l}" class="checkbox" ${event?.allowedLevels?.includes(l) ? 'checked' : ''}><span class="label-text">${l}</span></label>`).join(''); formFieldsContainer.innerHTML = `<input type="text" id="formEventId" placeholder="ID (auto)" class="input input-bordered" ${isEdit ? 'readonly' : ''} value="${isEdit ? event.id : ''}" /><input type="text" id="formEventTitle" placeholder="Title" class="input input-bordered" required value="${isEdit ? event.title : ''}" /><input type="number" id="formEventPoint" placeholder="Points" class="input input-bordered" required value="${isEdit ? event.point : 0}" /><div class="form-control"><label class="label"><span class="label-text">ระดับที่เข้าร่วมได้ (ไม่เลือก=ทุกคน)</span></label><div class="flex gap-4">${levelsHtml}</div></div><textarea id="formEventDesc" placeholder="Description" class="textarea textarea-bordered h-24">${isEdit ? event.desc : ''}</textarea><input type="url" id="formEventImage" placeholder="Image URL" class="input input-bordered" value="${isEdit ? event.image : ''}" />`; dataFormModal.showModal(); formSaveBtn.onclick = () => saveEvent(isEdit); formCancelBtn.onclick = () => dataFormModal.close(); }
-        async function saveEvent(isEdit) { const data = { id: document.getElementById('formEventId').value.trim() || undefined, title: document.getElementById('formEventTitle').value.trim(), point: parseInt(document.getElementById('formEventPoint').value, 10), desc: document.getElementById('formEventDesc').value.trim(), image: document.getElementById('formEventImage').value.trim(), allowedLevels: Array.from(document.querySelectorAll('input[name="allowedLevels"]:checked')).map(cb => cb.value) }; if (!data.title) return showAlert('Error', 'Title is required.'); formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateEvent' : 'addEvent', data); showAlert('Success', `Event ${isEdit ? 'updated' : 'added'}`, () => { dataFormModal.close(); loadEvents(); }); } finally { formSaveBtn.classList.remove('loading'); } }
+        async function saveEvent(isEdit) { const data = { id: document.getElementById('formEventId').value.trim() || undefined, title: document.getElementById('formEventTitle').value.trim(), point: parseInt(document.getElementById('formEventPoint').value, 10), desc: document.getElementById('formEventDesc').value.trim(), image: document.getElementById('formEventImage').value.trim(), allowedLevels: Array.from(document.querySelectorAll('input[name="allowedLevels"]:checked')).map(cb => cb.value) }; if (!data.title) return showAlert('Error', 'Title is required.'); formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateEvent' : 'addEvent', data); showAlert('Success', `Event ${isEdit ? 'updated' : 'added'}`, () => { dataFormModal.close(); loadEvents(); }); } catch(e) {/* handled */ } finally { formSaveBtn.classList.remove('loading'); } }
         async function deleteEvent(id) { if (await showConfirm('Confirm', `ต้องการลบกิจกรรม ${id}?`)) { try { await postData('deleteEvent', { id }); showAlert('Success', 'Event deleted', loadEvents); } catch (e) {} } }
     }
 
     async function initCodes() {
-    const tableBody = document.getElementById('codeTableBody'); document.getElementById('addCodeBtn').onclick = () => showCodeFormModal();
-    await loadCodes();
-
-    async function loadCodes() {
-        tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4"><div class="loading-spinner mx-auto"></div></td></tr>`;
-        try {
-            const codes = await fetchData('getCodes');
-            renderCodeTable(codes);
-        } catch (e) {
-            tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-error">Load failed</td></tr>`;
-        }
+        const tableBody = document.getElementById('codeTableBody'); document.getElementById('addCodeBtn').onclick = () => showCodeFormModal(); await loadCodes();
+        async function loadCodes() { tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4"><div class="loading-spinner mx-auto"></div></td></tr>`; try { const codes = await fetchData('getCodes'); renderCodeTable(codes); } catch (e) { tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-error">Load failed</td></tr>`; } }
+        function renderCodeTable(codes) { if (!codes.length) { tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = codes.map(c => `<tr><td class="font-mono text-xs">${c.id}</td><td>${c.title}</td><td>${c.point}</td><td class="max-w-xs truncate">${c.desc || '-'}</td><td><button class="btn btn-xs btn-accent qr-gen-btn" data-id="${c.id}" data-title="${c.title}">QR</button> <button class="btn btn-xs btn-info edit-code-btn" data-id="${c.id}">แก้ไข</button> <button class="btn btn-xs btn-error delete-code-btn" data-id="${c.id}">ลบ</button></td></tr>`).join(''); tableBody.querySelectorAll('.qr-gen-btn').forEach(b => b.onclick = () => { const canvas = document.getElementById('qrCodeCanvas'); document.getElementById('qrCodeModalTitle').textContent = `QR Code: ${b.dataset.title}`; canvas.innerHTML = ''; new QRCode(canvas, { text: b.dataset.id, width: 256, height: 256 }); document.getElementById('qrCodeModal').showModal(); }); tableBody.querySelectorAll('.edit-code-btn').forEach(b => b.onclick = () => showCodeFormModal(codes.find(c => c.id === b.dataset.id))); tableBody.querySelectorAll('.delete-code-btn').forEach(b => b.onclick = () => deleteCode(b.dataset.id)); }
+        function showCodeFormModal(code) { const isEdit = !!code; dataFormModalTitle.textContent = isEdit ? 'แก้ไขโค้ด' : 'เพิ่มโค้ด'; formFieldsContainer.innerHTML = `<input type="text" id="formCodeId" placeholder="ID (QR Value)" class="input input-bordered" ${isEdit ? 'readonly' : 'required'} value="${isEdit ? code.id : ''}" /><input type="text" id="formCodeTitle" placeholder="Title" class="input input-bordered" required value="${isEdit ? code.title : ''}" /><input type="number" id="formCodePoint" placeholder="Points" class="input input-bordered" required value="${isEdit ? code.point : 0}" /><textarea id="formCodeDesc" placeholder="Description" class="textarea textarea-bordered h-24">${isEdit ? (code.desc || '') : ''}</textarea>`; dataFormModal.showModal(); formSaveBtn.onclick = () => saveCode(isEdit); formCancelBtn.onclick = () => dataFormModal.close(); }
+        async function saveCode(isEdit) { const data = { id: document.getElementById('formCodeId').value.trim(), title: document.getElementById('formCodeTitle').value.trim(), point: parseInt(document.getElementById('formCodePoint').value, 10), desc: document.getElementById('formCodeDesc').value.trim() }; if (!data.id || !data.title) return showAlert('Error', 'ID and Title are required.'); formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateCode' : 'addCode', data); showAlert('Success', `Code ${isEdit ? 'updated' : 'added'}`, () => { dataFormModal.close(); loadCodes(); }); } catch(e) {/* handled */ } finally { formSaveBtn.classList.remove('loading'); } }
+        async function deleteCode(id) { if (await showConfirm('Confirm', `ต้องการลบโค้ด ${id}?`)) { try { await postData('deleteCode', { id }); showAlert('Success', 'Code deleted', loadCodes); } catch (e) {} } }
     }
-
-    function renderCodeTable(codes) {
-        if (!codes.length) {
-            tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">ไม่พบข้อมูล</td></tr>`;
-            return;
-        }
-        // [MODIFIED] เพิ่มปุ่ม QR และ data-title สำหรับแสดงชื่อใน Modal
-        tableBody.innerHTML = codes.map(c => `<tr>
-            <td class="font-mono text-xs">${c.id}</td>
-            <td>${c.title}</td>
-            <td>${c.point}</td>
-            <td class="max-w-xs truncate">${c.desc || '-'}</td>
-            <td>
-                <button class="btn btn-xs btn-accent qr-gen-btn" data-id="${c.id}" data-title="${c.title}">QR</button>
-                <button class="btn btn-xs btn-info edit-code-btn" data-id="${c.id}">แก้ไข</button>
-                <button class="btn btn-xs btn-error delete-code-btn" data-id="${c.id}">ลบ</button>
-            </td>
-        </tr>`).join('');
-
-        // [ADDED] เพิ่ม Event Listener สำหรับปุ่มสร้าง QR Code
-        tableBody.querySelectorAll('.qr-gen-btn').forEach(b => {
-            b.onclick = () => {
-                const codeId = b.dataset.id;
-                const codeTitle = b.dataset.title;
-                const qrCanvas = document.getElementById('qrCodeCanvas');
-                const modalTitle = document.getElementById('qrCodeModalTitle');
-                
-                qrCanvas.innerHTML = ''; // ล้าง QR Code เก่าออกก่อน
-                modalTitle.textContent = `QR Code: ${codeTitle}`;
-                
-                // สร้าง QR Code ใหม่โดยใช้ library
-                new QRCode(qrCanvas, {
-                    text: codeId,
-                    width: 256,
-                    height: 256,
-                    colorDark : "#000000",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                });
-                
-                // แสดง Modal
-                document.getElementById('qrCodeModal').showModal();
-            };
-        });
-
-        tableBody.querySelectorAll('.edit-code-btn').forEach(b => b.onclick = () => showCodeFormModal(codes.find(c => c.id === b.dataset.id)));
-        tableBody.querySelectorAll('.delete-code-btn').forEach(b => b.onclick = () => deleteCode(b.dataset.id));
-    }
-
-    function showCodeFormModal(code) {
-        const isEdit = !!code;
-        dataFormModalTitle.textContent = isEdit ? 'แก้ไขโค้ด' : 'เพิ่มโค้ด';
-        formFieldsContainer.innerHTML = `<input type="text" id="formCodeId" placeholder="ID (QR Value)" class="input input-bordered" ${isEdit ? 'readonly' : 'required'} value="${isEdit ? code.id : ''}" /><input type="text" id="formCodeTitle" placeholder="Title" class="input input-bordered" required value="${isEdit ? code.title : ''}" /><input type="number" id="formCodePoint" placeholder="Points" class="input input-bordered" required value="${isEdit ? code.point : 0}" /><textarea id="formCodeDesc" placeholder="Description" class="textarea textarea-bordered h-24">${isEdit ? (code.desc || '') : ''}</textarea>`;
-        dataFormModal.showModal();
-        formSaveBtn.onclick = () => saveCode(isEdit);
-        formCancelBtn.onclick = () => dataFormModal.close();
-    }
-
-    async function saveCode(isEdit) {
-        const data = {
-            id: document.getElementById('formCodeId').value.trim(),
-            title: document.getElementById('formCodeTitle').value.trim(),
-            point: parseInt(document.getElementById('formCodePoint').value, 10),
-            desc: document.getElementById('formCodeDesc').value.trim()
-        };
-        if (!data.id || !data.title) return showAlert('Error', 'ID and Title are required.');
-        formSaveBtn.classList.add('loading');
-        try {
-            await postData(isEdit ? 'updateCode' : 'addCode', data);
-            showAlert('Success', `Code ${isEdit ? 'updated' : 'added'}`, () => {
-                dataFormModal.close();
-                loadCodes();
-            });
-        } finally {
-            formSaveBtn.classList.remove('loading');
-        }
-    }
-
-    async function deleteCode(id) {
-        if (await showConfirm('Confirm', `ต้องการลบโค้ด ${id}?`)) {
-            try {
-                await postData('deleteCode', { id });
-                showAlert('Success', 'Code deleted', loadCodes);
-            } catch (e) {}
-        }
-    }
-}
 
     async function initHistory() {
         const tableBody = document.getElementById('historyTableBody'); const [lineIdInput, typeSelect, startDateInput, endDateInput, filterBtn, resetBtn] = ['historySearchLineId', 'historyFilterType', 'historyStartDate', 'historyEndDate', 'historyFilterBtn', 'historyResetBtn'].map(id => document.getElementById(id)); filterBtn.onclick = loadHistory; resetBtn.onclick = () => { lineIdInput.value = ''; typeSelect.value = ''; startDateInput.value = ''; endDateInput.value = ''; loadHistory(); }; await loadHistory();
@@ -436,124 +578,22 @@
     
     async function initSettings() {
         const form = document.getElementById('levelSettingsForm'); const vipInput = document.getElementById('vipPoints'); const superInput = document.getElementById('superPoints');
-        try { const config = await fetchData('getLevelConfig'); vipInput.value = config.VIP_points; superInput.value = config.SUPER_points; } catch (e) { /* Handled */ }
-        form.onsubmit = async (e) => { e.preventDefault(); const vip = parseInt(vipInput.value), superP = parseInt(superInput.value); if (isNaN(vip) || isNaN(superP)) return showAlert('Error', 'กรุณากรอกตัวเลข'); if (vip >= superP && superP !== 0) return showAlert('Error', 'แต้ม SUPER ต้องมากกว่า VIP'); const btn = document.getElementById('saveLevelSettingsBtn'); btn.classList.add('loading'); try { await postData('setLevelConfig', { VIP_points: vip, SUPER_points: superP }); showAlert('Success', 'บันทึกการตั้งค่าแล้ว'); } finally { btn.classList.remove('loading'); } };
+        try { const config = await fetchData('getLevelConfig'); vipInput.value = config.VIP_points; superInput.value = config.SUPER_points; } catch (e) { /* handled */ }
+        form.onsubmit = async (e) => { e.preventDefault(); const vip = parseInt(vipInput.value), superP = parseInt(superInput.value); if (isNaN(vip) || isNaN(superP)) return showAlert('Error', 'กรุณากรอกตัวเลข'); if (vip >= superP && superP > 0) return showAlert('Error', 'แต้ม SUPER ต้องมากกว่า VIP'); const btn = document.getElementById('saveLevelSettingsBtn'); btn.classList.add('loading'); try { await postData('setLevelConfig', { VIP_points: vip, SUPER_points: superP }); showAlert('Success', 'บันทึกการตั้งค่าแล้ว'); } catch(e) {/* handled */ } finally { btn.classList.remove('loading'); } };
     }
-
-   async function initAddPoints() {
-    const form = document.getElementById('addPointsForm');
-    const submitBtn = document.getElementById('addPointsSubmitBtn');
-    const productModeSection = document.getElementById('productModeSection');
-    const manualModeSection = document.getElementById('manualModeSection');
-    const productListSelect = document.getElementById('productList');
-    const modeToggles = document.querySelectorAll('input[name="point_mode"]');
-
-    // --- Load Products for Dropdown ---
-    try {
-        const products = await fetchData('getProducts');
-        productListSelect.innerHTML = '<option disabled selected>-- กรุณาเลือกสินค้า --</option>';
-        if (products && products.length > 0) {
-            products.forEach(p => {
-                const option = document.createElement('option');
-                option.value = p.id;
-                option.textContent = `${p.name} (${p.points} แต้ม)`;
-                option.dataset.points = p.points;
-                option.dataset.name = p.name;
-                productListSelect.appendChild(option);
-            });
-        } else {
-            productListSelect.innerHTML = '<option disabled selected>ไม่พบรายการสินค้า</option>';
-        }
-    } catch (e) {
-        productListSelect.innerHTML = `<option disabled selected>Error: ${e.message}</option>`;
-    }
-
-    // --- UI Logic for Toggling Modes ---
-    modeToggles.forEach(toggle => {
-        toggle.addEventListener('change', (e) => {
-            if (e.target.value === 'product') {
-                productModeSection.classList.remove('hidden');
-                manualModeSection.classList.add('hidden');
-            } else {
-                productModeSection.classList.add('hidden');
-                manualModeSection.classList.remove('hidden');
-            }
-        });
-    });
-
-    // --- Form Submission Logic ---
-    form.onsubmit = async (e) => {
-        e.preventDefault();
-        const identifier = document.getElementById('addPointsIdentifier').value.trim();
-        const selectedMode = document.querySelector('input[name="point_mode"]:checked').value;
-        
-        if (!identifier) {
-            showAlert('ข้อมูลไม่ครบ', 'กรุณาระบุลูกค้า');
-            return;
-        }
-
-        let payload = { identifier };
-        let confirmMessage = '';
-
-        if (selectedMode === 'product') {
-            const productId = document.getElementById('productList').value;
-            const quantity = document.getElementById('productQuantity').value;
-            const selectedOption = productListSelect.options[productListSelect.selectedIndex];
-            
-            if (!productId || productId.startsWith('--')) {
-                return showAlert('ข้อมูลไม่ครบ', 'กรุณาเลือกสินค้า');
-            }
-            if (!quantity || parseInt(quantity) < 1) {
-                return showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกจำนวนสินค้าให้ถูกต้อง');
-            }
-            
-            payload.productId = productId;
-            payload.quantity = parseInt(quantity, 10);
-            const totalPoints = parseInt(selectedOption.dataset.points) * payload.quantity;
-            confirmMessage = `ยืนยันให้ ${totalPoints} แต้ม \nจาก: ซื้อ ${selectedOption.dataset.name} (จำนวน ${payload.quantity} ชิ้น)\nให้กับผู้ใช้: "${identifier}"?`;
-
-        } else { // Manual mode
-            const points = document.getElementById('addPointsAmount').value;
-            const reason = document.getElementById('addPointsReason').value.trim();
-
-            if (!points || parseInt(points) < 1 || !reason) {
-                return showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกแต้มและเหตุผลให้ครบถ้วน');
-            }
-
-            payload.points = parseInt(points, 10);
-            payload.reason = reason;
-            confirmMessage = `ยืนยันให้ ${payload.points} แต้ม \nเหตุผล: ${payload.reason}\nให้กับผู้ใช้: "${identifier}"?`;
-        }
-
-        if (await showConfirm('ยืนยันการเพิ่มแต้ม', confirmMessage)) {
-            submitBtn.classList.add('loading');
-            submitBtn.disabled = true;
-            try {
-                const responseText = await postData('addPointsToUser', payload);
-                let result;
-                try { result = JSON.parse(responseText); } 
-                catch(jsonError){ result = { success: true, message: responseText }; }
-
-                if (result.success === false) {
-                   showAlert('เกิดข้อผิดพลาด', result.error || 'ไม่สามารถทำรายการได้');
-                } else {
-                   showAlert('สำเร็จ', result.message || 'เพิ่มแต้มเรียบร้อยแล้ว');
-                   form.reset(); // ล้างฟอร์มเมื่อสำเร็จ
-                   productModeSection.classList.remove('hidden'); // Reset UI to default
-                   manualModeSection.classList.add('hidden');
-                }
-            } catch (error) {
-                showAlert('เกิดข้อผิดพลาดรุนแรง', error.message);
-            } finally {
-                submitBtn.classList.remove('loading');
-                submitBtn.disabled = false;
-            }
-        }
-    };
-}
 
     // --- App Start ---
     document.addEventListener('DOMContentLoaded', () => {
+        // Fallback for config.js
+        if (typeof CONFIG === 'undefined') {
+            const gasUrl = prompt("Please enter your Google Apps Script URL:");
+            if (gasUrl) {
+                window.CONFIG = { GAS_URL_ADMIN: gasUrl };
+            } else {
+                document.body.innerHTML = '<div class="p-8 text-center text-error">Configuration not found. Please create config-admin.js or enter the URL.</div>';
+                return;
+            }
+        }
         handleLogin();
         window.addEventListener('hashchange', router);
     });
