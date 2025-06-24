@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th" data-theme="light">
+<html lang="th">
 
 <head>
   <meta charset="UTF-8" />
@@ -8,216 +8,256 @@
   <title>CRM - POS</title>
   
   <script src="config-admin.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet" type="text/css" />
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <script>
-    tailwind.config = {
-      daisyui: {
-        themes: [{
-          light: {
-            ...require("daisyui/src/theming/themes")["light"],
-            "primary": "#1f2937", // Dark gray for primary buttons
-            "primary-focus": "#374151",
-            "secondary": "#3b82f6", // A friendly blue
-            "accent": "#10b981", // Teal for accents
-            "--rounded-box": "0.75rem", 
-            "--rounded-btn": "0.5rem",
-          },
-        }],
-      },
-    }
-  </script>
-
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
-    body { background-color: #f3f4f6; font-family: 'Inter', 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
-    #qr-shaded-region{ border-width:0 !important; } 
+    /* Custom Base Styles */
+    body {
+      background-color: #f3f4f6; /* bg-gray-100 */
+      font-family: 'Inter', 'Kanit', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #qr-shaded-region { border-width: 0 !important; } 
     .hidden { display: none !important; }
     
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .loading-spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: #1f2937; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-    .page-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 2rem; color: #6b7280; }
-    
-    /* Tab content visibility */
-    [role="tabpanel"] { display: none; }
-    input[type="radio"]:checked + [role="tabpanel"] { display: block; }
+    .loading-spinner { 
+      border: 4px solid rgba(0, 0, 0, 0.1); 
+      border-left-color: #1f2937; /* border-left-gray-800 */
+      border-radius: 50%; 
+      width: 40px; 
+      height: 40px; 
+      animation: spin 1s linear infinite; 
+    }
+    .page-loader { 
+      display: flex; flex-direction: column; align-items: center; 
+      justify-content: center; gap: 1rem; padding: 2rem; 
+      color: #6b7280; /* text-gray-500 */
+    }
+
+    /* Custom Modal Styles */
+    .modal-overlay {
+        position: fixed; inset: 0; z-index: 50;
+        display: flex; align-items: center; justify-content: center;
+        background-color: rgba(0, 0, 0, 0.5);
+        opacity: 0; transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+    .modal-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .modal-box {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 0.75rem; /* rounded-xl */
+        box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+        width: 90%;
+        max-width: 28rem; /* max-w-md */
+    }
+    .modal-overlay.active .modal-box {
+        transform: scale(1);
+    }
   </style>
 </head>
 
-<body>
+<body class="bg-gray-100">
   <!-- Main App Content -->
   <div id="main-app" class="flex flex-col h-screen">
-      <header class="navbar bg-base-100 shadow-sm p-4 sticky top-0 z-30 border-b border-gray-200">
-        <div class="flex-1 px-2 mx-2"><h1 class="text-xl font-bold" id="pageTitle">หน้าร้าน (POS)</h1></div>
+      <header class="bg-white shadow-sm p-4 sticky top-0 z-30 border-b border-gray-200 flex justify-between items-center">
+        <h1 class="text-xl font-bold text-gray-800" id="pageTitle">หน้าร้าน (POS)</h1>
       </header>
-      <main class="flex-grow p-2 sm:p-4 bg-gray-100 overflow-y-auto">
-        <div id="app-container" class="transition-opacity duration-300">
-            <!-- App content will be loaded here -->
-        </div>
+      <main class="flex-grow p-2 sm:p-4 overflow-y-auto">
+        <div id="app-container" class="transition-opacity duration-300"></div>
       </main>
   </div>
 
   <!-- MODALS -->
-  <dialog id="customAlertDialog" class="modal"><div class="modal-box rounded-lg"><h3 id="customAlertTitle" class="font-bold text-lg mb-3 text-center"></h3><p id="customAlertMessage" class="py-4 whitespace-pre-line text-center"></p><div class="modal-action justify-center"><form method="dialog"><button class="btn btn-primary w-full rounded-lg">ตกลง</button></form></div></div></dialog>
-  <dialog id="customConfirmDialog" class="modal"><div class="modal-box rounded-lg"><h3 id="customConfirmTitle" class="font-bold text-lg mb-3 text-center"></h3><p id="customConfirmMessage" class="py-4 whitespace-pre-line text-center"></p><div class="modal-action justify-around"><button id="customConfirmCancelButton" class="btn btn-ghost rounded-lg">ยกเลิก</button><button id="customConfirmConfirmButton" class="btn btn-primary rounded-lg">ยืนยัน</button></div></div></dialog>
-  
-  <dialog id="scanCustomerModal" class="modal">
-    <div class="modal-box rounded-lg">
-      <h3 class="font-bold text-lg text-center">สแกน QR Code ของลูกค้า</h3>
-      <div id="customer-qr-reader" class="w-full h-64 bg-gray-100 rounded-lg my-4 border-2 border-dashed border-gray-300 overflow-hidden"></div>
-      <div class="modal-action">
-        <button id="closeScanCustomerBtn" class="btn btn-ghost rounded-lg w-full">ยกเลิก</button>
-      </div>
+  <div id="customAlertDialog" class="modal-overlay">
+    <div class="modal-box">
+        <h3 id="customAlertTitle" class="font-bold text-lg mb-3 text-center text-gray-800"></h3>
+        <p id="customAlertMessage" class="py-4 whitespace-pre-line text-center text-gray-600"></p>
+        <div class="mt-4"><button id="customAlertButton" class="w-full bg-gray-800 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700">ตกลง</button></div>
     </div>
-  </dialog>
+  </div>
+  <div id="customConfirmDialog" class="modal-overlay">
+    <div class="modal-box">
+        <h3 id="customConfirmTitle" class="font-bold text-lg mb-3 text-center text-gray-800"></h3>
+        <p id="customConfirmMessage" class="py-4 whitespace-pre-line text-center text-gray-600"></p>
+        <div class="mt-4 flex justify-around gap-4">
+            <button id="customConfirmCancelButton" class="flex-1 bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">ยกเลิก</button>
+            <button id="customConfirmConfirmButton" class="flex-1 bg-gray-800 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700">ยืนยัน</button>
+        </div>
+    </div>
+  </div>
+  <div id="scanCustomerModal" class="modal-overlay">
+    <div class="modal-box">
+      <h3 class="font-bold text-lg text-center text-gray-800">สแกน QR Code ของลูกค้า</h3>
+      <div id="customer-qr-reader" class="w-full h-64 bg-gray-200 rounded-lg my-4 border-2 border-dashed border-gray-300 overflow-hidden"></div>
+      <button id="closeScanCustomerBtn" class="w-full bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">ยกเลิก</button>
+    </div>
+  </div>
 
-  <!-- Main Template for this page -->
+  <!-- Main Template -->
   <template id="view-cashier-page">
-    <div role="tablist" class="tabs tabs-boxed mb-4 bg-base-200">
-      <input type="radio" name="main_tabs" role="tab" class="tab" aria-label="ให้แต้ม" value="pos" checked />
-      <div role="tabpanel" class="tab-content pt-4">
-          <div class="card bg-base-100 shadow-md rounded-lg">
-              <div class="card-body p-4 sm:p-6">
-                  <form id="addPointsForm" onsubmit="event.preventDefault()" class="space-y-6">
-                      <div class="form-control">
-                          <label class="label pb-1"><span class="label-text font-semibold">1. ระบุลูกค้า</span></label>
-                          <input type="text" id="addPointsIdentifier" placeholder="กรอก Line ID, เบอร์โทร..." class="input input-bordered w-full rounded-md" required />
-                          <button type="button" id="scanCustomerBtn" class="btn btn-secondary w-full mt-2 rounded-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5" /></svg>
-                            สแกน QR ลูกค้า
-                          </button>
-                      </div>
-                      <div class="form-control">
-                        <label class="label pb-1"><span class="label-text font-semibold">2. เลือกวิธีให้แต้ม</span></label>
-                        <div role="tablist" class="tabs tabs-boxed rounded-md"><a role="tab" class="tab tab-active" data-mode="product">สินค้า</a><a role="tab" class="tab" data-mode="manual">กรอกเอง</a></div>
-                      </div>
-                      <div id="productModeSection" class="space-y-4">
-                          <div class="bg-base-200/60 p-3 rounded-lg space-y-4">
-                            <div class="form-control">
-                                <label class="label py-1"><span class="label-text">เลือกสินค้า</span></label>
-                                <select id="productList" class="select select-bordered w-full rounded-md"><option disabled selected>กำลังโหลด...</option></select>
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <div class="form-control flex-1">
-                                    <label class="label py-1"><span class="label-text">จำนวน</span></label>
-                                    <input type="number" id="productQuantity" value="1" min="1" class="input input-bordered w-full rounded-md" />
-                                </div>
-                                <button type="button" id="addItemToBillBtn" class="btn btn-secondary self-end rounded-md">เพิ่มลงบิล</button>
-                            </div>
-                          </div>
-                          <div class="divider my-2">สรุปรายการ</div>
-                          <div id="billItemsContainer" class="space-y-2 max-h-48 overflow-y-auto pr-2"><p class="text-center text-gray-400">ยังไม่มีรายการ</p></div>
-                          <div class="text-right text-lg font-bold">แต้มรวม: <span id="totalPointsDisplay" class="text-primary">0</span></div>
-                      </div>
-                      <div id="manualModeSection" class="space-y-4 hidden">
-                          <div class="form-control"><label class="label py-1"><span class="label-text">จำนวนแต้ม</span></label><input type="number" id="addPointsAmount" placeholder="เช่น 50" class="input input-bordered w-full rounded-md" min="1" /></div>
-                          <div class="form-control"><label class="label py-1"><span class="label-text">เหตุผล</span></label><input type="text" id="addPointsReason" placeholder="เช่น ของขวัญพิเศษ" class="input input-bordered w-full rounded-md" /></div>
-                      </div>
-                      <div class="pt-2"><button type="submit" id="addPointsSubmitBtn" class="btn btn-primary w-full btn-lg rounded-lg">ยืนยันและให้แต้ม</button></div>
-                  </form>
-              </div>
-          </div>
+    <div class="w-full max-w-4xl mx-auto">
+      <!-- Custom Tabs -->
+      <div class="flex border-b border-gray-200 mb-4" id="main-tabs-container">
+        <button data-tab="pos" class="tab-button flex-1 py-3 px-1 text-center font-semibold text-gray-500 border-b-2 border-transparent hover:border-gray-300 hover:text-gray-700">ให้แต้ม</button>
+        <button data-tab="scan" class="tab-button flex-1 py-3 px-1 text-center font-semibold text-gray-500 border-b-2 border-transparent hover:border-gray-300 hover:text-gray-700">สแกนรับของ</button>
+        <button data-tab="history" class="tab-button flex-1 py-3 px-1 text-center font-semibold text-gray-500 border-b-2 border-transparent hover:border-gray-300 hover:text-gray-700">ประวัติ</button>
       </div>
-
-      <input type="radio" name="main_tabs" role="tab" class="tab" aria-label="สแกนรับของ" value="scan" />
-      <div role="tabpanel" class="tab-content pt-4">
-          <div class="card bg-base-100 shadow-md rounded-lg">
-              <div class="card-body p-4 sm:p-6 items-center text-center">
-                  <h3 class="card-title mb-2">สแกน QR Code รับของ</h3>
-                  <div id="qr-reader" class="w-full max-w-sm h-64 bg-gray-100 rounded-lg mb-4 border-2 border-dashed border-gray-300 overflow-hidden"></div>
-                  <div class="w-full max-w-sm">
-                      <button id="startScanBtn" class="btn btn-primary w-full rounded-lg">เริ่มสแกน</button>
-                      <button id="stopScanBtn" class="btn btn-ghost w-full rounded-lg hidden">หยุดสแกน</button>
-                  </div>
-                  <div id="scan-result" class="mt-4 text-md font-semibold h-10"></div>
-              </div>
-          </div>
-      </div>
-
-      <input type="radio" name="main_tabs" role="tab" class="tab" aria-label="ประวัติ" value="history" />
-      <div role="tabpanel" class="tab-content pt-4">
-          <div class="card bg-base-100 shadow-md rounded-lg">
-            <div class="card-body p-4 sm:p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold">ประวัติล่าสุด</h3>
-                    <button id="refreshHistoryBtn" class="btn btn-ghost btn-sm rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l1.5 1.5A9 9 0 0120.5 15M20 20l-1.5-1.5A9 9 0 003.5 9" /></svg></button>
+      
+      <!-- Tab Content Panels -->
+      <div id="pos-tab-panel" class="tab-panel">
+        <div class="bg-white shadow-md rounded-lg p-4 sm:p-6">
+            <form id="addPointsForm" onsubmit="event.preventDefault()" class="space-y-6">
+                <div><label class="block text-sm font-semibold text-gray-700 mb-1">1. ระบุลูกค้า</label><input type="text" id="addPointsIdentifier" placeholder="กรอก Line ID, เบอร์โทร..." class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required /><button type="button" id="scanCustomerBtn" class="w-full mt-2 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"> <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5" /></svg> สแกน QR ลูกค้า </button></div>
+                <div><label class="block text-sm font-semibold text-gray-700 mb-1">2. เลือกวิธีให้แต้ม</label><div class="flex bg-gray-200 p-1 rounded-lg" id="pos-mode-container"><button type="button" data-mode="product" class="pos-mode-button flex-1 py-2 text-sm rounded-md">สินค้า</button><button type="button" data-mode="manual" class="pos-mode-button flex-1 py-2 text-sm rounded-md">กรอกเอง</button></div></div>
+                <div id="productModeSection" class="space-y-4">
+                    <div class="bg-gray-100 p-3 rounded-lg space-y-4 border border-gray-200">
+                      <div><label class="block text-xs text-gray-600 mb-1">เลือกสินค้า</label><select id="productList" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"><option disabled selected>กำลังโหลด...</option></select></div>
+                      <div class="flex items-end gap-2">
+                          <div class="flex-1"><label class="block text-xs text-gray-600 mb-1">จำนวน</label><input type="number" id="productQuantity" value="1" min="1" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                          <button type="button" id="addItemToBillBtn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">เพิ่มลงบิล</button>
+                      </div>
+                    </div>
+                    <div class="border-t border-gray-200"></div>
+                    <div id="billItemsContainer" class="space-y-2 max-h-48 overflow-y-auto pr-2"><p class="text-center text-gray-400">ยังไม่มีรายการ</p></div>
+                    <div class="text-right text-lg font-bold text-gray-800">แต้มรวม: <span id="totalPointsDisplay" class="text-blue-600">0</span></div>
                 </div>
-                <div class="overflow-x-auto"><table class="table w-full table-sm"><thead class="bg-gray-50"><tr><th>วันที่</th><th>ประเภท</th><th>รายละเอียด</th><th>แต้ม</th></tr></thead><tbody id="historyTableBody"></tbody></table></div>
+                <div id="manualModeSection" class="space-y-4 hidden">
+                    <div><label class="block text-xs text-gray-600 mb-1">จำนวนแต้ม</label><input type="number" id="addPointsAmount" placeholder="เช่น 50" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg" min="1" /></div>
+                    <div><label class="block text-xs text-gray-600 mb-1">เหตุผล</label><input type="text" id="addPointsReason" placeholder="เช่น ของขวัญพิเศษ" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg" /></div>
+                </div>
+                <div class="pt-2"><button type="submit" id="addPointsSubmitBtn" class="w-full bg-gray-800 text-white text-lg font-bold py-3 px-4 rounded-lg hover:bg-gray-700">ยืนยันและให้แต้ม</button></div>
+            </form>
+        </div>
+      </div>
+      
+      <div id="scan-tab-panel" class="tab-panel hidden">
+        <div class="bg-white shadow-md rounded-lg p-4 sm:p-6 text-center">
+            <h3 class="text-xl font-bold mb-4 text-gray-800">สแกน QR Code รับของ</h3>
+            <div id="qr-reader" class="w-full max-w-sm h-64 mx-auto bg-gray-200 rounded-lg mb-4 border-2 border-dashed border-gray-300 overflow-hidden"></div>
+            <div class="w-full max-w-sm mx-auto">
+                <button id="startScanBtn" class="w-full bg-gray-800 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700">เริ่มสแกน</button>
+                <button id="stopScanBtn" class="w-full bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 hidden">หยุดสแกน</button>
             </div>
-          </div>
+            <div id="scan-result" class="mt-4 text-md font-semibold h-10 text-gray-700"></div>
+        </div>
+      </div>
+
+      <div id="history-tab-panel" class="tab-panel hidden">
+        <div class="bg-white shadow-md rounded-lg p-4 sm:p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">ประวัติล่าสุด</h3>
+                <button id="refreshHistoryBtn" class="p-2 rounded-lg bg-white hover:bg-gray-100 border border-gray-300"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l1.5 1.5A9 9 0 0120.5 15M20 20l-1.5-1.5A9 9 0 003.5 9" /></svg></button>
+            </div>
+            <div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-4 py-3">วันที่</th><th class="px-4 py-3">ประเภท</th><th class="px-4 py-3">รายละเอียด</th><th class="px-4 py-3 text-right">แต้ม</th></tr></thead><tbody id="historyTableBody" class="bg-white"></tbody></table></div>
+        </div>
       </div>
     </div>
   </template>
   
 <script>
-    // ==========================================================
-    // ===                 GLOBAL VARIABLES                   ===
-    // ==========================================================
-    const mainApp = document.getElementById('main-app');
+    // === GLOBAL VARIABLES ===
     const appContainer = document.getElementById('app-container');
     
-    // ==========================================================
-    // ===                 HELPER FUNCTIONS                   ===
-    // ==========================================================
-    function showAlert(title, message, cb) { const dialog = document.getElementById('customAlertDialog'); document.getElementById('customAlertTitle').textContent = title; document.getElementById('customAlertMessage').textContent = message; dialog.showModal(); const closeHandler = () => { dialog.removeEventListener('close', closeHandler); if (cb) cb(); }; dialog.addEventListener('close', closeHandler, { once: true }); }
-    function showConfirm(title, message) { return new Promise(res => { const dialog = document.getElementById('customConfirmDialog'); document.getElementById('customConfirmTitle').textContent = title; document.getElementById('customConfirmMessage').textContent = message; dialog.showModal(); const ok = document.getElementById('customConfirmConfirmButton'), no = document.getElementById('customConfirmCancelButton'); const onOk = () => { cleanup(); res(true); }, onNo = () => { cleanup(); res(false); }; function cleanup() { dialog.close(); ok.removeEventListener('click', onOk); no.removeEventListener('click', onNo); } ok.addEventListener('click', onOk, { once: true }); no.addEventListener('click', onNo, { once: true }); }); }
+    // === HELPER FUNCTIONS ===
+    function showAlert(title, message, cb) {
+        const dialog = document.getElementById('customAlertDialog');
+        dialog.querySelector('#customAlertTitle').textContent = title;
+        dialog.querySelector('#customAlertMessage').textContent = message;
+        dialog.classList.add('active');
+        const btn = dialog.querySelector('#customAlertButton');
+        const handler = () => { dialog.classList.remove('active'); btn.removeEventListener('click', handler); if(cb) cb(); };
+        btn.addEventListener('click', handler, {once: true});
+    }
+    function showConfirm(title, message) {
+        return new Promise(res => {
+            const dialog = document.getElementById('customConfirmDialog');
+            dialog.querySelector('#customConfirmTitle').textContent = title;
+            dialog.querySelector('#customConfirmMessage').textContent = message;
+            dialog.classList.add('active');
+            const ok = dialog.querySelector('#customConfirmConfirmButton'), no = dialog.querySelector('#customConfirmCancelButton');
+            const onOk = () => { cleanup(); res(true); }, onNo = () => { cleanup(); res(false); };
+            function cleanup() { dialog.classList.remove('active'); ok.removeEventListener('click', onOk); no.removeEventListener('click', onNo); }
+            ok.addEventListener('click', onOk, { once: true });
+            no.addEventListener('click', onNo, { once: true });
+        });
+    }
     async function fetchData(action, params = {}) { const url = new URL(CONFIG.GAS_URL_ADMIN); url.searchParams.append('action', action); for (const k in params) { if (params[k]) url.searchParams.append(k, params[k]); } try { const r = await fetch(url); if (!r.ok) throw new Error(`Server responded with status: ${r.status}`); const data = await r.json(); if(data.error) throw new Error(data.error); return data; } catch (e) { showAlert('Error', `Fetch failed: ${e.message}`); throw e; } }
-    async function postData(action, data) { try { const r = await fetch(CONFIG.GAS_URL_ADMIN, { method: 'POST', body: JSON.stringify({ action, ...data }) }); if (!r.ok) throw new Error(`Server responded with status: ${r.status}`); const responseText = await r.text(); try { const jsonData = JSON.parse(responseText); if(jsonData.success === false) throw new Error(jsonData.error || 'Unknown error from server'); return jsonData.message || responseText; } catch (jsonError) { return responseText; } } catch (e) { showAlert('Error', `Request failed: ${e.message}`); throw e; } }
+    async function postData(action, data) { try { const r = await fetch(CONFIG.GAS_URL_ADMIN, { method: 'POST', body: JSON.stringify({ action, ...data }) }); if (!r.ok) throw new Error(`Server responded with status: ${r.status}`); const responseText = await r.text(); try { const jsonData = JSON.parse(responseText); if(jsonData.success === false) throw new Error(jsonData.error || 'Unknown error'); return jsonData.message || responseText; } catch (jsonError) { return responseText; } } catch (e) { showAlert('Error', `Request failed: ${e.message}`); throw e; } }
 
-    // ==========================================================
-    // ===                    APP LOGIC                       ===
-    // ==========================================================
-    
+    // === APP LOGIC ===
     async function initCashierPage() {
-        // --- Common variables ---
-        let claimScanner, customerScanner;
-        let isClaimScannerActive = false;
-
-        // --- PART 1: Scan Claim Logic (for redeeming rewards) ---
+        let claimScanner, customerScanner; let isClaimScannerActive = false;
+        
+        // --- Tab Switching Logic ---
+        const tabsContainer = document.getElementById('main-tabs-container');
+        const tabButtons = tabsContainer.querySelectorAll('.tab-button');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+        
+        function switchTab(tabId) {
+            stopClaimScanner();
+            tabButtons.forEach(btn => {
+                btn.classList.toggle('text-blue-600', btn.dataset.tab === tabId);
+                btn.classList.toggle('border-blue-600', btn.dataset.tab === tabId);
+                btn.classList.toggle('text-gray-500', btn.dataset.tab !== tabId);
+                btn.classList.toggle('border-transparent', btn.dataset.tab !== tabId);
+            });
+            tabPanels.forEach(panel => {
+                panel.classList.toggle('hidden', panel.id !== `${tabId}-tab-panel`);
+            });
+            if (tabId === 'history') { loadHistory(); }
+        }
+        tabsContainer.addEventListener('click', (e) => {
+            if(e.target.matches('.tab-button')) { switchTab(e.target.dataset.tab); }
+        });
+        
+        // --- Scan Claim Logic ---
         const startScanBtn = document.getElementById('startScanBtn'), stopScanBtn = document.getElementById('stopScanBtn'), scanResultEl = document.getElementById('scan-result');
-        const onScanSuccessClaim = async (decodedText) => { await stopClaimScanner(); scanResultEl.innerHTML = `<span class="loading loading-dots loading-md"></span>`; try { const responseText = await postData('claimItemByUniqueId', { uniqueId: decodedText }); showAlert('ผลการยืนยัน', responseText); scanResultEl.innerHTML = responseText.includes('สำเร็จ') ? `✅ ${responseText}` : `⚠️ ${responseText}`; } catch (error) { scanResultEl.innerHTML = `❌ ${error.message}`; } };
+        const onScanSuccessClaim = async (decodedText) => { await stopClaimScanner(); scanResultEl.innerHTML = `<span class="loading-spinner w-6 h-6 mx-auto"></span>`; try { const responseText = await postData('claimItemByUniqueId', { uniqueId: decodedText }); showAlert('ผลการยืนยัน', responseText); scanResultEl.innerHTML = responseText.includes('สำเร็จ') ? `✅ ${responseText}` : `⚠️ ${responseText}`; } catch (error) { scanResultEl.innerHTML = `❌ ${error.message}`; } };
         const startClaimScanner = () => { if (!claimScanner) { claimScanner = new Html5Qrcode("qr-reader"); } if (isClaimScannerActive) return; isClaimScannerActive = true; claimScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccessClaim, () => {}).then(() => { startScanBtn.classList.add('hidden'); stopScanBtn.classList.remove('hidden'); scanResultEl.textContent = 'กรุณาหันกล้องไปที่ QR Code'; }).catch(err => { showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องได้"); isClaimScannerActive = false; }); };
         const stopClaimScanner = async () => { if (claimScanner && claimScanner.isScanning) { try { await claimScanner.stop(); } catch (err) {} } isClaimScannerActive = false; startScanBtn.classList.remove('hidden'); stopScanBtn.classList.add('hidden'); };
         startScanBtn.onclick = startClaimScanner; stopScanBtn.onclick = stopClaimScanner;
 
-        // --- PART 2: Scan Customer Logic (for POS) ---
+        // --- Scan Customer Logic ---
         const scanCustomerModal = document.getElementById('scanCustomerModal'), scanCustomerBtn = document.getElementById('scanCustomerBtn'), closeScanCustomerBtn = document.getElementById('closeScanCustomerBtn'), customerIdentifierInput = document.getElementById('addPointsIdentifier');
         const onScanSuccessCustomer = async (decodedText) => { customerIdentifierInput.value = decodedText; customerIdentifierInput.focus(); await stopCustomerScanner(); };
-        const startCustomerScanner = () => { if (!customerScanner) { customerScanner = new Html5Qrcode("customer-qr-reader"); } scanCustomerModal.showModal(); customerScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccessCustomer, () => {}).catch(err => { showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องสแกนลูกค้าได้"); scanCustomerModal.close(); }); };
-        const stopCustomerScanner = async () => { if (customerScanner && customerScanner.isScanning) { try { await customerScanner.stop(); } catch (err) {} } scanCustomerModal.close(); };
+        const startCustomerScanner = () => { if (!customerScanner) { customerScanner = new Html5Qrcode("customer-qr-reader"); } scanCustomerModal.classList.add('active'); customerScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccessCustomer, () => {}).catch(err => { showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องสแกนลูกค้าได้"); scanCustomerModal.classList.remove('active'); }); };
+        const stopCustomerScanner = async () => { if (customerScanner && customerScanner.isScanning) { try { await customerScanner.stop(); } catch (err) {} } scanCustomerModal.classList.remove('active'); };
         scanCustomerBtn.onclick = startCustomerScanner; closeScanCustomerBtn.onclick = stopCustomerScanner;
 
-        // --- PART 3: Add Points (POS) Logic ---
-        const addPointsForm = document.getElementById('addPointsForm'), addPointsSubmitBtn = document.getElementById('addPointsSubmitBtn'), productModeSection = document.getElementById('productModeSection'), manualModeSection = document.getElementById('manualModeSection'), productListSelect = document.getElementById('productList'), quantityInput = document.getElementById('productQuantity'), addItemBtn = document.getElementById('addItemToBillBtn'), billContainer = document.getElementById('billItemsContainer'), totalPointsDisplay = document.getElementById('totalPointsDisplay'), posModeTabs = addPointsForm.querySelectorAll('.tabs .tab');
+        // --- Add Points (POS) Logic ---
+        const addPointsForm = document.getElementById('addPointsForm'), addPointsSubmitBtn = document.getElementById('addPointsSubmitBtn'), productModeSection = document.getElementById('productModeSection'), manualModeSection = document.getElementById('manualModeSection'), productListSelect = document.getElementById('productList'), quantityInput = document.getElementById('productQuantity'), addItemBtn = document.getElementById('addItemToBillBtn'), billContainer = document.getElementById('billItemsContainer'), totalPointsDisplay = document.getElementById('totalPointsDisplay'), posModeContainer = document.getElementById('pos-mode-container');
         let allProducts = [], billItems = [], currentPosMode = 'product';
         try { allProducts = await fetchData('getProducts'); updateProductDropdown(); } catch (e) { productListSelect.innerHTML = `<option disabled selected>โหลดสินค้าล้มเหลว</option>`; }
         function updateProductDropdown() { const productIdsInBill = billItems.map(item => item.id); const availableProducts = allProducts.filter(p => !productIdsInBill.includes(p.id)); productListSelect.innerHTML = ''; if (availableProducts.length > 0) { availableProducts.forEach(p => { const option = document.createElement('option'); option.value = p.id; option.textContent = `${p.name} (${p.points} แต้ม)`; productListSelect.appendChild(option); }); } else { productListSelect.innerHTML = '<option disabled selected>เพิ่มสินค้าครบแล้ว</option>'; } }
-        function renderBill() { billContainer.innerHTML = ''; let totalPoints = 0; if (billItems.length === 0) { billContainer.innerHTML = '<p class="text-center text-gray-400">ยังไม่มีรายการ</p>'; totalPointsDisplay.textContent = '0'; return; } billItems.forEach(item => { const itemPoints = item.points * item.quantity; totalPoints += itemPoints; const itemDiv = document.createElement('div'); itemDiv.className = 'flex items-center justify-between p-2 bg-base-200/60 rounded-lg'; itemDiv.innerHTML = `<div><span class="font-semibold">${item.name}</span> <span class="text-sm text-gray-500">x ${item.quantity}</span></div><div><span class="font-bold text-secondary">${itemPoints} แต้ม</span><button type="button" class="btn btn-xs btn-ghost btn-circle remove-item-btn" data-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div>`; billContainer.appendChild(itemDiv); }); totalPointsDisplay.textContent = totalPoints.toLocaleString(); document.querySelectorAll('.remove-item-btn').forEach(btn => { btn.onclick = (e) => { billItems = billItems.filter(item => item.id !== e.currentTarget.dataset.id); renderBill(); updateProductDropdown(); }; }); }
-        posModeTabs.forEach(tab => { tab.onclick = () => { currentPosMode = tab.dataset.mode; posModeTabs.forEach(t => t.classList.remove('tab-active')); tab.classList.add('tab-active'); productModeSection.classList.toggle('hidden', currentPosMode !== 'product'); manualModeSection.classList.toggle('hidden', currentPosMode !== 'manual'); }; });
+        function renderBill() { billContainer.innerHTML = ''; let totalPoints = 0; if (billItems.length === 0) { billContainer.innerHTML = '<p class="text-center text-gray-400">ยังไม่มีรายการ</p>'; totalPointsDisplay.textContent = '0'; return; } billItems.forEach(item => { const itemPoints = item.points * item.quantity; totalPoints += itemPoints; const itemDiv = document.createElement('div'); itemDiv.className = 'flex items-center justify-between p-2 bg-gray-100 rounded-md'; itemDiv.innerHTML = `<div><span class="font-semibold text-gray-800">${item.name}</span> <span class="text-sm text-gray-500">x ${item.quantity}</span></div><div><span class="font-bold text-blue-600">${itemPoints} แต้ม</span><button type="button" class="ml-2 p-1 remove-item-btn text-red-500 hover:bg-red-100 rounded-full" data-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div>`; billContainer.appendChild(itemDiv); }); totalPointsDisplay.textContent = totalPoints.toLocaleString(); billContainer.querySelectorAll('.remove-item-btn').forEach(btn => { btn.onclick = (e) => { billItems = billItems.filter(item => item.id !== e.currentTarget.dataset.id); renderBill(); updateProductDropdown(); }; }); }
+        posModeContainer.addEventListener('click', (e) => { if(e.target.matches('.pos-mode-button')) { currentPosMode = e.target.dataset.mode; posModeContainer.querySelectorAll('.pos-mode-button').forEach(b => {b.classList.toggle('bg-gray-800', b.dataset.mode === currentPosMode); b.classList.toggle('text-white', b.dataset.mode === currentPosMode);}); productModeSection.classList.toggle('hidden', currentPosMode !== 'product'); manualModeSection.classList.toggle('hidden', currentPosMode !== 'manual'); }});
         addItemBtn.onclick = () => { const selectedId = productListSelect.value; if (!selectedId) return; const product = allProducts.find(p => p.id === selectedId); const quantity = parseInt(quantityInput.value, 10); if (product && quantity > 0) { billItems.push({ ...product, quantity }); renderBill(); updateProductDropdown(); quantityInput.value = 1; } };
-        addPointsForm.onsubmit = async (e) => { e.preventDefault(); const identifier = document.getElementById('addPointsIdentifier').value.trim(); if (!identifier) return showAlert('ข้อมูลไม่ครบ', 'กรุณาระบุลูกค้า'); let payload = { identifier }, confirmMessage = ''; if (currentPosMode === 'product') { if (billItems.length === 0) return showAlert('ข้อมูลไม่ครบ', 'กรุณาเพิ่มสินค้าลงในบิล'); payload.itemsPurchased = billItems.map(item => ({ productId: item.id, quantity: item.quantity })); const totalPoints = billItems.reduce((sum, item) => sum + (item.points * item.quantity), 0); const itemSummary = billItems.map(item => `${item.name} x${item.quantity}`).join(',\n'); confirmMessage = `ยืนยันให้ ${totalPoints} แต้ม\nจาก:\n${itemSummary}\n\nสำหรับผู้ใช้: "${identifier}"?`; } else { const points = document.getElementById('addPointsAmount').value; const reason = document.getElementById('addPointsReason').value.trim(); if (!points || parseInt(points) < 1 || !reason) return showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกแต้มและเหตุผล'); payload.points = parseInt(points, 10); payload.reason = reason; confirmMessage = `ยืนยันให้ ${payload.points} แต้ม\nเหตุผล: ${payload.reason}\n\nสำหรับผู้ใช้: "${identifier}"?`; } if (await showConfirm('ยืนยันการให้แต้ม', confirmMessage)) { addPointsSubmitBtn.classList.add('loading'); addPointsSubmitBtn.disabled = true; try { const message = await postData('addPointsToUser', payload); showAlert('สำเร็จ', message || 'เพิ่มแต้มเรียบร้อยแล้ว'); addPointsForm.reset(); billItems = []; renderBill(); updateProductDropdown(); } catch(e) {} finally { addPointsSubmitBtn.classList.remove('loading'); addPointsSubmitBtn.disabled = false; } } };
+        addPointsForm.onsubmit = async (e) => { e.preventDefault(); const identifier = document.getElementById('addPointsIdentifier').value.trim(); if (!identifier) return showAlert('ข้อมูลไม่ครบ', 'กรุณาระบุลูกค้า'); let payload = { identifier }, confirmMessage = ''; if (currentPosMode === 'product') { if (billItems.length === 0) return showAlert('ข้อมูลไม่ครบ', 'กรุณาเพิ่มสินค้าลงในบิล'); payload.itemsPurchased = billItems.map(item => ({ productId: item.id, quantity: item.quantity })); const totalPoints = billItems.reduce((sum, item) => sum + (item.points * item.quantity), 0); const itemSummary = billItems.map(item => `${item.name} x${item.quantity}`).join(',\n'); confirmMessage = `ยืนยันให้ ${totalPoints} แต้ม\nจาก:\n${itemSummary}\n\nสำหรับผู้ใช้: "${identifier}"?`; } else { const points = document.getElementById('addPointsAmount').value; const reason = document.getElementById('addPointsReason').value.trim(); if (!points || parseInt(points) < 1 || !reason) return showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกแต้มและเหตุผล'); payload.points = parseInt(points, 10); payload.reason = reason; confirmMessage = `ยืนยันให้ ${payload.points} แต้ม\nเหตุผล: ${payload.reason}\n\nสำหรับผู้ใช้: "${identifier}"?`; } if (await showConfirm('ยืนยันการให้แต้ม', confirmMessage)) { addPointsSubmitBtn.classList.add('opacity-50', 'cursor-not-allowed'); addPointsSubmitBtn.disabled = true; try { const message = await postData('addPointsToUser', payload); showAlert('สำเร็จ', message || 'เพิ่มแต้มเรียบร้อยแล้ว'); addPointsForm.reset(); billItems = []; renderBill(); updateProductDropdown(); } catch(e) {} finally { addPointsSubmitBtn.classList.remove('opacity-50', 'cursor-not-allowed'); addPointsSubmitBtn.disabled = false; } } };
         renderBill();
-
-        // --- PART 4: Recent History Logic ---
-        const historyTableBody = document.getElementById('historyTableBody'), refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
-        async function loadHistory() { historyTableBody.innerHTML = `<tr><td colspan="4" class="py-12 text-center"><span class="loading loading-spinner loading-sm"></span></td></tr>`; try { const history = await fetchData('getAllHistory', { limit: 20 }); if (!history.length) { historyTableBody.innerHTML = `<tr><td colspan="4" class="text-center p-4">ไม่พบประวัติ</td></tr>`; return; } historyTableBody.innerHTML = history.map(h => `<tr><td>${new Date(h.date).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'})}</td><td>${h.type}</td><td class="max-w-xs truncate">${h.detail}</td><td class="${h.amount < 0 ? 'text-error' : 'text-success'} font-bold">${h.amount > 0 ? '+' : ''}${h.amount}</td></tr>`).join(''); } catch (e) { historyTableBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-error">Load failed</td></tr>`; } }
-        refreshHistoryBtn.onclick = loadHistory;
+        posModeContainer.querySelector('[data-mode="product"]').click(); // Initialize first tab
         
-        // --- PART 5: Tab Switching Logic ---
-        document.querySelectorAll('input[name="main_tabs"]').forEach(tabInput => {
-            tabInput.addEventListener('change', () => {
-                stopClaimScanner(); 
-                if (tabInput.value === 'history') { loadHistory(); }
-            });
-        });
+        // --- Recent History Logic ---
+        const historyTableBody = document.getElementById('historyTableBody'), refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
+        function parseGASDate(dateString) { const parts = dateString.split(/[\s/:]/); if (parts.length < 6) return new Date(dateString); return new Date(parts[2], parts[1] - 1, parts[0], parts[3], parts[4], parts[5]); }
+        const transactionTypeMap = { 'purchase': { text: 'ซื้อสินค้า', style: 'bg-blue-100 text-blue-800' }, 'admin_add': { text: 'Admin เพิ่ม', style: 'bg-indigo-100 text-indigo-800' }, 'redeem': { text: 'แลกของ', style: 'bg-red-100 text-red-800' }, 'event': { text: 'กิจกรรม', style: 'bg-purple-100 text-purple-800' }, 'code': { text: 'ใช้โค้ด', style: 'bg-yellow-100 text-yellow-800' }, 'checkin': { text: 'เช็คอิน', style: 'bg-green-100 text-green-800' }, 'default': { text: 'อื่นๆ', style: 'bg-gray-100 text-gray-800' } };
+        async function loadHistory() { historyTableBody.innerHTML = `<tr><td colspan="4" class="py-12 text-center"><span class="loading-spinner mx-auto"></span></td></tr>`; try { const history = await fetchData('getAllHistory', { limit: 20 }); if (!history.length) { historyTableBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">ไม่พบประวัติ</td></tr>`; return; } historyTableBody.innerHTML = history.map(h => { const dateObj = parseGASDate(h.date); const formattedDate = !isNaN(dateObj) ? dateObj.toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'}) : 'Invalid Date'; const typeInfo = transactionTypeMap[h.type] || transactionTypeMap['default']; return `<tr class="border-b border-gray-200"><td class="px-4 py-3 text-gray-500">${formattedDate}</td><td class="px-4 py-3"><span class="px-2 py-1 text-xs font-medium rounded-full ${typeInfo.style}">${typeInfo.text}</span></td><td class="px-4 py-3 max-w-xs truncate">${h.detail}</td><td class="px-4 py-3 font-bold text-right ${h.amount < 0 ? 'text-red-600' : 'text-green-600'}">${h.amount > 0 ? '+' : ''}${h.amount}</td></tr>`; }).join(''); } catch (e) { historyTableBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-red-500">Load failed</td></tr>`; } }
+        refreshHistoryBtn.onclick = loadHistory;
+
+        // Initialize first tab
+        switchTab('pos');
     }
 
     // --- App Start ---
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof CONFIG === 'undefined' || !CONFIG.GAS_URL_ADMIN) { const gasUrl = prompt("Please enter your Google Apps Script URL:"); if (gasUrl) { window.CONFIG = { GAS_URL_ADMIN: gasUrl }; } else { document.body.innerHTML = '<div class="p-8 text-center text-error">Configuration not found. Please create config-admin.js or enter the URL.</div>'; return; } }
-        mainApp.classList.remove('hidden');
         const template = document.getElementById('view-cashier-page');
         if(template) { appContainer.innerHTML = ''; appContainer.appendChild(template.content.cloneNode(true)); initCashierPage(); } 
         else { appContainer.innerHTML = "Error: Main template not found."; }
