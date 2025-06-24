@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -16,24 +17,47 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
 
   <style>
-    .hidden { display: none !important; }
+    .hidden {
+      display: none !important;
+    }
+
     .neon-text {
       color: #fff;
       text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e, 0 0 40px #ff005e, 0 0 80px #ff005e;
       animation: glow 1.5s infinite alternate;
     }
+
     @keyframes glow {
-      from { text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e; }
-      to { text-shadow: 0 0 10px #00d4ff, 0 0 20px #00d4ff, 0 0 40px #00d4ff; }
+      from {
+        text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e;
+      }
+
+      to {
+        text-shadow: 0 0 10px #00d4ff, 0 0 20px #00d4ff, 0 0 40px #00d4ff;
+      }
     }
+
     @keyframes pulse-opacity {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 1; }
+
+      0%,
+      100% {
+        opacity: 0.5;
+      }
+
+      50% {
+        opacity: 1;
+      }
     }
-    .loading-card-animation { animation: pulse-opacity 1.5s infinite ease-in-out; }
+
+    .loading-card-animation {
+      animation: pulse-opacity 1.5s infinite ease-in-out;
+    }
+
     .glass-white {
-      background: rgba(255, 255, 255, 0.15); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-      backdrop-filter: blur(8.1px); -webkit-backdrop-filter: blur(8.1px);
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(8.1px);
+      -webkit-backdrop-filter: blur(8.1px);
       border: 1px solid rgba(255, 255, 255, 0.3);
     }
   </style>
@@ -45,15 +69,16 @@
     <h2 id="pageTitle" class="text-xl font-bold text-white">กำลังโหลด...</h2>
     <div class="glass-white rounded-full flex items-center p-1 space-x-2">
       <div id="pointVal" class="font-bold neon-text text-lg px-2">0</div>
-      <img id="lineDisplayPicture" class="mask mask-circle w-10 h-10 rounded-full object-cover border border-black" src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" />
+      <img id="lineDisplayPicture" class="mask mask-circle w-10 h-10 rounded-full object-cover border border-black"
+        src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" />
     </div>
   </div>
-  
+
   <!-- Main App Container -->
   <div id="app">
     <div class="text-center text-gray-100 py-8">กำลังโหลดเนื้อหา...</div>
   </div>
-  
+
   <!-- Dialogs -->
   <dialog id="customAlertDialog" class="modal">
     <div class="modal-box text-center">
@@ -64,7 +89,7 @@
       </div>
     </div>
   </dialog>
-  
+
   <dialog id="customConfirmDialog" class="modal">
     <div class="modal-box text-center">
       <h3 id="customConfirmTitle" class="font-bold text-lg mb-3"></h3>
@@ -81,11 +106,11 @@
     <div class="modal-box text-center">
       <h3 id="qrDialogTitle" class="font-bold text-lg mb-2">สแกนเพื่อรับของ</h3>
       <p id="qrDialogItemName" class="mb-4 text-sm text-gray-600"></p>
-      <div id="qrcode" class="flex justify-center mb-4 p-4 bg-white rounded-lg"></div> 
+      <div id="qrcode" class="flex justify-center mb-4 p-4 bg-white rounded-lg"></div>
       <p class="text-xs text-gray-500 mb-4">ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า</p>
       <div class="modal-action justify-around">
         <button id="qrDialogCloseBtn" class="btn btn-outline">ปิด</button>
-        <button id="sendMessageToOABtn" class="btn btn-info">แจ้งพนักงาน</button> 
+        <button id="sendMessageToOABtn" class="btn btn-info">แจ้งพนักงาน</button>
         <button id="qrDialogConfirmBtn" class="btn btn-neutral hidden">ยืนยันการรับของ</button>
       </div>
     </div>
@@ -95,27 +120,54 @@
   <template id="view-dashboard">
     <div class="glass-white rounded-2xl p-4 grid grid-cols-3 gap-3 text-center text-sm font-medium mb-6">
       <a href="#event" class="bg-white text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
         <span>กิจกรรม</span>
       </a>
-      <a href="#warehouse" class="bg-white text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+      <a href="#warehouse"
+        class="bg-white text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+        </svg>
         <span>คลัง</span>
       </a>
-      <a href="#addpoint" class="bg-white text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none"><path d="M2.5 8.18677C2.60406 6.08705 2.91537 4.77792 3.84664 3.84664C4.77792 2.91537 6.08705 2.60406 8.18677 2.5M21.5 8.18677C21.3959 6.08705 21.0846 4.77792 20.1534 3.84664C19.2221 2.91537 17.9129 2.60406 15.8132 2.5M15.8132 21.5C17.9129 21.3959 19.2221 21.0846 20.1534 20.1534C21.0846 19.2221 21.3959 17.9129 21.5 15.8132M8.18676 21.5C6.08705 21.3959 4.77792 21.0846 3.84664 20.1534C2.91537 19.2221 2.60406 17.9129 2.5 15.8132" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M2.49986 12H21.4999" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M6 12C6 8.68629 8.68629 6 12 6C12 7.65685 13.3431 9 15 9C15.6755 9 16.2989 8.77672 16.8004 8.39993C17.5536 9.40273 18 10.6492 18 12M17.1973 15C16.1599 16.7934 14.2208 18 12 18C9.77915 18 7.84012 16.7934 6.80269 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <a href="#addpoint"
+        class="bg-white text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none">
+          <path
+            d="M2.5 8.18677C2.60406 6.08705 2.91537 4.77792 3.84664 3.84664C4.77792 2.91537 6.08705 2.60406 8.18677 2.5M21.5 8.18677C21.3959 6.08705 21.0846 4.77792 20.1534 3.84664C19.2221 2.91537 17.9129 2.60406 15.8132 2.5M15.8132 21.5C17.9129 21.3959 19.2221 21.0846 20.1534 20.1534C21.0846 19.2221 21.3959 17.9129 21.5 15.8132M8.18676 21.5C6.08705 21.3959 4.77792 21.0846 3.84664 20.1534C2.91537 19.2221 2.60406 17.9129 2.5 15.8132"
+            stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+          <path d="M2.49986 12H21.4999" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+          <path
+            d="M6 12C6 8.68629 8.68629 6 12 6C12 7.65685 13.3431 9 15 9C15.6755 9 16.2989 8.77672 16.8004 8.39993C17.5536 9.40273 18 10.6492 18 12M17.1973 15C16.1599 16.7934 14.2208 18 12 18C9.77915 18 7.84012 16.7934 6.80269 15"
+            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
         <span>สแกนรับ</span>
       </a>
-      <a href="#transfer" class="bg-white text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+      <a href="#transfer"
+        class="bg-white text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
         <span>โอนพ้อย</span>
       </a>
       <a href="#redeem" class="bg-white text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+        </svg>
         <span>แลกพ้อย</span>
       </a>
-      <a href="#profile" class="bg-white text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+      <a href="#profile"
+        class="bg-white text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
         <span>บัญชี</span>
       </a>
     </div>
@@ -124,7 +176,8 @@
       <div class="bg-gray-100 rounded-full px-4 py-2 flex items-center space-x-2 text-gray-700">
         <span class="text-sm">วันที่</span><span id="todayDate" class="font-bold text-md">00</span>
       </div>
-      <div class="bg-yellow-400 rounded-full w-10 h-10 flex items-center justify-center text-white font-bold text-sm">+1</div>
+      <div class="bg-yellow-400 rounded-full w-10 h-10 flex items-center justify-center text-white font-bold text-sm">+1
+      </div>
       <button id="checkinBtn" class="btn btn-neutral btn-sm">เช็คอิน</button>
     </div>
 
@@ -145,9 +198,17 @@
   <!-- Template: Event Detail -->
   <template id="view-event-detail">
     <div id="cardWrapper">
-      <div id="cardSkeleton" class="bg-white p-6 rounded shadow-md mb-6 animate-pulse"><div class="h-6 bg-gray-200 rounded w-1/3 mb-4"></div><div class="h-4 bg-gray-200 rounded w-1/4 mb-2"></div><div class="h-3 bg-gray-200 rounded w-full mb-6"></div><div class="h-12 bg-gray-200 rounded-full w-full"></div></div>
+      <div id="cardSkeleton" class="bg-white p-6 rounded shadow-md mb-6 animate-pulse">
+        <div class="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+        <div class="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+        <div class="h-3 bg-gray-200 rounded w-full mb-6"></div>
+        <div class="h-12 bg-gray-200 rounded-full w-full"></div>
+      </div>
       <div id="card" class="bg-white p-6 rounded shadow-md text-gray-800 mb-6 hidden">
-        <div class="flex justify-between items-start mb-3"><div class="font-bold text-lg" id="eventDetailTitle">–</div><div class="bg-yellow-400 text-black font-bold text-md px-3 py-1 rounded-full" id="eventPoint">0+</div></div>
+        <div class="flex justify-between items-start mb-3">
+          <div class="font-bold text-lg" id="eventDetailTitle">–</div>
+          <div class="bg-yellow-400 text-black font-bold text-md px-3 py-1 rounded-full" id="eventPoint">0+</div>
+        </div>
         <div class="text-sm text-gray-700 mb-6 leading-relaxed" id="eventDetailDesc">...</div>
         <button id="joinBtn" class="btn btn-neutral w-full">เข้าร่วม</button>
       </div>
@@ -159,39 +220,59 @@
     <div class="space-y-4">
       <div class="glass-white p-6 rounded-lg text-center shadow-md">
         <div class="relative w-24 h-24 mx-auto mb-4">
-          <img id="profileDisplayPicture" class="mask mask-circle w-24 h-24 rounded-full object-cover border-4 border-black" src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" alt="รูปโปรไฟล์" />
-          <button id="editProfileBtn" class="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md hover:scale-110 transition-transform"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.389-8.389-2.828-2.828z" /></svg></button>
+          <img id="profileDisplayPicture"
+            class="mask mask-circle w-24 h-24 rounded-full object-cover border-4 border-black"
+            src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" alt="รูปโปรไฟล์" />
+          <button id="editProfileBtn"
+            class="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md hover:scale-110 transition-transform"><svg
+              xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.389-8.389-2.828-2.828z" />
+            </svg></button>
         </div>
         <div class="text-2xl font-bold mb-2" id="profileDisplayName">กำลังโหลด...</div>
-        <div class="flex items-center justify-center space-x-2 mb-2"><span id="profileLevelBadge" class="badge badge-lg"></span><span id="profileCustomTagBadge" class="badge badge-lg"></span></div>
+        <div class="flex items-center justify-center space-x-2 mb-2"><span id="profileLevelBadge"
+            class="badge badge-lg"></span><span id="profileCustomTagBadge" class="badge badge-lg"></span></div>
         <progress id="profileProgressBar" class="progress progress-warning w-full" value="0" max="100"></progress>
         <div id="profilePointsToNextLevel" class="text-sm text-gray-700 mt-1"></div>
-          <div class="text-lg mt-2">พ้อยคงเหลือ: <span id="profileCurrentPoints">0</span></div>
-          <div class="font-bold text-sm mt-4">แต้มสะสมทั้งหมด: <span id="profileTotalPoints">0</span></div>
+        <div class="text-lg mt-2">พ้อยคงเหลือ: <span id="profileCurrentPoints">0</span></div>
+        <div class="font-bold text-sm mt-4">แต้มสะสมทั้งหมด: <span id="profileTotalPoints">0</span></div>
 
       </div>
       <div id="profileFormContainer" class="bg-white p-6 rounded-lg shadow-md space-y-4 hidden">
-        <div><label class="block text-sm font-medium text-gray-700 mb-1">LINE ID</label><input id="profileLineId" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ</label><input id="profileName" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-1">เบอร์โทรศัพท์</label><input id="profilePhone" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label><input id="profileEmail" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-1">ที่อยู่</label><input id="profileAddress" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-1">หมายเหตุ</label><input id="profileNote" readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div>
-        <div id="profileEditButtons" class="flex space-x-2 hidden"><button id="saveProfileBtn" class="btn btn-neutral flex-1">บันทึกข้อมูล</button><button id="cancelEditBtn" class="btn btn-outline btn-neutral flex-1">ยกเลิก</button></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">LINE ID</label><input id="profileLineId"
+            readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ</label><input id="profileName" readonly
+            class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">เบอร์โทรศัพท์</label><input id="profilePhone"
+            readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label><input id="profileEmail" readonly
+            class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">ที่อยู่</label><input id="profileAddress"
+            readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">หมายเหตุ</label><input id="profileNote"
+            readonly class="input input-bordered w-full cursor-not-allowed text-gray-500" /></div>
+        <div id="profileEditButtons" class="flex space-x-2 hidden"><button id="saveProfileBtn"
+            class="btn btn-neutral flex-1">บันทึกข้อมูล</button><button id="cancelEditBtn"
+            class="btn btn-outline btn-neutral flex-1">ยกเลิก</button></div>
       </div>
     </div>
   </template>
 
   <!-- Template: Redeem -->
   <template id="view-redeem">
-    <div class="p-0"><ul id="redeemList" class="grid grid-cols-2 gap-4"></ul></div>
+    <div class="p-0">
+      <ul id="redeemList" class="grid grid-cols-2 gap-4"></ul>
+    </div>
   </template>
 
   <!-- Template: Transfer -->
   <template id="view-transfer">
     <div class="space-y-4 mb-6">
-      <input id="transferTo" placeholder="LINE ID เพื่อน / เบอร์โทรปลายทาง" type="text" class="input input-bordered input-neutral w-full">
-      <input id="transferAmount" placeholder="จำนวนพ้อยที่ต้องการโอน" type="number" class="input input-bordered input-neutral w-full">
+      <input id="transferTo" placeholder="LINE ID เพื่อน / เบอร์โทรปลายทาง" type="text"
+        class="input input-bordered input-neutral w-full">
+      <input id="transferAmount" placeholder="จำนวนพ้อยที่ต้องการโอน" type="number"
+        class="input input-bordered input-neutral w-full">
       <button id="transferBtn" class="btn btn-neutral w-full">โอนพ้อย</button>
     </div>
   </template>
@@ -206,38 +287,40 @@
     <div id="scanContainer" class="space-y-4 mb-6">
       <button id="scanBtn" class="btn btn-neutral w-full">สแกน QR Code</button>
       <div class="flex space-x-2">
-        <input id="manualCode" type="text" placeholder="กรอกโค้ดที่นี่" class="input input-bordered input-neutral flex-1">
+        <input id="manualCode" type="text" placeholder="กรอกโค้ดที่นี่"
+          class="input input-bordered input-neutral flex-1">
         <button id="enterBtn" class="btn btn-neutral">รับโค้ด</button>
       </div>
     </div>
   </template>
 
-<!-- Shipping Form Dialog (for Physical Items) -->
-<dialog id="shippingFormDialog" class="modal">
-  <div class="modal-box">
-    <h3 id="shippingFormTitle" class="font-bold text-lg mb-4">ข้อมูลสำหรับจัดส่ง</h3>
-    <div class="space-y-4">
-      <div>
-        <label class="label"><span class="label-text">ชื่อ-นามสกุล ผู้รับ</span></label>
-        <input id="shippingName" type="text" placeholder="กรอกชื่อ-นามสกุล" class="input input-bordered w-full" />
+  <!-- Shipping Form Dialog (for Physical Items) -->
+  <dialog id="shippingFormDialog" class="modal">
+    <div class="modal-box">
+      <h3 id="shippingFormTitle" class="font-bold text-lg mb-4">ข้อมูลสำหรับจัดส่ง</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="label"><span class="label-text">ชื่อ-นามสกุล ผู้รับ</span></label>
+          <input id="shippingName" type="text" placeholder="กรอกชื่อ-นามสกุล" class="input input-bordered w-full" />
+        </div>
+        <div>
+          <label class="label"><span class="label-text">เบอร์โทรศัพท์ติดต่อ</span></label>
+          <input id="shippingPhone" type="tel" placeholder="กรอกเบอร์โทรศัพท์" class="input input-bordered w-full" />
+        </div>
+        <div>
+          <label class="label"><span class="label-text">ที่อยู่สำหรับจัดส่ง</span></label>
+          <textarea id="shippingAddress" class="textarea textarea-bordered w-full" rows="4"
+            placeholder="บ้านเลขที่, ถนน, ตำบล, อำเภอ, จังหวัด, รหัสไปรษณีย์"></textarea>
+        </div>
       </div>
-      <div>
-        <label class="label"><span class="label-text">เบอร์โทรศัพท์ติดต่อ</span></label>
-        <input id="shippingPhone" type="tel" placeholder="กรอกเบอร์โทรศัพท์" class="input input-bordered w-full" />
-      </div>
-      <div>
-        <label class="label"><span class="label-text">ที่อยู่สำหรับจัดส่ง</span></label>
-        <textarea id="shippingAddress" class="textarea textarea-bordered w-full" rows="4" placeholder="บ้านเลขที่, ถนน, ตำบล, อำเภอ, จังหวัด, รหัสไปรษณีย์"></textarea>
+      <div class="modal-action justify-between mt-6">
+        <button id="shippingFormCancelBtn" class="btn btn-outline">ยกเลิก</button>
+        <button id="shippingFormConfirmBtn" class="btn btn-neutral">ยืนยันและแลกของ</button>
       </div>
     </div>
-    <div class="modal-action justify-between mt-6">
-      <button id="shippingFormCancelBtn" class="btn btn-outline">ยกเลิก</button>
-      <button id="shippingFormConfirmBtn" class="btn btn-neutral">ยืนยันและแลกของ</button>
-    </div>
-  </div>
-</dialog>
+  </dialog>
 
-<script>
+  <script>
     // --- GLOBAL STATE & CACHE ---
     let liffInitialized = false;
     // [MODIFIED] Added totalPoints to user state
@@ -250,11 +333,11 @@
     const confirmDialog = document.getElementById('customConfirmDialog'), confT = document.getElementById('customConfirmTitle'), confM = document.getElementById('customConfirmMessage'), okBtn = document.getElementById('customConfirmConfirmButton'), noBtn = document.getElementById('customConfirmCancelButton');
     const pageTitleEl = document.getElementById('pageTitle'), pointValEl = document.getElementById('pointVal'), dpEl = document.getElementById('lineDisplayPicture');
     const qrDialog = document.getElementById('qrDialog'),
-          qrDialogTitle = document.getElementById('qrDialogTitle'),
-          qrDialogItemName = document.getElementById('qrDialogItemName'),
-          qrcodeContainer = document.getElementById('qrcode'),
-          qrConfirmBtn = document.getElementById('qrDialogConfirmBtn'),
-          qrCloseBtn = document.getElementById('qrDialogCloseBtn');
+      qrDialogTitle = document.getElementById('qrDialogTitle'),
+      qrDialogItemName = document.getElementById('qrDialogItemName'),
+      qrcodeContainer = document.getElementById('qrcode'),
+      qrConfirmBtn = document.getElementById('qrDialogConfirmBtn'),
+      qrCloseBtn = document.getElementById('qrDialogCloseBtn');
 
     // --- STYLES ---
     const LEVEL_STYLES = { 'Member': { text: 'Member', class: 'badge-info badge-outline' }, 'VIP': { text: 'VIP', class: 'badge-primary badge-outline' }, 'Super': { text: 'Super', class: 'badge-success badge-outline' } };
@@ -281,36 +364,36 @@
       const vipPoints = dataCache.levelSettings?.VIP_points || 5000;
       const superPoints = dataCache.levelSettings?.SUPER_points || 10000;
       let level = 'Member', currentLevelMin = 0, nextLevelMin = vipPoints, nextLevelName = 'VIP';
-      
-      if (totalAccumulatedPoints >= superPoints) { 
-          level = 'Super'; 
-          currentLevelMin = superPoints; 
-          nextLevelMin = totalAccumulatedPoints; // At max level
-          nextLevelName = ''; 
-      } else if (totalAccumulatedPoints >= vipPoints) { 
-          level = 'VIP'; 
-          currentLevelMin = vipPoints; 
-          nextLevelMin = superPoints; 
-          nextLevelName = 'Super'; 
+
+      if (totalAccumulatedPoints >= superPoints) {
+        level = 'Super';
+        currentLevelMin = superPoints;
+        nextLevelMin = totalAccumulatedPoints; // At max level
+        nextLevelName = '';
+      } else if (totalAccumulatedPoints >= vipPoints) {
+        level = 'VIP';
+        currentLevelMin = vipPoints;
+        nextLevelMin = superPoints;
+        nextLevelName = 'Super';
       }
-      
-      const pointsInCurrentTier = totalAccumulatedPoints - currentLevelMin; 
+
+      const pointsInCurrentTier = totalAccumulatedPoints - currentLevelMin;
       const pointsToNextTier = nextLevelMin - currentLevelMin;
-      
+
       let progressValue = 0;
       let pointsNeeded = 0;
 
-      if (nextLevelName) { 
-          progressValue = (pointsToNextTier > 0) ? (pointsInCurrentTier / pointsToNextTier) * 100 : 100;
-          pointsNeeded = nextLevelMin - totalAccumulatedPoints; 
-      } else { 
-          progressValue = 100; 
-          pointsNeeded = 0; 
+      if (nextLevelName) {
+        progressValue = (pointsToNextTier > 0) ? (pointsInCurrentTier / pointsToNextTier) * 100 : 100;
+        pointsNeeded = nextLevelMin - totalAccumulatedPoints;
+      } else {
+        progressValue = 100;
+        pointsNeeded = 0;
       }
 
       return { level, progressValue: Math.min(100, Math.max(0, progressValue)), pointsToNext: pointsNeeded, nextLevelName };
     }
-    
+
     function setBadgeContent(badgeElement, text, className) {
       if (!badgeElement) return; badgeElement.textContent = text; badgeElement.className = className;
       if (text) badgeElement.classList.remove('hidden'); else badgeElement.classList.add('hidden');
@@ -361,15 +444,15 @@
         if (settingsData && !settingsData.error) { dataCache.levelSettings = { VIP_points: parseInt(settingsData.VIP_points || 0), SUPER_points: parseInt(settingsData.SUPER_points || 0) }; }
         else { console.warn("Failed to load level settings, using defaults."); dataCache.levelSettings = { VIP_points: 5000, SUPER_points: 10000 }; }
         if (!userData || !userData.isRegistered) { window.location.href = 'Register.html'; return false; }
-        
+
         // [MODIFIED] Store both spendable and total points
         userState.points = parseInt(userData.point || 0, 10);
         userState.totalPoints = parseInt(userData.totalPoints || 0, 10);
-        userState.level = userData.level || 'Member'; 
+        userState.level = userData.level || 'Member';
         userState.customTag = userData.customTag || '';
-        dataCache.userProfileFull = userData; 
+        dataCache.userProfileFull = userData;
         pointValEl.textContent = userState.points;
-        dataCache.history = historyData; 
+        dataCache.history = historyData;
         userState.pointsChanged = false;
       } catch (error) { console.error("Failed to fetch initial data:", error); pointValEl.textContent = 'N/A'; showAlert("ข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลผู้ใช้ได้ กรุณาลองใหม่"); return false; }
       return true;
@@ -389,12 +472,12 @@
     };
     async function router() {
       if (warehousePollingInterval) {
-         clearInterval(warehousePollingInterval);
-         warehousePollingInterval = null;
-         if (qrDialog && qrDialog.open) {
-             qrDialog.close();
-         }
-         console.log("Polling stopped due to route change.");
+        clearInterval(warehousePollingInterval);
+        warehousePollingInterval = null;
+        if (qrDialog && qrDialog.open) {
+          qrDialog.close();
+        }
+        console.log("Polling stopped due to route change.");
       }
 
       const hash = window.location.hash.split('?')[0] || '';
@@ -453,50 +536,50 @@
 
     // [LATEST VERSION] Displays all events with correct level tags and button states.
     async function initEvent() {
-        const eventListEl = document.getElementById('eventList');
-        if (eventListEl) eventListEl.innerHTML = generateListSkeleton(5);
-        
-        let events = dataCache.events || [];
-        if (!dataCache.events) {
-            try {
-                const res = await fetch(`${CONFIG.GAS_URL}?action=getEvents`);
-                events = await res.json();
-                if (events.error) throw new Error(events.error);
-                dataCache.events = events;
-            } catch (e) {
-                console.error("Error fetching events:", e);
-                if (eventListEl) eventListEl.innerHTML = `<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดกิจกรรม</div>`;
-                return;
-            }
+      const eventListEl = document.getElementById('eventList');
+      if (eventListEl) eventListEl.innerHTML = generateListSkeleton(5);
+
+      let events = dataCache.events || [];
+      if (!dataCache.events) {
+        try {
+          const res = await fetch(`${CONFIG.GAS_URL}?action=getEvents`);
+          events = await res.json();
+          if (events.error) throw new Error(events.error);
+          dataCache.events = events;
+        } catch (e) {
+          console.error("Error fetching events:", e);
+          if (eventListEl) eventListEl.innerHTML = `<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดกิจกรรม</div>`;
+          return;
+        }
+      }
+
+      if (!events || events.length === 0) {
+        eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`;
+        return;
+      }
+
+      eventListEl.innerHTML = events.map(e => {
+        let isUserAllowed = false;
+        let levelTagHTML = '';
+
+        // Check if allowedLevels is a non-empty string
+        const hasLevelRestriction = typeof e.allowedLevels === 'string' && e.allowedLevels.trim() !== '';
+
+        if (hasLevelRestriction) {
+          const allowed = e.allowedLevels.split(',').map(level => level.trim().toUpperCase());
+          if (allowed.includes(userState.level.toUpperCase())) {
+            isUserAllowed = true;
+          }
+          levelTagHTML = `<div class="badge badge-outline badge-sm mt-2">สำหรับ: ${e.allowedLevels}</div>`;
+        } else {
+          isUserAllowed = true; // No restriction
         }
 
-        if (!events || events.length === 0) {
-            eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`;
-            return;
-        }
+        const buttonHTML = isUserAllowed
+          ? `<a href="#event-detail?id=${e.id}" class="btn btn-neutral btn-sm">ดูรายละเอียด</a>`
+          : `<button class="btn btn-disabled btn-sm">ระดับไม่ถึง</button>`;
 
-        eventListEl.innerHTML = events.map(e => {
-            let isUserAllowed = false;
-            let levelTagHTML = '';
-            
-            // Check if allowedLevels is a non-empty string
-            const hasLevelRestriction = typeof e.allowedLevels === 'string' && e.allowedLevels.trim() !== '';
-
-            if (hasLevelRestriction) {
-                const allowed = e.allowedLevels.split(',').map(level => level.trim().toUpperCase());
-                if (allowed.includes(userState.level.toUpperCase())) {
-                    isUserAllowed = true;
-                }
-                levelTagHTML = `<div class="badge badge-outline badge-sm mt-2">สำหรับ: ${e.allowedLevels}</div>`;
-            } else {
-                isUserAllowed = true; // No restriction
-            }
-            
-            const buttonHTML = isUserAllowed
-                ? `<a href="#event-detail?id=${e.id}" class="btn btn-neutral btn-sm">ดูรายละเอียด</a>`
-                : `<button class="btn btn-disabled btn-sm">ระดับไม่ถึง</button>`;
-
-            return `
+        return `
                 <div class="bg-white rounded p-4 flex justify-between items-center shadow-sm">
                     <div>
                         <div class="font-semibold text-gray-800 text-sm">${e.title}</div>
@@ -508,7 +591,7 @@
                     </div>
                 </div>
             `;
-        }).join('');
+      }).join('');
     }
 
     // [LATEST VERSION] Handles button clicks correctly and checks levels safely.
@@ -520,73 +603,73 @@
 
       let eventData = dataCache.eventDetails[eventId];
       if (!eventData) {
-        try { 
-            const res = await fetch(`${CONFIG.GAS_URL}?action=getEventById&id=${eventId}`); 
-            eventData = await res.json(); 
-            if (!eventData.error) dataCache.eventDetails[eventId] = eventData; 
+        try {
+          const res = await fetch(`${CONFIG.GAS_URL}?action=getEventById&id=${eventId}`);
+          eventData = await res.json();
+          if (!eventData.error) dataCache.eventDetails[eventId] = eventData;
         }
-        catch (e) { 
-            console.error("Error fetching event detail:", e); 
-            eventData = { error: "ไม่สามารถโหลดรายละเอียดได้" }; 
+        catch (e) {
+          console.error("Error fetching event detail:", e);
+          eventData = { error: "ไม่สามารถโหลดรายละเอียดได้" };
         }
       }
 
       const history = await getFreshOrCachedHistory();
-      if (eventData.error) { 
-        titleEl.textContent = "ไม่พบกิจกรรม"; descEl.textContent = eventData.error; joinBtn.disabled = true; 
+      if (eventData.error) {
+        titleEl.textContent = "ไม่พบกิจกรรม"; descEl.textContent = eventData.error; joinBtn.disabled = true;
       } else {
         titleEl.textContent = eventData.title; pointEl.textContent = `${eventData.point}+`; descEl.textContent = eventData.desc;
-        
+
         const hasJoined = history.some(item => item.type === 'event' && item.eventId === eventId);
-        
+
         let isLevelAllowed = false;
         const hasLevelRestriction = typeof eventData.allowedLevels === 'string' && eventData.allowedLevels.trim() !== '';
-        
+
         if (hasLevelRestriction) {
-            const allowed = eventData.allowedLevels.split(',').map(level => level.trim().toUpperCase());
-            if (allowed.includes(userState.level.toUpperCase())) {
-                isLevelAllowed = true;
-            }
+          const allowed = eventData.allowedLevels.split(',').map(level => level.trim().toUpperCase());
+          if (allowed.includes(userState.level.toUpperCase())) {
+            isLevelAllowed = true;
+          }
         } else {
-            isLevelAllowed = true; // No restriction
+          isLevelAllowed = true; // No restriction
         }
 
-        if (hasJoined) { 
-            joinBtn.textContent = "รับพ้อยต์แล้ว"; 
-            joinBtn.disabled = true; 
-        } else if (!isLevelAllowed) { 
-            joinBtn.textContent = `สำหรับระดับ ${eventData.allowedLevels}`; 
-            joinBtn.disabled = true; 
+        if (hasJoined) {
+          joinBtn.textContent = "รับพ้อยต์แล้ว";
+          joinBtn.disabled = true;
+        } else if (!isLevelAllowed) {
+          joinBtn.textContent = `สำหรับระดับ ${eventData.allowedLevels}`;
+          joinBtn.disabled = true;
         } else {
-            // Correct button click logic
-            joinBtn.onclick = async () => {
-                if (!(await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`))) return;
-                joinBtn.disabled = true;
-                joinBtn.textContent = "กำลังดำเนินการ...";
-                try {
-                    const res = await fetch(CONFIG.GAS_URL, {
-                        method: "POST",
-                        body: JSON.stringify({ action: "joinEvent", lineId: userState.lineId, eventId, title: eventData.title, point: eventData.point })
-                    });
-                    const text = await res.text();
-                    showAlert("สถานะ", text, async () => {
-                        if (text.includes("สำเร็จ")) {
-                            await fetchAndUpdateUserState();
-                            joinBtn.textContent = "รับพ้อยต์แล้ว";
-                            joinBtn.disabled = true; // Keep it disabled
-                        } else {
-                            // Also keep it disabled if already claimed
-                            joinBtn.textContent = "รับพ้อยต์แล้ว";
-                            joinBtn.disabled = true;
-                        }
-                    });
-                } catch (e) {
-                    console.error("Join event failed:", e);
-                    showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมได้');
-                    joinBtn.textContent = "เข้าร่วม";
-                    joinBtn.disabled = false; // Re-enable only on network error
+          // Correct button click logic
+          joinBtn.onclick = async () => {
+            if (!(await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`))) return;
+            joinBtn.disabled = true;
+            joinBtn.textContent = "กำลังดำเนินการ...";
+            try {
+              const res = await fetch(CONFIG.GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "joinEvent", lineId: userState.lineId, eventId, title: eventData.title, point: eventData.point })
+              });
+              const text = await res.text();
+              showAlert("สถานะ", text, async () => {
+                if (text.includes("สำเร็จ")) {
+                  await fetchAndUpdateUserState();
+                  joinBtn.textContent = "รับพ้อยต์แล้ว";
+                  joinBtn.disabled = true; // Keep it disabled
+                } else {
+                  // Also keep it disabled if already claimed
+                  joinBtn.textContent = "รับพ้อยต์แล้ว";
+                  joinBtn.disabled = true;
                 }
-            };
+              });
+            } catch (e) {
+              console.error("Join event failed:", e);
+              showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมได้');
+              joinBtn.textContent = "เข้าร่วม";
+              joinBtn.disabled = false; // Re-enable only on network error
+            }
+          };
         }
       }
       cardSkeleton.classList.add("hidden"); card.classList.remove("hidden");
@@ -599,21 +682,21 @@
 
       dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/96';
       dnEl.textContent = userState.profile.displayName || 'ผู้ใช้ LINE';
-      
+
       // Display total accumulated points for level context
       totalPointsEl.textContent = userState.totalPoints.toLocaleString();
       // [เพิ่ม] แสดงพ้อยคงเหลือ
       const currentPointsEl = document.getElementById('profileCurrentPoints');
-      if(currentPointsEl) currentPointsEl.textContent = userState.points.toLocaleString();      
+      if (currentPointsEl) currentPointsEl.textContent = userState.points.toLocaleString();
       // Calculate level and progress based on total accumulated points
       const { progressValue, pointsToNext, nextLevelName } = calculateLevelAndProgress(userState.totalPoints);
-      
+
       setBadgeContent(levelBadgeEl, LEVEL_STYLES[userState.level]?.text || userState.level, `badge badge-lg ${LEVEL_STYLES[userState.level]?.class || ''}`);
       const primaryTag = (userState.customTag.split(',')[0] || '').trim().toLowerCase();
       const tagInfo = CUSTOM_TAG_STYLES[primaryTag] || CUSTOM_TAG_STYLES['default'];
       const tagText = tagInfo.text || (primaryTag ? primaryTag.charAt(0).toUpperCase() + primaryTag.slice(1) : '');
       if (!tagText) tagBadgeEl.classList.add('hidden'); else setBadgeContent(tagBadgeEl, tagText, `badge badge-lg ${tagInfo.class}`);
-      
+
       progressEl.value = progressValue;
       progressTextEl.textContent = nextLevelName ? `อีก ${pointsToNext.toLocaleString()} พ้อยต์สู่ ${nextLevelName}` : `คุณอยู่ระดับสูงสุดแล้ว!`;
 
@@ -645,26 +728,26 @@
     }
 
     async function initRedeem() {
-        const redeemListEl = document.getElementById('redeemList');
-        if (redeemListEl) redeemListEl.innerHTML = generateCardSkeleton(4);
-        let items = dataCache.redeemItems || [];
-        if (!dataCache.redeemItems || dataCache.redeemItems.length === 0) {
-            try {
-                const res = await fetch(`${CONFIG.GAS_URL}?action=getItems`);
-                items = await res.json();
-                if (items.error) throw new Error(items.error);
-                dataCache.redeemItems = items;
-            } catch (e) {
-                console.error("Error fetching items:", e);
-                if (redeemListEl) redeemListEl.innerHTML = `<li class="col-span-2 text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดของรางวัล</li>`;
-                return;
-            }
+      const redeemListEl = document.getElementById('redeemList');
+      if (redeemListEl) redeemListEl.innerHTML = generateCardSkeleton(4);
+      let items = dataCache.redeemItems || [];
+      if (!dataCache.redeemItems || dataCache.redeemItems.length === 0) {
+        try {
+          const res = await fetch(`${CONFIG.GAS_URL}?action=getItems`);
+          items = await res.json();
+          if (items.error) throw new Error(items.error);
+          dataCache.redeemItems = items;
+        } catch (e) {
+          console.error("Error fetching items:", e);
+          if (redeemListEl) redeemListEl.innerHTML = `<li class="col-span-2 text-center text-red-500 py-4">เกิดข้อผิดพลาดในการโหลดของรางวัล</li>`;
+          return;
         }
-        if (!items || items.length === 0) {
-            redeemListEl.innerHTML = `<li class="col-span-2 text-center text-gray-400 py-4">ไม่มีของรางวัลให้แลก</li>`;
-            return;
-        }
-        redeemListEl.innerHTML = items.map(item => `
+      }
+      if (!items || items.length === 0) {
+        redeemListEl.innerHTML = `<li class="col-span-2 text-center text-gray-400 py-4">ไม่มีของรางวัลให้แลก</li>`;
+        return;
+      }
+      redeemListEl.innerHTML = items.map(item => `
             <li class="bg-white p-4 rounded shadow-sm text-center flex flex-col justify-between">
                 <div>
                   <img src="${item.image}" alt="${item.name}" class="h-24 w-full object-cover mx-auto mb-2 rounded-md">
@@ -676,143 +759,143 @@
                     class="redeem-btn btn btn-neutral btn-sm mt-2">แลกเลย</button>
             </li>
         `).join('');
-        document.querySelectorAll('.redeem-btn').forEach(btn => btn.addEventListener('click', handleRedeemClick));
+      document.querySelectorAll('.redeem-btn').forEach(btn => btn.addEventListener('click', handleRedeemClick));
     }
 
     async function handleRedeemClick(event) {
-        const btn = event.currentTarget;
-        const { itemId, itemName, itemPoint, itemType } = btn.dataset;
-        const point = parseInt(itemPoint, 10);
-        if (userState.points < point) {
-            showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points}) ไม่พอสำหรับแลก "${itemName}" ซึ่งใช้ ${point} พ้อยต์`);
-            return;
-        }
-        if (itemType === 'physical') {
-            showShippingForm({ itemId, itemName, point });
-        } else {
-            const confirmed = await showConfirm(`ยืนยันการแลก`, `แลก "${itemName}" ด้วย ${point} พ้อยต์ ใช่หรือไม่?`);
-            if (!confirmed) return;
-            await executeRedemption(btn, { itemId, point });
-        }
+      const btn = event.currentTarget;
+      const { itemId, itemName, itemPoint, itemType } = btn.dataset;
+      const point = parseInt(itemPoint, 10);
+      if (userState.points < point) {
+        showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points}) ไม่พอสำหรับแลก "${itemName}" ซึ่งใช้ ${point} พ้อยต์`);
+        return;
+      }
+      if (itemType === 'physical') {
+        showShippingForm({ itemId, itemName, point });
+      } else {
+        const confirmed = await showConfirm(`ยืนยันการแลก`, `แลก "${itemName}" ด้วย ${point} พ้อยต์ ใช่หรือไม่?`);
+        if (!confirmed) return;
+        await executeRedemption(btn, { itemId, point });
+      }
     }
 
     function showShippingForm(item) {
-        const dialog = document.getElementById('shippingFormDialog');
-        const titleEl = document.getElementById('shippingFormTitle');
-        const nameInput = document.getElementById('shippingName');
-        const phoneInput = document.getElementById('shippingPhone');
-        const addressInput = document.getElementById('shippingAddress');
-        const confirmBtn = document.getElementById('shippingFormConfirmBtn');
-        const cancelBtn = document.getElementById('shippingFormCancelBtn');
-        titleEl.textContent = `ข้อมูลจัดส่งสำหรับ: ${item.itemName}`;
-        const profile = dataCache.userProfileFull || {};
-        nameInput.value = profile.name || '';
-        phoneInput.value = profile.phone || '';
-        addressInput.value = profile.address || '';
-        dialog.showModal();
-        const handleConfirm = async () => {
-            const shippingName = nameInput.value.trim();
-            const shippingPhone = phoneInput.value.trim();
-            const shippingAddress = addressInput.value.trim();
-            if (!shippingName || !shippingPhone || !shippingAddress) {
-                showAlert("ข้อมูลไม่ครบ", "กรุณากรอกชื่อ, เบอร์โทร, และที่อยู่ให้ครบถ้วน");
-                return;
-            }
-            dialog.close();
-            const originalButton = document.querySelector(`.redeem-btn[data-item-id="${item.itemId}"]`);
-            await executeRedemption(originalButton, {
-                itemId: item.itemId, point: item.point,
-                shippingInfo: { name: shippingName, phone: shippingPhone, address: shippingAddress }
-            });
-        };
-        confirmBtn.onclick = handleConfirm;
-        cancelBtn.onclick = () => dialog.close();
+      const dialog = document.getElementById('shippingFormDialog');
+      const titleEl = document.getElementById('shippingFormTitle');
+      const nameInput = document.getElementById('shippingName');
+      const phoneInput = document.getElementById('shippingPhone');
+      const addressInput = document.getElementById('shippingAddress');
+      const confirmBtn = document.getElementById('shippingFormConfirmBtn');
+      const cancelBtn = document.getElementById('shippingFormCancelBtn');
+      titleEl.textContent = `ข้อมูลจัดส่งสำหรับ: ${item.itemName}`;
+      const profile = dataCache.userProfileFull || {};
+      nameInput.value = profile.name || '';
+      phoneInput.value = profile.phone || '';
+      addressInput.value = profile.address || '';
+      dialog.showModal();
+      const handleConfirm = async () => {
+        const shippingName = nameInput.value.trim();
+        const shippingPhone = phoneInput.value.trim();
+        const shippingAddress = addressInput.value.trim();
+        if (!shippingName || !shippingPhone || !shippingAddress) {
+          showAlert("ข้อมูลไม่ครบ", "กรุณากรอกชื่อ, เบอร์โทร, และที่อยู่ให้ครบถ้วน");
+          return;
+        }
+        dialog.close();
+        const originalButton = document.querySelector(`.redeem-btn[data-item-id="${item.itemId}"]`);
+        await executeRedemption(originalButton, {
+          itemId: item.itemId, point: item.point,
+          shippingInfo: { name: shippingName, phone: shippingPhone, address: shippingAddress }
+        });
+      };
+      confirmBtn.onclick = handleConfirm;
+      cancelBtn.onclick = () => dialog.close();
     }
 
     async function executeRedemption(buttonElement, payload) {
-        buttonElement.disabled = true;
-        buttonElement.textContent = "กำลังแลก...";
-        try {
-            const body = { action: 'redeemItem', lineId: userState.lineId, itemId: payload.itemId, point: payload.point, ...(payload.shippingInfo && { shippingInfo: payload.shippingInfo }) };
-            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify(body) });
-            const text = await res.text();
-            showAlert("สถานะการแลก", text, async () => {
-                if (text.includes("สำเร็จ")) {
-                    await fetchAndUpdateUserState();
-                    buttonElement.textContent = "แลกแล้ว";
-                } else {
-                    buttonElement.disabled = false;
-                    buttonElement.textContent = "แลกเลย";
-                }
-            });
-        } catch (e) {
-            console.error("Redemption failed:", e);
-            showAlert('ข้อผิดพลาด', 'ไม่สามารถทำรายการแลกของได้ กรุณาลองใหม่');
+      buttonElement.disabled = true;
+      buttonElement.textContent = "กำลังแลก...";
+      try {
+        const body = { action: 'redeemItem', lineId: userState.lineId, itemId: payload.itemId, point: payload.point, ...(payload.shippingInfo && { shippingInfo: payload.shippingInfo }) };
+        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify(body) });
+        const text = await res.text();
+        showAlert("สถานะการแลก", text, async () => {
+          if (text.includes("สำเร็จ")) {
+            await fetchAndUpdateUserState();
+            buttonElement.textContent = "แลกแล้ว";
+          } else {
             buttonElement.disabled = false;
             buttonElement.textContent = "แลกเลย";
-        }
+          }
+        });
+      } catch (e) {
+        console.error("Redemption failed:", e);
+        showAlert('ข้อผิดพลาด', 'ไม่สามารถทำรายการแลกของได้ กรุณาลองใหม่');
+        buttonElement.disabled = false;
+        buttonElement.textContent = "แลกเลย";
+      }
     }
 
     async function initTransfer() {
       const toEl = document.getElementById('transferTo'), amountEl = document.getElementById('transferAmount'), transferBtn = document.getElementById('transferBtn');
       transferBtn.onclick = async () => {
-          const to = toEl.value.trim(), amount = parseInt(amountEl.value, 10);
-          if (!to) { showAlert("ข้อผิดพลาด", "กรุณากรอก LINE ID / เบอร์โทรปลายทาง"); return; }
-          if (isNaN(amount) || amount <= 0) { showAlert("ข้อผิดพลาด", "กรอกจำนวนพ้อยต์ให้ถูกต้อง"); return; }
-          if (to === userState.lineId) { showAlert("ข้อผิดพลาด", "ไม่สามารถโอนให้ตัวเอง"); return; }
-          if (userState.points < amount) { showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points}) ไม่พอสำหรับโอน`); return; }
-          if (!(await showConfirm("ยืนยัน", `โอน ${amount} พ้อยต์ให้ ${to}?`))) return;
-          transferBtn.disabled = true;
-          try {
-              const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'transferPoints', from: userState.lineId, to, amount }) });
-              const txt = await res.text();
-              showAlert("สถานะ", txt, async () => { if (/สำเร็จ|เรียบร้อย/.test(txt)) { await fetchAndUpdateUserState(); toEl.value = ''; amountEl.value = ''; } });
-          } catch (e) { showAlert("ข้อผิดพลาด", "ไม่สามารถโอนได้"); }
-          finally { transferBtn.disabled = false; }
+        const to = toEl.value.trim(), amount = parseInt(amountEl.value, 10);
+        if (!to) { showAlert("ข้อผิดพลาด", "กรุณากรอก LINE ID / เบอร์โทรปลายทาง"); return; }
+        if (isNaN(amount) || amount <= 0) { showAlert("ข้อผิดพลาด", "กรอกจำนวนพ้อยต์ให้ถูกต้อง"); return; }
+        if (to === userState.lineId) { showAlert("ข้อผิดพลาด", "ไม่สามารถโอนให้ตัวเอง"); return; }
+        if (userState.points < amount) { showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points}) ไม่พอสำหรับโอน`); return; }
+        if (!(await showConfirm("ยืนยัน", `โอน ${amount} พ้อยต์ให้ ${to}?`))) return;
+        transferBtn.disabled = true;
+        try {
+          const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'transferPoints', from: userState.lineId, to, amount }) });
+          const txt = await res.text();
+          showAlert("สถานะ", txt, async () => { if (/สำเร็จ|เรียบร้อย/.test(txt)) { await fetchAndUpdateUserState(); toEl.value = ''; amountEl.value = ''; } });
+        } catch (e) { showAlert("ข้อผิดพลาด", "ไม่สามารถโอนได้"); }
+        finally { transferBtn.disabled = false; }
       };
     }
 
     async function initAddpoint() {
       const scanContainer = document.getElementById('scanContainer'), scanBtn = document.getElementById('scanBtn'), enterBtn = document.getElementById('enterBtn'), manualInput = document.getElementById('manualCode');
       async function processCode(code) {
-          if (!code) return;
-          const history = await getFreshOrCachedHistory();
-          if (history.some(item => (item.type === 'code' || item.type === 'event') && item.eventId === code)) {
-              showAlert('รับแล้ว', 'คุณเคยรับโค้ดนี้ไปแล้ว');
-              return;
-          }
-          try {
-              const res = await fetch(`${CONFIG.GAS_URL}?action=getCodeById&id=${code}`);
-              const data = await res.json();
-              if (data.error) { showAlert('ไม่พบโค้ด', data.error); return; }
-              scanContainer.innerHTML = `<div class="bg-white p-6 rounded shadow mb-4 text-center"><div class="font-bold text-lg mb-2">${data.title}</div><div class="text-sm text-gray-700 mb-4">${data.desc}</div><div class="font-bold text-yellow-600 mb-4 text-xl">คุณจะได้รับ: ${data.point} พ้อยต์</div><button id="acceptBtn" class="btn btn-neutral w-full">ยืนยันการรับพ้อยต์</button></div>`;
-              document.getElementById('acceptBtn').addEventListener('click', () => joinCode(data));
-          } catch (e) { console.error("Error processing code:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถประมวลผลโค้ดได้'); }
+        if (!code) return;
+        const history = await getFreshOrCachedHistory();
+        if (history.some(item => (item.type === 'code' || item.type === 'event') && item.eventId === code)) {
+          showAlert('รับแล้ว', 'คุณเคยรับโค้ดนี้ไปแล้ว');
+          return;
+        }
+        try {
+          const res = await fetch(`${CONFIG.GAS_URL}?action=getCodeById&id=${code}`);
+          const data = await res.json();
+          if (data.error) { showAlert('ไม่พบโค้ด', data.error); return; }
+          scanContainer.innerHTML = `<div class="bg-white p-6 rounded shadow mb-4 text-center"><div class="font-bold text-lg mb-2">${data.title}</div><div class="text-sm text-gray-700 mb-4">${data.desc}</div><div class="font-bold text-yellow-600 mb-4 text-xl">คุณจะได้รับ: ${data.point} พ้อยต์</div><button id="acceptBtn" class="btn btn-neutral w-full">ยืนยันการรับพ้อยต์</button></div>`;
+          document.getElementById('acceptBtn').addEventListener('click', () => joinCode(data));
+        } catch (e) { console.error("Error processing code:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถประมวลผลโค้ดได้'); }
       }
       async function joinCode(codeData) {
-          const { id: scannedCode, title: codeTitle, point: codePoint } = codeData;
-          if (!(await showConfirm('ยืนยัน', `รับพ้อยต์จาก "${codeTitle}" จำนวน ${codePoint} พ้อยต์?`))) return;
-          const btn = document.getElementById("acceptBtn");
-          if (!btn) return;
-          btn.disabled = true; btn.textContent = "กำลังดำเนินการ..."; let success = false;
-          try {
-              const res = await fetch(CONFIG.GAS_URL, { method: "POST", body: JSON.stringify({ action: "joinCode", lineId: userState.lineId, id: scannedCode, title: codeTitle, point: codePoint }) });
-              const text = await res.text();
-              if (text.includes("สำเร็จ")) {
-                  success = true; btn.textContent = "รับพ้อยต์แล้ว";
-                  showAlert("สำเร็จ", text, async () => { await fetchAndUpdateUserState(); window.location.hash = '#dashboard'; });
-              } else { showAlert("เกิดข้อผิดพลาด", text); window.location.hash = '#addpoint'; }
-          } catch (e) { console.error("Join code failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อได้'); } 
-          finally { if (!success && btn) { btn.disabled = false; btn.textContent = "ยืนยันการรับพ้อยต์"; } }
+        const { id: scannedCode, title: codeTitle, point: codePoint } = codeData;
+        if (!(await showConfirm('ยืนยัน', `รับพ้อยต์จาก "${codeTitle}" จำนวน ${codePoint} พ้อยต์?`))) return;
+        const btn = document.getElementById("acceptBtn");
+        if (!btn) return;
+        btn.disabled = true; btn.textContent = "กำลังดำเนินการ..."; let success = false;
+        try {
+          const res = await fetch(CONFIG.GAS_URL, { method: "POST", body: JSON.stringify({ action: "joinCode", lineId: userState.lineId, id: scannedCode, title: codeTitle, point: codePoint }) });
+          const text = await res.text();
+          if (text.includes("สำเร็จ")) {
+            success = true; btn.textContent = "รับพ้อยต์แล้ว";
+            showAlert("สำเร็จ", text, async () => { await fetchAndUpdateUserState(); window.location.hash = '#dashboard'; });
+          } else { showAlert("เกิดข้อผิดพลาด", text); window.location.hash = '#addpoint'; }
+        } catch (e) { console.error("Join code failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อได้'); }
+        finally { if (!success && btn) { btn.disabled = false; btn.textContent = "ยืนยันการรับพ้อยต์"; } }
       }
       scanBtn.onclick = async () => {
-          try { const result = await liff.scanCodeV2(); if (result && result.value) await processCode(result.value); } 
-          catch (e) { if (e.code !== 'USER_CANCEL') { console.error("Scan failed:", e); showAlert('สแกนไม่สำเร็จ', e.message || 'กรุณาลองใหม่'); } }
+        try { const result = await liff.scanCodeV2(); if (result && result.value) await processCode(result.value); }
+        catch (e) { if (e.code !== 'USER_CANCEL') { console.error("Scan failed:", e); showAlert('สแกนไม่สำเร็จ', e.message || 'กรุณาลองใหม่'); } }
       };
       enterBtn.onclick = () => { const codeValue = manualInput.value.trim(); if (codeValue) processCode(codeValue); else showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกโค้ด'); };
     }
 
-   async function initWarehouse() {
+    async function initWarehouse() {
     if (warehousePollingInterval) {
         clearInterval(warehousePollingInterval);
         warehousePollingInterval = null;
@@ -832,48 +915,52 @@
         }
 
         warehouseListEl.innerHTML = ownedItems.map(item => {
-            let statusBadgeHTML = '';
-            let detailsHTML = ''; // จะเก็บข้อมูลวันที่ และ tracking
+            let statusBlockHTML = ''; // ส่วนด้านขวาบน (สถานะ/ปุ่ม)
+            let detailsBlockHTML = ''; // ส่วนด้านขวาล่าง (วันที่รับ/ส่ง/tracking)
 
-            // [แก้ไข] Logic การแสดงผลใหม่ทั้งหมด
             switch (item.status) {
                 case 'claimed':
-                    statusBadgeHTML = `<div class="badge badge-success">รับแล้ว</div>`;
-                    detailsHTML = `<div class="text-xs text-right text-gray-500">วันที่รับ: ${item.claimDate || '-'}</div>`;
+                    statusBlockHTML = `<div class="badge badge-success">รับแล้ว</div>`;
+                    detailsBlockHTML = `<div class="text-xs text-gray-500">วันที่รับ: ${item.claimDate || '-'}</div>`;
                     break;
                 case 'shipped':
-                    statusBadgeHTML = `<div class="badge badge-info">จัดส่งแล้ว</div>`;
+                    statusBlockHTML = `<div class="badge badge-info">จัดส่งแล้ว</div>`;
                     // ตรวจสอบว่ามี tracking number หรือไม่
                     if (item.expressTracking && String(item.expressTracking).trim() !== '') {
-                        detailsHTML = `
-                            <div class="text-xs text-right text-gray-500">วันที่จัดส่ง: ${item.claimDate || '-'}</div>
-                            <div class="text-xs text-right text-gray-700 font-semibold mt-1">Tracking: ${item.expressTracking}</div>
+                        detailsBlockHTML = `
+                            <div class="text-xs text-gray-500">วันที่จัดส่ง: ${item.claimDate || '-'}</div>
+                            <div class="text-xs text-gray-700 font-semibold mt-1">Tracking: ${item.expressTracking}</div>
                         `;
                     } else {
-                        detailsHTML = `<div class="text-xs text-right text-gray-500">วันที่จัดส่ง: ${item.claimDate || '-'}</div>`;
+                        detailsBlockHTML = `<div class="text-xs text-gray-500">วันที่จัดส่ง: ${item.claimDate || '-'}</div>`;
                     }
                     break;
                 case 'pending_claim':
                 default:
-                    statusBadgeHTML = `<button class="btn btn-neutral btn-sm claim-btn" data-unique-id="${item.uniqueId}" data-item-name="${item.itemName}">รับของ</button>`;
-                    detailsHTML = `<div class="badge badge-warning badge-outline">รอรับ</div>`;
+                    statusBlockHTML = `<button class="btn btn-neutral btn-sm claim-btn" data-unique-id="${item.uniqueId}" data-item-name="${item.itemName}">รับของ</button>`;
+                    detailsBlockHTML = `<div class="badge badge-warning badge-outline">รอรับ</div>`; // แสดงเป็นป้ายสถานะแทน
                     break;
             }
 
-            // [แก้ไข] จัด Layout ใหม่ทั้งหมดให้สวยงาม
+            // [แก้ไข] ใช้ Flexbox เพื่อสร้าง Layout 2 คอลัมน์
             return `
-                <li class="bg-white p-4 rounded-lg shadow-sm space-y-3">
-                    <div class="flex justify-between items-start">
-                        <div class="font-semibold text-gray-800">${item.itemName}</div>
-                        <div class="text-right flex-shrink-0 ml-4">
-                           ${detailsHTML}
+                <li class="bg-white p-4 rounded-lg shadow-sm">
+                    <div class="flex justify-between items-start space-x-4">
+                        <!-- คอลัมน์ซ้าย -->
+                        <div class="flex-grow">
+                            <div class="font-semibold text-gray-800">${item.itemName}</div>
+                            <div class="text-xs text-gray-500 mt-2">วันที่แลก: ${item.redeemDate}</div>
+                        </div>
+                        <!-- คอลัมน์ขวา -->
+                        <div class="flex-shrink-0 text-right space-y-2">
+                            <div class="flex justify-end">
+                                ${statusBlockHTML}
+                            </div>
+                            ${detailsBlockHTML}
                         </div>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <div class="text-xs text-gray-500">วันที่แลก: ${item.redeemDate}</div>
-                        ${statusBadgeHTML}
-                    </div>
                 </li>`;
+
         }).join('');
 
         // ผูก event click กับปุ่ม "รับของ" ใหม่
@@ -888,42 +975,42 @@
     }
 }
     function handleClaimButtonClick(event) {
-        if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; }
-        const btn = event.currentTarget;
-        const { uniqueId, itemName } = btn.dataset;
-        qrConfirmBtn.classList.add('hidden');
-        qrDialogTitle.textContent = `สแกนเพื่อรับ: ${itemName}`;
-        qrDialogItemName.textContent = `ID เฉพาะ: ${uniqueId}`;
-        qrcodeContainer.innerHTML = '';
-        try { const qr = qrcode(4, 'L'); qr.addData(uniqueId); qr.make(); qrcodeContainer.innerHTML = qr.createImgTag(6, 4); } 
-        catch(e) { qrcodeContainer.innerHTML = `<p class="text-red-500">ไม่สามารถสร้าง QR Code ได้</p>`; console.error(e); }
-        document.getElementById('sendMessageToOABtn').onclick = async () => {
-            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(uniqueId)}`;
-            const flexMessage = { "type": "bubble", "body": { "type": "box", "layout": "vertical", "spacing": "md", "contents": [ { "type": "image", "url": qrImageUrl, "size": "5xl", "aspectRatio": "1:1", "aspectMode": "cover"}, { "type": "text", "text": "แจ้งรับของรางวัล", "weight": "bold","align": "center", "size": "md", "color": "#000000" }, { "type": "separator" }, { "type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm", "contents": [ { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [ { "type": "text", "text": "สินค้า", "color": "#aaaaaa", "size": "sm", "flex": 2 }, { "type": "text", "text": itemName, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 } ]}, { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [ { "type": "text", "text": "รหัส", "color": "#aaaaaa", "size": "sm", "flex": 2 }, { "type": "text", "text": uniqueId, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 } ]} ] } ] }, "footer": { "type": "box", "layout": "vertical", "contents": [ { "type": "text", "text": `แจ้งจากคุณ: ${userState.profile.displayName}`, "size": "xs", "color": "#888888", "align": "center" } ] } };
-            try { if (!liff.isInClient()) { showAlert('ไม่สามารถส่งได้', 'ฟังก์ชันนี้ใช้ได้เมื่อเปิดผ่านแอป LINE เท่านั้น'); return; } await liff.sendMessages([{ type: 'flex', altText: `แจ้งรับของรางวัล: ${itemName}`, contents: flexMessage }]); showAlert('ส่งข้อความสำเร็จ', 'ข้อความของคุณถูกส่งไปยังพนักงานแล้ว'); } 
-            catch (error) { console.error('Failed to send flex message:', error); showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถส่งข้อความได้'); }
-        };
-        async function checkClaimStatus() {
-            try {
-                const res = await fetch(`${CONFIG.GAS_URL}?action=getWarehouseItemStatus&uniqueId=${uniqueId}`);
-                const data = await res.json();
-                if (data && data.status === 'claimed') {
-                    console.log('Item has been claimed!'); clearInterval(warehousePollingInterval); warehousePollingInterval = null;
-                    qrcodeContainer.innerHTML = `<div class="text-center text-green-600 font-bold text-lg p-4">✅ สินค้า "${itemName}" ถูกรับแล้ว!</div>`;
-                    qrCloseBtn.textContent = 'ปิด'; setTimeout(() => { qrDialog.close(); initWarehouse(); }, 2000); 
-                } else if (data && data.status === 'not_found') {
-                     console.error(`Polling: Warehouse item with UniqueID ${uniqueId} not found.`); clearInterval(warehousePollingInterval); warehousePollingInterval = null;
-                     qrcodeContainer.innerHTML = `<p class="text-red-500">รายการนี้ไม่ถูกต้องหรือไม่พบในระบบ</p>`; setTimeout(() => qrDialog.close(), 3000);
-                }
-            } catch (err) {
-                console.error('Polling failed:', err); clearInterval(warehousePollingInterval); warehousePollingInterval = null;
-                qrcodeContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการตรวจสอบสถานะ.</p>`; setTimeout(() => qrDialog.close(), 3000);
-            }
+      if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; }
+      const btn = event.currentTarget;
+      const { uniqueId, itemName } = btn.dataset;
+      qrConfirmBtn.classList.add('hidden');
+      qrDialogTitle.textContent = `สแกนเพื่อรับ: ${itemName}`;
+      qrDialogItemName.textContent = `ID เฉพาะ: ${uniqueId}`;
+      qrcodeContainer.innerHTML = '';
+      try { const qr = qrcode(4, 'L'); qr.addData(uniqueId); qr.make(); qrcodeContainer.innerHTML = qr.createImgTag(6, 4); }
+      catch (e) { qrcodeContainer.innerHTML = `<p class="text-red-500">ไม่สามารถสร้าง QR Code ได้</p>`; console.error(e); }
+      document.getElementById('sendMessageToOABtn').onclick = async () => {
+        const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(uniqueId)}`;
+        const flexMessage = { "type": "bubble", "body": { "type": "box", "layout": "vertical", "spacing": "md", "contents": [{ "type": "image", "url": qrImageUrl, "size": "5xl", "aspectRatio": "1:1", "aspectMode": "cover" }, { "type": "text", "text": "แจ้งรับของรางวัล", "weight": "bold", "align": "center", "size": "md", "color": "#000000" }, { "type": "separator" }, { "type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm", "contents": [{ "type": "box", "layout": "baseline", "spacing": "sm", "contents": [{ "type": "text", "text": "สินค้า", "color": "#aaaaaa", "size": "sm", "flex": 2 }, { "type": "text", "text": itemName, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 }] }, { "type": "box", "layout": "baseline", "spacing": "sm", "contents": [{ "type": "text", "text": "รหัส", "color": "#aaaaaa", "size": "sm", "flex": 2 }, { "type": "text", "text": uniqueId, "wrap": true, "color": "#666666", "size": "sm", "flex": 5 }] }] }] }, "footer": { "type": "box", "layout": "vertical", "contents": [{ "type": "text", "text": `แจ้งจากคุณ: ${userState.profile.displayName}`, "size": "xs", "color": "#888888", "align": "center" }] } };
+        try { if (!liff.isInClient()) { showAlert('ไม่สามารถส่งได้', 'ฟังก์ชันนี้ใช้ได้เมื่อเปิดผ่านแอป LINE เท่านั้น'); return; } await liff.sendMessages([{ type: 'flex', altText: `แจ้งรับของรางวัล: ${itemName}`, contents: flexMessage }]); showAlert('ส่งข้อความสำเร็จ', 'ข้อความของคุณถูกส่งไปยังพนักงานแล้ว'); }
+        catch (error) { console.error('Failed to send flex message:', error); showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถส่งข้อความได้'); }
+      };
+      async function checkClaimStatus() {
+        try {
+          const res = await fetch(`${CONFIG.GAS_URL}?action=getWarehouseItemStatus&uniqueId=${uniqueId}`);
+          const data = await res.json();
+          if (data && data.status === 'claimed') {
+            console.log('Item has been claimed!'); clearInterval(warehousePollingInterval); warehousePollingInterval = null;
+            qrcodeContainer.innerHTML = `<div class="text-center text-green-600 font-bold text-lg p-4">✅ สินค้า "${itemName}" ถูกรับแล้ว!</div>`;
+            qrCloseBtn.textContent = 'ปิด'; setTimeout(() => { qrDialog.close(); initWarehouse(); }, 2000);
+          } else if (data && data.status === 'not_found') {
+            console.error(`Polling: Warehouse item with UniqueID ${uniqueId} not found.`); clearInterval(warehousePollingInterval); warehousePollingInterval = null;
+            qrcodeContainer.innerHTML = `<p class="text-red-500">รายการนี้ไม่ถูกต้องหรือไม่พบในระบบ</p>`; setTimeout(() => qrDialog.close(), 3000);
+          }
+        } catch (err) {
+          console.error('Polling failed:', err); clearInterval(warehousePollingInterval); warehousePollingInterval = null;
+          qrcodeContainer.innerHTML = `<p class="text-red-500">เกิดข้อผิดพลาดในการตรวจสอบสถานะ.</p>`; setTimeout(() => qrDialog.close(), 3000);
         }
-        warehousePollingInterval = setInterval(checkClaimStatus, 2000); // Poll every 2 seconds
-        qrCloseBtn.onclick = () => { if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; } qrDialog.close(); };
-        qrDialog.addEventListener('close', () => { if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; } }, { once: true });
-        qrDialog.showModal();
+      }
+      warehousePollingInterval = setInterval(checkClaimStatus, 2000); // Poll every 2 seconds
+      qrCloseBtn.onclick = () => { if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; } qrDialog.close(); };
+      qrDialog.addEventListener('close', () => { if (warehousePollingInterval) { clearInterval(warehousePollingInterval); warehousePollingInterval = null; } }, { once: true });
+      qrDialog.showModal();
     }
 
     // --- APP START ---
@@ -935,6 +1022,7 @@
     }
 
     initializeApp();
-</script>
+  </script>
 </body>
+
 </html>
