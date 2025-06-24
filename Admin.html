@@ -152,33 +152,62 @@
     </div>
   </dialog>
 <!-- TEMPLATES -->
-  <template id="view-add-points">
-    <h2 class="text-2xl font-bold mb-4">เพิ่มแต้มให้ลูกค้า</h2>
-    <div class="card bg-base-100 shadow-xl max-w-lg mx-auto">
-        <div class="card-body">
-            <p class="text-sm opacity-70 mb-4">กรอก Line ID หรือเบอร์โทรศัพท์ของลูกค้า, จำนวนแต้ม, และเหตุผลที่ให้แต้ม ระบบจะเพิ่มแต้มและส่งการแจ้งเตือนไปยัง LINE ของลูกค้าโดยอัตโนมัติ</p>
-            <form id="addPointsForm" onsubmit="event.preventDefault()" class="space-y-4">
-                <div class="form-control">
-                    <label class="label"><span class="label-text">Line ID หรือ เบอร์โทรศัพท์</span></label>
-                    <input type="text" id="addPointsIdentifier" placeholder="ค้นหาลูกค้า..." class="input input-bordered w-full" required />
-                </div>
-                <div class="form-control">
-                    <label class="label"><span class="label-text">จำนวนแต้มที่ให้</span></label>
-                    <input type="number" id="addPointsAmount" placeholder="เช่น 20" class="input input-bordered w-full" required min="1" />
-                </div>
-                <div class="form-control">
-                    <label class="label"><span class="label-text">เหตุผลที่ให้แต้ม</span></label>
-                    <input type="text" id="addPointsReason" placeholder="เช่น ซื้อกาแฟ 2 แก้ว" class="input input-bordered w-full" required />
-                </div>
-                <div class="mt-6">
-                    <button type="submit" id="addPointsSubmitBtn" class="btn btn-primary w-full">
-                        ยืนยันและส่งการแจ้งเตือน
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-  </template>
+<template id="view-add-points">
+  <h2 class="text-2xl font-bold mb-4">เพิ่มแต้มให้ลูกค้า</h2>
+  <div class="card bg-base-100 shadow-xl max-w-lg mx-auto">
+      <div class="card-body">
+          <form id="addPointsForm" onsubmit="event.preventDefault()" class="space-y-4">
+              <!-- User Identifier -->
+              <div class="form-control">
+                  <label class="label"><span class="label-text font-semibold">1. ระบุลูกค้า</span></label>
+                  <input type="text" id="addPointsIdentifier" placeholder="กรอก Line ID, เบอร์โทร หรือสแกน QR ลูกค้า" class="input input-bordered w-full" required />
+              </div>
+
+              <!-- Point Addition Mode Toggle -->
+              <div class="form-control">
+                  <label class="label"><span class="label-text font-semibold">2. เลือกวิธีให้แต้ม</span></label>
+                  <div role="tablist" class="tabs tabs-bordered">
+                      <input type="radio" name="point_mode" role="tab" class="tab" aria-label="จากการซื้อสินค้า" value="product" checked />
+                      <input type="radio" name="point_mode" role="tab" class="tab" aria-label="กรอกแต้มเอง" value="manual" />
+                  </div>
+              </div>
+
+              <!-- Mode 1: Product Purchase -->
+              <div id="productModeSection" class="space-y-4 border-l-4 border-primary pl-4 py-2">
+                  <div class="form-control">
+                      <label class="label"><span class="label-text">เลือกสินค้า</span></label>
+                      <select id="productList" class="select select-bordered w-full">
+                          <option disabled selected>กำลังโหลดรายการสินค้า...</option>
+                      </select>
+                  </div>
+                  <div class="form-control">
+                      <label class="label"><span class="label-text">จำนวน</span></label>
+                      <input type="number" id="productQuantity" placeholder="1" class="input input-bordered w-full" min="1" value="1" />
+                  </div>
+              </div>
+
+              <!-- Mode 2: Manual Entry -->
+              <div id="manualModeSection" class="space-y-4 border-l-4 border-secondary pl-4 py-2 hidden">
+                  <div class="form-control">
+                      <label class="label"><span class="label-text">จำนวนแต้มที่ให้</span></label>
+                      <input type="number" id="addPointsAmount" placeholder="เช่น 20" class="input input-bordered w-full" min="1" />
+                  </div>
+                  <div class="form-control">
+                      <label class="label"><span class="label-text">เหตุผลที่ให้แต้ม</span></label>
+                      <input type="text" id="addPointsReason" placeholder="เช่น โปรโมชั่นพิเศษ" class="input input-bordered w-full" />
+                  </div>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="mt-6">
+                  <button type="submit" id="addPointsSubmitBtn" class="btn btn-primary w-full">
+                      ยืนยันและส่งการแจ้งเตือน
+                  </button>
+              </div>
+          </form>
+      </div>
+  </div>
+</template>
 <script>
     // ==========================================================
     // ===                 GLOBAL VARIABLES                   ===
@@ -411,49 +440,108 @@
         form.onsubmit = async (e) => { e.preventDefault(); const vip = parseInt(vipInput.value), superP = parseInt(superInput.value); if (isNaN(vip) || isNaN(superP)) return showAlert('Error', 'กรุณากรอกตัวเลข'); if (vip >= superP && superP !== 0) return showAlert('Error', 'แต้ม SUPER ต้องมากกว่า VIP'); const btn = document.getElementById('saveLevelSettingsBtn'); btn.classList.add('loading'); try { await postData('setLevelConfig', { VIP_points: vip, SUPER_points: superP }); showAlert('Success', 'บันทึกการตั้งค่าแล้ว'); } finally { btn.classList.remove('loading'); } };
     }
 
-    
-async function initAddPoints() {
+   async function initAddPoints() {
     const form = document.getElementById('addPointsForm');
     const submitBtn = document.getElementById('addPointsSubmitBtn');
+    const productModeSection = document.getElementById('productModeSection');
+    const manualModeSection = document.getElementById('manualModeSection');
+    const productListSelect = document.getElementById('productList');
+    const modeToggles = document.querySelectorAll('input[name="point_mode"]');
 
+    // --- Load Products for Dropdown ---
+    try {
+        const products = await fetchData('getProducts');
+        productListSelect.innerHTML = '<option disabled selected>-- กรุณาเลือกสินค้า --</option>';
+        if (products && products.length > 0) {
+            products.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = `${p.name} (${p.points} แต้ม)`;
+                option.dataset.points = p.points;
+                option.dataset.name = p.name;
+                productListSelect.appendChild(option);
+            });
+        } else {
+            productListSelect.innerHTML = '<option disabled selected>ไม่พบรายการสินค้า</option>';
+        }
+    } catch (e) {
+        productListSelect.innerHTML = `<option disabled selected>Error: ${e.message}</option>`;
+    }
+
+    // --- UI Logic for Toggling Modes ---
+    modeToggles.forEach(toggle => {
+        toggle.addEventListener('change', (e) => {
+            if (e.target.value === 'product') {
+                productModeSection.classList.remove('hidden');
+                manualModeSection.classList.add('hidden');
+            } else {
+                productModeSection.classList.add('hidden');
+                manualModeSection.classList.remove('hidden');
+            }
+        });
+    });
+
+    // --- Form Submission Logic ---
     form.onsubmit = async (e) => {
         e.preventDefault();
         const identifier = document.getElementById('addPointsIdentifier').value.trim();
-        const points = document.getElementById('addPointsAmount').value;
-        const reason = document.getElementById('addPointsReason').value.trim();
-
-        if (!identifier || !points || !reason) {
-            showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกข้อมูลทุกช่อง');
+        const selectedMode = document.querySelector('input[name="point_mode"]:checked').value;
+        
+        if (!identifier) {
+            showAlert('ข้อมูลไม่ครบ', 'กรุณาระบุลูกค้า');
             return;
         }
 
-        if (await showConfirm('ยืนยันการเพิ่มแต้ม', `คุณต้องการเพิ่ม ${points} แต้มให้ผู้ใช้ "${identifier}" \nเหตุผล: ${reason}\n\nระบบจะส่งการแจ้งเตือนไปที่ LINE ของลูกค้าด้วย`)) {
+        let payload = { identifier };
+        let confirmMessage = '';
+
+        if (selectedMode === 'product') {
+            const productId = document.getElementById('productList').value;
+            const quantity = document.getElementById('productQuantity').value;
+            const selectedOption = productListSelect.options[productListSelect.selectedIndex];
+            
+            if (!productId || productId.startsWith('--')) {
+                return showAlert('ข้อมูลไม่ครบ', 'กรุณาเลือกสินค้า');
+            }
+            if (!quantity || parseInt(quantity) < 1) {
+                return showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกจำนวนสินค้าให้ถูกต้อง');
+            }
+            
+            payload.productId = productId;
+            payload.quantity = parseInt(quantity, 10);
+            const totalPoints = parseInt(selectedOption.dataset.points) * payload.quantity;
+            confirmMessage = `ยืนยันให้ ${totalPoints} แต้ม \nจาก: ซื้อ ${selectedOption.dataset.name} (จำนวน ${payload.quantity} ชิ้น)\nให้กับผู้ใช้: "${identifier}"?`;
+
+        } else { // Manual mode
+            const points = document.getElementById('addPointsAmount').value;
+            const reason = document.getElementById('addPointsReason').value.trim();
+
+            if (!points || parseInt(points) < 1 || !reason) {
+                return showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกแต้มและเหตุผลให้ครบถ้วน');
+            }
+
+            payload.points = parseInt(points, 10);
+            payload.reason = reason;
+            confirmMessage = `ยืนยันให้ ${payload.points} แต้ม \nเหตุผล: ${payload.reason}\nให้กับผู้ใช้: "${identifier}"?`;
+        }
+
+        if (await showConfirm('ยืนยันการเพิ่มแต้ม', confirmMessage)) {
             submitBtn.classList.add('loading');
             submitBtn.disabled = true;
-
             try {
-                // ที่นี่เราใช้ postData ไม่ใช่ fetchData เพราะเราจะส่งข้อมูลไปแก้ไข
-                const responseText = await postData('addPointsToUser', {
-                    identifier: identifier,
-                    points: points,
-                    reason: reason
-                });
-                
-                // ลองพยายาม parse JSON จาก response
+                const responseText = await postData('addPointsToUser', payload);
                 let result;
-                try {
-                   result = JSON.parse(responseText);
-                } catch(jsonError){
-                   result = { success: true, message: responseText }; // ถ้าไม่ใช่ JSON ให้ถือว่าสำเร็จและใช้ text ตรงๆ
-                }
+                try { result = JSON.parse(responseText); } 
+                catch(jsonError){ result = { success: true, message: responseText }; }
 
-                if (result.success === false) { // เช็ค error จาก backend
+                if (result.success === false) {
                    showAlert('เกิดข้อผิดพลาด', result.error || 'ไม่สามารถทำรายการได้');
                 } else {
                    showAlert('สำเร็จ', result.message || 'เพิ่มแต้มเรียบร้อยแล้ว');
                    form.reset(); // ล้างฟอร์มเมื่อสำเร็จ
+                   productModeSection.classList.remove('hidden'); // Reset UI to default
+                   manualModeSection.classList.add('hidden');
                 }
-
             } catch (error) {
                 showAlert('เกิดข้อผิดพลาดรุนแรง', error.message);
             } finally {
