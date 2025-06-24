@@ -454,16 +454,49 @@
         if (hasJoined) { joinBtn.textContent = "รับพ้อยต์แล้ว"; joinBtn.disabled = true; }
         else if (!isLevelAllowed) { joinBtn.textContent = `สำหรับระดับ ${eventData.allowedLevels.join(', ')}`; joinBtn.disabled = true; }
         else {
-          joinBtn.onclick = async () => {
-            if (!(await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`))) return;
-            joinBtn.disabled = true;
-            try {
-              const res = await fetch(CONFIG.GAS_URL, { method: "POST", body: JSON.stringify({ action: "joinEvent", lineId: userState.lineId, eventId, title: eventData.title, point: eventData.point }) });
-              const text = await res.text();
-              showAlert("สถานะ", text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); joinBtn.textContent = "รับพ้อยต์แล้ว"; } });
-            } catch (e) { console.error("Join event failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมได้'); }
-            finally { if (joinBtn.textContent !== "รับพ้อยต์แล้ว") joinBtn.disabled = false; }
-          };
+joinBtn.onclick = async () => {
+    if (!(await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`))) return;
+    
+    // ทำให้ปุ่มแสดงสถานะว่ากำลังโหลด
+    joinBtn.disabled = true;
+    joinBtn.textContent = "กำลังดำเนินการ...";
+
+    try {
+        const res = await fetch(CONFIG.GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "joinEvent",
+                lineId: userState.lineId,
+                eventId,
+                title: eventData.title,
+                point: eventData.point
+            })
+        });
+        const text = await res.text();
+
+        // แสดง Pop-up แจ้งเตือน
+        showAlert("สถานะ", text, async () => {
+            if (text.includes("สำเร็จ")) {
+                // ถ้าสำเร็จ ให้อัปเดตข้อมูลและคงสถานะปุ่มเป็นปิดใช้งาน
+                await fetchAndUpdateUserState();
+                joinBtn.textContent = "รับพ้อยต์แล้ว";
+                joinBtn.disabled = true; // <--- **บรรทัดนี้สำคัญที่สุด**
+            } else {
+                // ถ้าไม่สำเร็จ (เช่น รับไปแล้ว) ให้คืนสถานะปุ่ม
+                joinBtn.textContent = "รับพ้อยต์แล้ว"; // อาจจะเปลี่ยนเป็นข้อความนี้
+                joinBtn.disabled = true;      // และปิดปุ่มไปเลย
+            }
+        });
+    } catch (e) {
+        console.error("Join event failed:", e);
+        showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมได้');
+        // ถ้าเกิดข้อผิดพลาดในการเชื่อมต่อ ให้ปุ่มกลับมาใช้งานได้
+        joinBtn.textContent = "เข้าร่วม";
+        joinBtn.disabled = false;
+    }
+    // ไม่จำเป็นต้องใช้ finally แล้ว เพราะเราจัดการทุกกรณีใน try...catch
+};
+
         }
       }
       cardSkeleton.classList.add("hidden"); card.classList.remove("hidden");
