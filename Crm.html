@@ -198,13 +198,13 @@
   <!-- Template: Event Detail -->
   <template id="view-event-detail">
     <div id="cardWrapper">
-      <div id="cardSkeleton" class="bg-white p-6 rounded shadow-md mb-6 animate-pulse">
-        <div class="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-        <div class="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-        <div class="h-3 bg-gray-200 rounded w-full mb-6"></div>
+      <div id="cardSkeleton" class="bg-white p-6 rounded-lg shadow-md mb-6 animate-pulse">
+        <div class="h-6 bg-gray-200 rounded-lg w-1/3 mb-4"></div>
+        <div class="h-4 bg-gray-200 rounded-lg w-1/4 mb-2"></div>
+        <div class="h-3 bg-gray-200 rounded-lg w-full mb-6"></div>
         <div class="h-12 bg-gray-200 rounded-full w-full"></div>
       </div>
-      <div id="card" class="bg-white p-6 rounded shadow-md text-gray-800 mb-6 hidden">
+      <div id="card" class="bg-white p-6 rounded-lg shadow-md text-gray-800 mb-6 hidden">
         <div class="flex justify-between items-start mb-3">
           <div class="font-bold text-lg" id="eventDetailTitle">–</div>
           <div class="bg-yellow-400 text-black font-bold text-md px-3 py-1 rounded-full" id="eventPoint">0+</div>
@@ -235,8 +235,8 @@
             class="badge badge-lg"></span><span id="profileCustomTagBadge" class="badge badge-lg"></span></div>
         <progress id="profileProgressBar" class="progress progress-warning w-full" value="0" max="100"></progress>
         <div id="profilePointsToNextLevel" class="text-sm text-gray-700 mt-1"></div>
-        <div class="text-lg mt-2">พ้อยคงเหลือ: <span id="profileCurrentPoints">0</span></div>
-        <div class="font-bold text-sm mt-4">แต้มสะสมทั้งหมด: <span id="profileTotalPoints">0</span></div>
+        <div class="text-xl font-bold mt-2">พ้อยคงเหลือ: <span id="profileCurrentPoints">0</span></div>
+        <div class=" text-sm mt-1">แต้มสะสมทั้งหมด: <span id="profileTotalPoints">0</span></div>
 
       </div>
       <div id="profileFormContainer" class="bg-white p-6 rounded-lg shadow-md space-y-4 hidden">
