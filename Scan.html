@@ -17,12 +17,8 @@
         themes: [{
           light: {
             ...require("daisyui/src/theming/themes")["light"],
-            "primary": "#191919", // Main buttons are black
-            "primary-focus": "#3d3d3d",
-            "secondary": "#1d4ed8", // A calm blue for secondary actions
-            "accent": "#37cdbe",
-            "--rounded-box": "1rem", 
-            "--rounded-btn": "0.8rem",
+            "primary": "#191919", "primary-focus": "#3d3d3d", "secondary": "#1d4ed8", "accent": "#37cdbe",
+            "--rounded-box": "1rem", "--rounded-btn": "0.8rem",
           },
         }],
       },
@@ -33,14 +29,10 @@
 
   <style>
     body { background-color: #f3f4f6; font-family: 'Inter', 'Kanit', sans-serif; }
-    #qr-shaded-region{ border-width:0 !important ; } 
-    .hidden { display: none !important; }
-    
+    #qr-shaded-region{ border-width:0 !important ; } .hidden { display: none !important; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loading-spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: #191919; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
     .page-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 2rem; color: #6b7280; }
-    
-    /* Style for DaisyUI lifted tabs content */
     [role="tabpanel"] { display: none; }
     input[type="radio"]:checked + [role="tabpanel"] { display: block; }
   </style>
@@ -53,9 +45,7 @@
         <div class="flex-1 px-2 mx-2"><h1 class="text-xl font-bold" id="pageTitle">หน้าร้าน (POS)</h1></div>
       </header>
       <main class="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-100 overflow-y-auto">
-        <div id="app-container" class="transition-opacity duration-300">
-            <!-- App content will be loaded here -->
-        </div>
+        <div id="app-container" class="transition-opacity duration-300"></div>
       </main>
   </div>
 
@@ -63,6 +53,17 @@
   <dialog id="customAlertDialog" class="modal"><div class="modal-box rounded-2xl"><h3 id="customAlertTitle" class="font-bold text-lg mb-3 text-center"></h3><p id="customAlertMessage" class="py-4 whitespace-pre-line text-center"></p><div class="modal-action justify-center"><form method="dialog"><button class="btn btn-primary w-full rounded-lg">ตกลง</button></form></div></div></dialog>
   <dialog id="customConfirmDialog" class="modal"><div class="modal-box rounded-2xl"><h3 id="customConfirmTitle" class="font-bold text-lg mb-3 text-center"></h3><p id="customConfirmMessage" class="py-4 whitespace-pre-line text-center"></p><div class="modal-action justify-around"><button id="customConfirmCancelButton" class="btn btn-outline rounded-lg">ยกเลิก</button><button id="customConfirmConfirmButton" class="btn btn-primary rounded-lg">ยืนยัน</button></div></div></dialog>
   
+  <!-- [NEW] Modal for scanning customer QR -->
+  <dialog id="scanCustomerModal" class="modal">
+    <div class="modal-box rounded-2xl">
+      <h3 class="font-bold text-lg text-center">สแกน QR Code ของลูกค้า</h3>
+      <div id="customer-qr-reader" class="w-full h-64 bg-gray-100 rounded-lg my-4 border-2 border-dashed border-gray-300 overflow-hidden"></div>
+      <div class="modal-action">
+        <button id="closeScanCustomerBtn" class="btn btn-ghost rounded-lg w-full">ยกเลิก</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Main Template for this page -->
   <template id="view-cashier-page">
     <div role="tablist" class="tabs tabs-lifted tabs-lg">
@@ -72,7 +73,17 @@
           <div class="card bg-base-100 max-w-2xl mx-auto">
               <div class="card-body p-0">
                   <form id="addPointsForm" onsubmit="event.preventDefault()" class="space-y-4">
-                      <div class="form-control"><label class="label"><span class="label-text font-semibold text-lg">1. ระบุลูกค้า</span></label><input type="text" id="addPointsIdentifier" placeholder="กรอก Line ID, เบอร์โทร หรือสแกน QR ลูกค้า" class="input input-bordered w-full input-lg rounded-lg" required /></div>
+                      <!-- [MODIFIED] User identifier input with scan button -->
+                      <div class="form-control">
+                          <label class="label"><span class="label-text font-semibold text-lg">1. ระบุลูกค้า</span></label>
+                          <div class="join w-full">
+                              <input type="text" id="addPointsIdentifier" placeholder="กรอก Line ID, เบอร์โทร..." class="input input-bordered w-full input-lg rounded-l-lg join-item" required />
+                              <button type="button" id="scanCustomerBtn" class="btn btn-secondary btn-lg join-item rounded-r-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5" /></svg>
+                                สแกน
+                              </button>
+                          </div>
+                      </div>
                       <div class="form-control mt-6"><label class="label"><span class="label-text font-semibold text-lg">2. เลือกวิธีให้แต้ม</span></label><div role="tablist" class="tabs tabs-boxed rounded-lg"><a role="tab" class="tab tab-active" data-mode="product">จากรายการสินค้า</a><a role="tab" class="tab" data-mode="manual">กรอกแต้มเอง</a></div></div>
                       <div id="productModeSection" class="space-y-4">
                           <div class="divider">รายการสินค้าในบิล</div>
@@ -121,22 +132,7 @@
                 รีเฟรช
             </button>
           </div>
-          <div class="bg-base-100 rounded-2xl overflow-hidden">
-            <div class="table-responsive">
-              <table class="table w-full table-sm">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th>วันที่</th>
-                    <th>ประเภท</th>
-                    <th>รายละเอียด</th>
-                    <th>จำนวน</th>
-                    <th>ผู้ใช้</th>
-                  </tr>
-                </thead>
-                <tbody id="historyTableBody"></tbody>
-              </table>
-            </div>
-          </div>
+          <div class="bg-base-100 rounded-2xl overflow-hidden"><div class="table-responsive"><table class="table w-full table-sm"><thead class="bg-gray-50"><tr><th>วันที่</th><th>ประเภท</th><th>รายละเอียด</th><th>จำนวน</th><th>ผู้ใช้</th></tr></thead><tbody id="historyTableBody"></tbody></table></div></div>
       </div>
     </div>
   </template>
@@ -162,17 +158,34 @@
     
     async function initCashierPage() {
         // --- Common variables ---
-        let html5QrCode = null;
-        let isScannerActive = false;
+        let claimScanner = null;
+        let customerScanner = null;
+        let isClaimScannerActive = false;
 
-        // --- PART 1: Scan Claim Logic ---
+        // --- PART 1: Scan Claim Logic (for redeeming rewards) ---
         const startScanBtn = document.getElementById('startScanBtn'), stopScanBtn = document.getElementById('stopScanBtn'), scanResultEl = document.getElementById('scan-result');
-        const onScanSuccess = async (decodedText) => { await stopScanning(); scanResultEl.innerHTML = `<span class="loading loading-dots loading-md"></span>`; try { const responseText = await postData('claimItemByUniqueId', { uniqueId: decodedText }); showAlert('ผลการยืนยัน', responseText); scanResultEl.innerHTML = responseText.includes('สำเร็จ') ? `✅ ${responseText}` : `⚠️ ${responseText}`; } catch (error) { scanResultEl.innerHTML = `❌ ${error.message}`; } };
-        const startScanning = () => { if (!html5QrCode) { html5QrCode = new Html5Qrcode("qr-reader"); } if (isScannerActive) return; isScannerActive = true; html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {}).then(() => { startScanBtn.classList.add('hidden'); stopScanBtn.classList.remove('hidden'); scanResultEl.textContent = 'กรุณาหันกล้องไปที่ QR Code'; }).catch(err => { showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องได้"); isScannerActive = false; }); };
-        const stopScanning = async () => { if (html5QrCode && html5QrCode.isScanning) { try { await html5QrCode.stop(); } catch (err) { console.error("Failed to stop scanning.", err); } } isScannerActive = false; startScanBtn.classList.remove('hidden'); stopScanBtn.classList.add('hidden'); };
-        startScanBtn.onclick = startScanning; stopScanBtn.onclick = stopScanning;
+        const onScanSuccessClaim = async (decodedText) => { await stopClaimScanner(); scanResultEl.innerHTML = `<span class="loading loading-dots loading-md"></span>`; try { const responseText = await postData('claimItemByUniqueId', { uniqueId: decodedText }); showAlert('ผลการยืนยัน', responseText); scanResultEl.innerHTML = responseText.includes('สำเร็จ') ? `✅ ${responseText}` : `⚠️ ${responseText}`; } catch (error) { scanResultEl.innerHTML = `❌ ${error.message}`; } };
+        const startClaimScanner = () => { if (!claimScanner) { claimScanner = new Html5Qrcode("qr-reader"); } if (isClaimScannerActive) return; isClaimScannerActive = true; claimScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccessClaim, () => {}).then(() => { startScanBtn.classList.add('hidden'); stopScanBtn.classList.remove('hidden'); scanResultEl.textContent = 'กรุณาหันกล้องไปที่ QR Code'; }).catch(err => { showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องได้"); isClaimScannerActive = false; }); };
+        const stopClaimScanner = async () => { if (claimScanner && claimScanner.isScanning) { try { await claimScanner.stop(); } catch (err) { console.error("Failed to stop claim scanner.", err); } } isClaimScannerActive = false; startScanBtn.classList.remove('hidden'); stopScanBtn.classList.add('hidden'); };
+        startScanBtn.onclick = startClaimScanner; stopScanBtn.onclick = stopClaimScanner;
 
-        // --- PART 2: Add Points (POS) Logic ---
+        // --- PART 2: Scan Customer Logic (for POS) ---
+        const scanCustomerModal = document.getElementById('scanCustomerModal');
+        const scanCustomerBtn = document.getElementById('scanCustomerBtn');
+        const closeScanCustomerBtn = document.getElementById('closeScanCustomerBtn');
+        const customerIdentifierInput = document.getElementById('addPointsIdentifier');
+        
+        const onScanSuccessCustomer = async (decodedText) => {
+            customerIdentifierInput.value = decodedText;
+            customerIdentifierInput.focus();
+            await stopCustomerScanner();
+        };
+        const startCustomerScanner = () => { if (!customerScanner) { customerScanner = new Html5Qrcode("customer-qr-reader"); } scanCustomerModal.showModal(); customerScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccessCustomer, () => {}).catch(err => { showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องสแกนลูกค้าได้"); scanCustomerModal.close(); }); };
+        const stopCustomerScanner = async () => { if (customerScanner && customerScanner.isScanning) { try { await customerScanner.stop(); } catch (err) { console.error("Failed to stop customer scanner.", err); } } scanCustomerModal.close(); };
+        scanCustomerBtn.onclick = startCustomerScanner;
+        closeScanCustomerBtn.onclick = stopCustomerScanner;
+
+        // --- PART 3: Add Points (POS) Logic ---
         const addPointsForm = document.getElementById('addPointsForm'), addPointsSubmitBtn = document.getElementById('addPointsSubmitBtn'), productModeSection = document.getElementById('productModeSection'), manualModeSection = document.getElementById('manualModeSection'), productListSelect = document.getElementById('productList'), quantityInput = document.getElementById('productQuantity'), addItemBtn = document.getElementById('addItemToBillBtn'), billContainer = document.getElementById('billItemsContainer'), totalPointsDisplay = document.getElementById('totalPointsDisplay'), posModeTabs = addPointsForm.querySelectorAll('.tabs .tab');
         let allProducts = [], billItems = [], currentPosMode = 'product';
         try { allProducts = await fetchData('getProducts'); updateProductDropdown(); } catch (e) { productListSelect.innerHTML = `<option disabled selected>โหลดสินค้าล้มเหลว</option>`; }
@@ -183,49 +196,28 @@
         addPointsForm.onsubmit = async (e) => { e.preventDefault(); const identifier = document.getElementById('addPointsIdentifier').value.trim(); if (!identifier) return showAlert('ข้อมูลไม่ครบ', 'กรุณาระบุลูกค้า'); let payload = { identifier }, confirmMessage = ''; if (currentPosMode === 'product') { if (billItems.length === 0) return showAlert('ข้อมูลไม่ครบ', 'กรุณาเพิ่มสินค้าลงในบิล'); payload.itemsPurchased = billItems.map(item => ({ productId: item.id, quantity: item.quantity })); const totalPoints = billItems.reduce((sum, item) => sum + (item.points * item.quantity), 0); const itemSummary = billItems.map(item => `${item.name} x${item.quantity}`).join(',\n'); confirmMessage = `ยืนยันให้ ${totalPoints} แต้ม\nจาก:\n${itemSummary}\n\nสำหรับผู้ใช้: "${identifier}"?`; } else { const points = document.getElementById('addPointsAmount').value; const reason = document.getElementById('addPointsReason').value.trim(); if (!points || parseInt(points) < 1 || !reason) return showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกแต้มและเหตุผล'); payload.points = parseInt(points, 10); payload.reason = reason; confirmMessage = `ยืนยันให้ ${payload.points} แต้ม\nเหตุผล: ${payload.reason}\n\nสำหรับผู้ใช้: "${identifier}"?`; } if (await showConfirm('ยืนยันการให้แต้ม', confirmMessage)) { addPointsSubmitBtn.classList.add('loading'); addPointsSubmitBtn.disabled = true; try { const message = await postData('addPointsToUser', payload); showAlert('สำเร็จ', message || 'เพิ่มแต้มเรียบร้อยแล้ว'); addPointsForm.reset(); billItems = []; renderBill(); updateProductDropdown(); } catch(e) {} finally { addPointsSubmitBtn.classList.remove('loading'); addPointsSubmitBtn.disabled = false; } } };
         renderBill();
 
-        // --- PART 3: Recent History Logic ---
-        const historyTableBody = document.getElementById('historyTableBody');
-        const refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
-        async function loadHistory() { 
-            historyTableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center"><span class="loading loading-spinner loading-sm"></span></td></tr>`;
-            try { 
-                const history = await fetchData('getAllHistory', { limit: 20 });
-                if (!history.length) { historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">ไม่พบประวัติ</td></tr>`; return; }
-                historyTableBody.innerHTML = history.map(h => `<tr><td>${new Date(h.date).toLocaleString('th-TH')}</td><td>${h.type}</td><td>${h.detail}</td><td class="${h.amount < 0 ? 'text-error' : 'text-success'} font-bold">${h.amount > 0 ? '+' : ''}${h.amount}</td><td class="font-mono text-xs">${h.lineId.substring(0, 15)}...</td></tr>`).join('');
-            } catch (e) { 
-                historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-error">Load failed</td></tr>`;
-            }
-        }
+        // --- PART 4: Recent History Logic ---
+        const historyTableBody = document.getElementById('historyTableBody'), refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
+        async function loadHistory() { historyTableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center"><span class="loading loading-spinner loading-sm"></span></td></tr>`; try { const history = await fetchData('getAllHistory', { limit: 20 }); if (!history.length) { historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">ไม่พบประวัติ</td></tr>`; return; } historyTableBody.innerHTML = history.map(h => `<tr><td>${new Date(h.date).toLocaleString('th-TH')}</td><td>${h.type}</td><td>${h.detail}</td><td class="${h.amount < 0 ? 'text-error' : 'text-success'} font-bold">${h.amount > 0 ? '+' : ''}${h.amount}</td><td class="font-mono text-xs">${h.lineId.substring(0, 15)}...</td></tr>`).join(''); } catch (e) { historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-error">Load failed</td></tr>`; } }
         refreshHistoryBtn.onclick = loadHistory;
         
-        // --- PART 4: Tab Switching Logic ---
+        // --- PART 5: Tab Switching Logic ---
         document.querySelectorAll('input[name="main_tabs"]').forEach(tabInput => {
             tabInput.addEventListener('change', () => {
-                if (tabInput.value !== 'scan') {
-                    stopScanning();
-                }
-                if (tabInput.value === 'history') {
-                    loadHistory();
-                }
+                stopClaimScanner(); // Stop claim scanner whenever tab changes
+                // Note: We don't need to stop customer scanner here as it's in a modal and has its own close button.
+                if (tabInput.value === 'history') { loadHistory(); }
             });
         });
-        window.addEventListener('hashchange', stopScanning, { once: true }); // Stop scanner if user navigates away (though not possible in this layout)
     }
 
     // --- App Start ---
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof CONFIG === 'undefined' || !CONFIG.GAS_URL_ADMIN) { const gasUrl = prompt("Please enter your Google Apps Script URL:"); if (gasUrl) { window.CONFIG = { GAS_URL_ADMIN: gasUrl }; } else { document.body.innerHTML = '<div class="p-8 text-center text-error">Configuration not found. Please create config-admin.js or enter the URL.</div>'; return; } }
-        
-        // No login, directly show the main app and run the single page initializer
         mainApp.classList.remove('hidden');
         const template = document.getElementById('view-cashier-page');
-        if(template) {
-            appContainer.innerHTML = '';
-            appContainer.appendChild(template.content.cloneNode(true));
-            initCashierPage();
-        } else {
-            appContainer.innerHTML = "Error: Main template not found.";
-        }
+        if(template) { appContainer.innerHTML = ''; appContainer.appendChild(template.content.cloneNode(true)); initCashierPage(); } 
+        else { appContainer.innerHTML = "Error: Main template not found."; }
     });
 </script>
 
