@@ -239,7 +239,7 @@
 <script>
     // --- GLOBAL STATE & CACHE ---
     let liffInitialized = false;
-    const userState = { profile: null, lineId: "", points: 0, pointsChanged: false, level: "MEMBER", customTag: "" };
+    const userState = { profile: null, lineId: "", points: 0, pointsChanged: false, level: "Member", customTag: "" };
     const dataCache = { events: null, redeemItems: null, eventDetails: {}, userProfileFull: null, history: null, levelSettings: null };
     let warehousePollingInterval = null;
 
@@ -255,7 +255,7 @@
           qrCloseBtn = document.getElementById('qrDialogCloseBtn');
 
     // --- STYLES ---
-    const LEVEL_STYLES = { 'MEMBER': { text: 'MEMBER', class: 'badge-info badge-outline' }, 'VIP': { text: 'VIP', class: 'badge-primary badge-outline' }, 'SUPER': { text: 'SUPER', class: 'badge-success badge-outline' } };
+    const LEVEL_STYLES = { 'Member': { text: 'Member', class: 'badge-info badge-outline' }, 'VIP': { text: 'VIP', class: 'badge-primary badge-outline' }, 'Super': { text: 'Super', class: 'badge-success badge-outline' } };
     const CUSTOM_TAG_STYLES = { 'newuser': { class: 'badge-warning', text: 'สมาชิกใหม่' }, 'ceo': { class: 'badge-accent', text: 'CEO' }, 'admin': { class: 'badge-error', text: 'ผู้ดูแล' }, 'tester': { class: 'badge-secondary', text: 'ผู้ทดสอบ' }, 'default': { class: 'badge-neutral', text: '' } };
 
     // --- COMMON UI FUNCTIONS ---
@@ -277,9 +277,9 @@
     function calculateLevelAndProgress(currentPoints) {
       const vipPoints = dataCache.levelSettings?.VIP_points || 5000;
       const superPoints = dataCache.levelSettings?.SUPER_points || 10000;
-      let level = 'MEMBER', currentLevelMin = 0, nextLevelMin = vipPoints, nextLevelName = 'VIP';
-      if (currentPoints >= superPoints) { level = 'SUPER'; currentLevelMin = superPoints; nextLevelMin = currentPoints; nextLevelName = ''; }
-      else if (currentPoints >= vipPoints) { level = 'VIP'; currentLevelMin = vipPoints; nextLevelMin = superPoints; nextLevelName = 'SUPER'; }
+      let level = 'Member', currentLevelMin = 0, nextLevelMin = vipPoints, nextLevelName = 'VIP';
+      if (currentPoints >= superPoints) { level = 'Super'; currentLevelMin = superPoints; nextLevelMin = currentPoints; nextLevelName = ''; }
+      else if (currentPoints >= vipPoints) { level = 'VIP'; currentLevelMin = vipPoints; nextLevelMin = superPoints; nextLevelName = 'Super'; }
       const pointsInCurrentTier = currentPoints - currentLevelMin; const pointsToNextTier = nextLevelMin - currentLevelMin;
       let progressValue = 0, pointsNeeded = 0;
       if (nextLevelName) { progressValue = (pointsInCurrentTier / pointsToNextTier) * 100; pointsNeeded = nextLevelMin - currentPoints; }
@@ -296,7 +296,7 @@
         const userData = await userRes.json();
         if (userData && !userData.error) {
           userState.points = parseInt(userData.point || 0, 10);
-          userState.level = userData.level || 'MEMBER';
+          userState.level = userData.level || 'Member';
           userState.customTag = userData.customTag || '';
           dataCache.userProfileFull = userData;
           pointValEl.textContent = userState.points;
@@ -334,7 +334,7 @@
         else { console.warn("Failed to load level settings, using defaults."); dataCache.levelSettings = { VIP_points: 5000, SUPER_points: 10000 }; }
         if (!userData || !userData.isRegistered) { window.location.href = 'Register.html'; return false; }
         userState.points = parseInt(userData.point || 0, 10);
-        userState.level = userData.level || 'MEMBER'; userState.customTag = userData.customTag || '';
+        userState.level = userData.level || 'Member'; userState.customTag = userData.customTag || '';
         dataCache.userProfileFull = userData; pointValEl.textContent = userState.points;
         dataCache.history = historyData; userState.pointsChanged = false;
       } catch (error) { console.error("Failed to fetch initial data:", error); pointValEl.textContent = 'N/A'; showAlert("ข้อผิดพลาด", "ไม่สามารถโหลดข้อมูลผู้ใช้ได้ กรุณาลองใหม่"); return false; }
@@ -418,19 +418,64 @@
     }
 
     async function initEvent() {
-      const eventListEl = document.getElementById('eventList');
-      if (eventListEl) eventListEl.innerHTML = generateListSkeleton(5);
-      let events = dataCache.events || [];
-      if (!dataCache.events) {
-        try {
-            const res = await fetch(`${CONFIG.GAS_URL}?action=getEvents`);
-            events = await res.json(); dataCache.events = events;
-        } catch (e) { console.error("Error fetching events:", e); if (eventListEl) eventListEl.innerHTML = `<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดกิจกรรม</div>`; return; }
-      }
-      if (!events || events.length === 0) { eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`; return; }
-      const filteredEvents = events.filter(e => !e.allowedLevels || e.allowedLevels.length === 0 || e.allowedLevels.includes(userState.level));
-      if (filteredEvents.length === 0) { eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมสำหรับระดับของคุณ</div>`; return; }
-      eventListEl.innerHTML = filteredEvents.map(e => `<div class="bg-white rounded p-4 flex justify-between items-center shadow-sm"><div><div class="font-semibold text-gray-800 text-sm">${e.title}</div><div class="text-xs text-gray-500">${e.detail || 'ดูรายละเอียดกิจกรรม'}</div></div><a href="#event-detail?id=${e.id}" class="btn btn-neutral">ดูรายละเอียด</a></div>`).join('');
+        const eventListEl = document.getElementById('eventList');
+        if (eventListEl) eventListEl.innerHTML = generateListSkeleton(5);
+        
+        let events = dataCache.events || [];
+        if (!dataCache.events) {
+            try {
+                const res = await fetch(`${CONFIG.GAS_URL}?action=getEvents`);
+                events = await res.json();
+                dataCache.events = events;
+            } catch (e) {
+                console.error("Error fetching events:", e);
+                if (eventListEl) eventListEl.innerHTML = `<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดกิจกรรม</div>`;
+                return;
+            }
+        }
+
+        if (!events || events.length === 0) {
+            eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`;
+            return;
+        }
+
+        // ใช้ .map เพื่อสร้าง HTML สำหรับทุกกิจกรรม
+        eventListEl.innerHTML = events.map(e => {
+            let isUserAllowed = false;
+            let levelTagHTML = '';
+            
+            // ตรวจสอบว่าผู้ใช้มีสิทธิ์เข้าร่วมหรือไม่
+            if (!e.allowedLevels || e.allowedLevels.trim() === '') {
+                isUserAllowed = true; // ไม่มีข้อจำกัดเรื่องระดับ
+            } else {
+                // แปลง string "MEMBER, VIP" เป็น Array ["MEMBER", "VIP"]
+                const allowed = e.allowedLevels.split(',').map(level => level.trim().toUpperCase());
+                if (allowed.includes(userState.level.toUpperCase())) {
+                    isUserAllowed = true;
+                }
+                // สร้าง Tag แสดงระดับที่ต้องการ
+                levelTagHTML = `<div class="badge badge-outline badge-sm mt-2">สำหรับ: ${e.allowedLevels}</div>`;
+            }
+            
+            // สร้างปุ่มตามสิทธิ์ของผู้ใช้
+            const buttonHTML = isUserAllowed
+                ? `<a href="#event-detail?id=${e.id}" class="btn btn-neutral btn-sm">ดูรายละเอียด</a>`
+                : `<button class="btn btn-disabled btn-sm">ระดับไม่ถึง</button>`;
+
+            // ประกอบร่าง HTML ของรายการกิจกรรม
+            return `
+                <div class="bg-white rounded p-4 flex justify-between items-center shadow-sm">
+                    <div>
+                        <div class="font-semibold text-gray-800 text-sm">${e.title}</div>
+                        <div class="text-xs text-gray-500">${e.detail || 'ดูรายละเอียดกิจกรรม'}</div>
+                        ${levelTagHTML}
+                    </div>
+                    <div class="text-right">
+                        ${buttonHTML}
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 
     async function initEventDetail() {
@@ -446,57 +491,70 @@
       }
 
       const history = await getFreshOrCachedHistory();
-      if (eventData.error) { titleEl.textContent = "ไม่พบกิจกรรม"; descEl.textContent = eventData.error; joinBtn.disabled = true; }
-      else {
-        titleEl.textContent = eventData.title; pointEl.textContent = `${eventData.point}+`; descEl.textContent = eventData.desc;
+      if (eventData.error) { 
+        titleEl.textContent = "ไม่พบกิจกรรม"; 
+        descEl.textContent = eventData.error; 
+        joinBtn.disabled = true; 
+      } else {
+        titleEl.textContent = eventData.title; 
+        pointEl.textContent = `${eventData.point}+`; 
+        descEl.textContent = eventData.desc;
+        
         const hasJoined = history.some(item => item.type === 'event' && item.eventId === eventId);
-        const isLevelAllowed = !eventData.allowedLevels || eventData.allowedLevels.length === 0 || eventData.allowedLevels.includes(userState.level);
-        if (hasJoined) { joinBtn.textContent = "รับพ้อยต์แล้ว"; joinBtn.disabled = true; }
-        else if (!isLevelAllowed) { joinBtn.textContent = `สำหรับระดับ ${eventData.allowedLevels.join(', ')}`; joinBtn.disabled = true; }
-        else {
-joinBtn.onclick = async () => {
-    if (!(await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`))) return;
-    
-    // ทำให้ปุ่มแสดงสถานะว่ากำลังโหลด
-    joinBtn.disabled = true;
-    joinBtn.textContent = "กำลังดำเนินการ...";
-
-    try {
-        const res = await fetch(CONFIG.GAS_URL, {
-            method: "POST",
-            body: JSON.stringify({
-                action: "joinEvent",
-                lineId: userState.lineId,
-                eventId,
-                title: eventData.title,
-                point: eventData.point
-            })
-        });
-        const text = await res.text();
-
-        // แสดง Pop-up แจ้งเตือน
-        showAlert("สถานะ", text, async () => {
-            if (text.includes("สำเร็จ")) {
-                // ถ้าสำเร็จ ให้อัปเดตข้อมูลและคงสถานะปุ่มเป็นปิดใช้งาน
-                await fetchAndUpdateUserState();
-                joinBtn.textContent = "รับพ้อยต์แล้ว";
-                joinBtn.disabled = true; // <--- **บรรทัดนี้สำคัญที่สุด**
-            } else {
-                // ถ้าไม่สำเร็จ (เช่น รับไปแล้ว) ให้คืนสถานะปุ่ม
-                joinBtn.textContent = "รับพ้อยต์แล้ว"; // อาจจะเปลี่ยนเป็นข้อความนี้
-                joinBtn.disabled = true;      // และปิดปุ่มไปเลย
+        
+        let isLevelAllowed = false;
+        if (!eventData.allowedLevels || eventData.allowedLevels.trim() === '') {
+            isLevelAllowed = true;
+        } else {
+            const allowed = eventData.allowedLevels.split(',').map(level => level.trim().toUpperCase());
+            if (allowed.includes(userState.level.toUpperCase())) {
+                isLevelAllowed = true;
             }
-        });
-    } catch (e) {
-        console.error("Join event failed:", e);
-        showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมได้');
-        // ถ้าเกิดข้อผิดพลาดในการเชื่อมต่อ ให้ปุ่มกลับมาใช้งานได้
-        joinBtn.textContent = "เข้าร่วม";
-        joinBtn.disabled = false;
-    }
-    // ไม่จำเป็นต้องใช้ finally แล้ว เพราะเราจัดการทุกกรณีใน try...catch
-};
+        }
 
+        if (hasJoined) { 
+            joinBtn.textContent = "รับพ้อยต์แล้ว"; 
+            joinBtn.disabled = true; 
+        } else if (!isLevelAllowed) { 
+            joinBtn.textContent = `สำหรับระดับ ${eventData.allowedLevels}`; 
+            joinBtn.disabled = true; 
+        } else {
+            joinBtn.onclick = async () => {
+                if (!(await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`))) return;
+                
+                joinBtn.disabled = true;
+                joinBtn.textContent = "กำลังดำเนินการ...";
+
+                try {
+                    const res = await fetch(CONFIG.GAS_URL, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            action: "joinEvent",
+                            lineId: userState.lineId,
+                            eventId,
+                            title: eventData.title,
+                            point: eventData.point
+                        })
+                    });
+                    const text = await res.text();
+
+                    showAlert("สถานะ", text, async () => {
+                        if (text.includes("สำเร็จ")) {
+                            await fetchAndUpdateUserState();
+                            joinBtn.textContent = "รับพ้อยต์แล้ว";
+                            joinBtn.disabled = true;
+                        } else {
+                            joinBtn.textContent = "รับพ้อยต์แล้ว";
+                            joinBtn.disabled = true;
+                        }
+                    });
+                } catch (e) {
+                    console.error("Join event failed:", e);
+                    showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมได้');
+                    joinBtn.textContent = "เข้าร่วม";
+                    joinBtn.disabled = false;
+                }
+            };
         }
       }
       cardSkeleton.classList.add("hidden"); card.classList.remove("hidden");
@@ -832,7 +890,6 @@ joinBtn.onclick = async () => {
                     <div class="text-right">${actionArea}</div></li>`;
         }).join('');
 
-        // *** นี่คือบรรทัดที่แก้ไขแล้ว ***
         document.querySelectorAll('.claim-btn').forEach(button => {
             button.addEventListener('click', handleClaimButtonClick);
         });
