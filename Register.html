@@ -115,7 +115,7 @@
 
                 if (data && data.name) { // ถ้ามีข้อมูลผู้ใช้และมีชื่อ แสดงว่าลงทะเบียนแล้ว
                     console.log("User already registered, redirecting to index.html");
-                    window.location.href = 'index.html'; // ส่งกลับไปหน้าหลัก
+                    window.location.href = 'Crm.html'; // ส่งกลับไปหน้าหลัก
                 } else if (data && data.isRegistered === false) { // ถ้า Cloud Function บอกว่ายังไม่ลงทะเบียน (คุณต้องเขียน Cloud Function ให้ส่ง isRegistered: false)
                     console.log("User not registered, show form.");
                     // แสดงฟอร์มลงทะเบียน
