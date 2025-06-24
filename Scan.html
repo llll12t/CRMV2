@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CRM - POS & Scan</title>
+  <title>CRM - Point of Sale</title>
   
   <script src="config-admin.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet" type="text/css" />
@@ -17,8 +17,12 @@
         themes: [{
           light: {
             ...require("daisyui/src/theming/themes")["light"],
-            "primary": "#191919", "primary-focus": "#3d3d3d", "secondary": "#f000b8", "accent": "#37cdbe",
-            "--rounded-box": "1rem", "--rounded-btn": "0.8rem",
+            "primary": "#191919", // Main buttons are black
+            "primary-focus": "#3d3d3d",
+            "secondary": "#1d4ed8", // A calm blue for secondary actions
+            "accent": "#37cdbe",
+            "--rounded-box": "1rem", 
+            "--rounded-btn": "0.8rem",
           },
         }],
       },
@@ -28,11 +32,14 @@
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
-    body { background-color: #f9fafb; font-family: 'Inter', 'Kanit', sans-serif; }
-    #qr-shaded-region{ border-width:0 !important ; } .hidden { display: none !important; }
+    body { background-color: #f3f4f6; font-family: 'Inter', 'Kanit', sans-serif; }
+    #qr-shaded-region{ border-width:0 !important ; } 
+    .hidden { display: none !important; }
+    
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loading-spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: #191919; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
     .page-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 2rem; color: #6b7280; }
+    
     /* Style for DaisyUI lifted tabs content */
     [role="tabpanel"] { display: none; }
     input[type="radio"]:checked + [role="tabpanel"] { display: block; }
@@ -40,18 +47,14 @@
 </head>
 
 <body>
-  <!-- Login Overlay -->
-  <div id="login-overlay" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-50"><div class="card w-96 bg-base-100 shadow-xl border border-gray-200"><div class="card-body"><h2 class="card-title justify-center text-2xl font-bold">Admin Login</h2><div id="login-error" class="text-error text-center text-sm hidden"></div><div class="form-control"><label class="label"><span class="label-text">Username</span></label><input type="text" id="username" placeholder="username" class="input input-bordered rounded-lg" /></div><div class="form-control"><label class="label"><span class="label-text">Password</span></label><input type="password" id="password" placeholder="password" class="input input-bordered rounded-lg" /></div><div class="card-actions justify-end mt-4"><button id="loginBtn" class="btn btn-primary w-full rounded-lg">Login</button></div></div></div></div>
-
   <!-- Main App Content -->
-  <div id="main-app" class="flex flex-col h-screen hidden">
+  <div id="main-app" class="flex flex-col h-screen">
       <header class="navbar bg-base-100 shadow-sm p-4 sticky top-0 z-30 border-b border-gray-200">
-        <div class="flex-1 px-2 mx-2"><h1 class="text-xl font-bold" id="pageTitle">POS & Scan</h1></div>
-        <div class="flex-none"><button id="logoutBtn" class="btn btn-sm btn-ghost rounded-lg">Logout</button></div>
+        <div class="flex-1 px-2 mx-2"><h1 class="text-xl font-bold" id="pageTitle">หน้าร้าน (POS)</h1></div>
       </header>
-      <main class="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-50 overflow-y-auto">
+      <main class="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-100 overflow-y-auto">
         <div id="app-container" class="transition-opacity duration-300">
-            <div class="page-loader"><div class="loading-spinner"></div><p>กำลังโหลด...</p></div>
+            <!-- App content will be loaded here -->
         </div>
       </main>
   </div>
@@ -60,12 +63,12 @@
   <dialog id="customAlertDialog" class="modal"><div class="modal-box rounded-2xl"><h3 id="customAlertTitle" class="font-bold text-lg mb-3 text-center"></h3><p id="customAlertMessage" class="py-4 whitespace-pre-line text-center"></p><div class="modal-action justify-center"><form method="dialog"><button class="btn btn-primary w-full rounded-lg">ตกลง</button></form></div></div></dialog>
   <dialog id="customConfirmDialog" class="modal"><div class="modal-box rounded-2xl"><h3 id="customConfirmTitle" class="font-bold text-lg mb-3 text-center"></h3><p id="customConfirmMessage" class="py-4 whitespace-pre-line text-center"></p><div class="modal-action justify-around"><button id="customConfirmCancelButton" class="btn btn-outline rounded-lg">ยกเลิก</button><button id="customConfirmConfirmButton" class="btn btn-primary rounded-lg">ยืนยัน</button></div></div></dialog>
   
-  <!-- ONLY REQUIRED TEMPLATE -->
-  <template id="view-pos-scan">
-    <div role="tablist" class="tabs tabs-lifted">
+  <!-- Main Template for this page -->
+  <template id="view-cashier-page">
+    <div role="tablist" class="tabs tabs-lifted tabs-lg">
       <!-- Tab 1: Add Points (POS) -->
       <input type="radio" name="main_tabs" role="tab" class="tab" aria-label="ให้แต้ม (POS)" value="pos" checked />
-      <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-b-box p-6">
+      <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-b-box p-6 shadow-md">
           <div class="card bg-base-100 max-w-2xl mx-auto">
               <div class="card-body p-0">
                   <form id="addPointsForm" onsubmit="event.preventDefault()" class="space-y-4">
@@ -94,7 +97,7 @@
 
       <!-- Tab 2: Scan Claim -->
       <input type="radio" name="main_tabs" role="tab" class="tab" aria-label="สแกนรับของ" value="scan" />
-      <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-b-box p-6">
+      <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-b-box p-6 shadow-md">
           <div class="card bg-base-100 shadow-lg max-w-lg mx-auto rounded-2xl border border-gray-200">
               <div class="card-body items-center text-center">
                   <h3 class="card-title mb-4">สแกน QR Code เพื่อยืนยันการรับของ</h3>
@@ -107,6 +110,34 @@
               </div>
           </div>
       </div>
+
+      <!-- Tab 3: Recent History -->
+      <input type="radio" name="main_tabs" role="tab" class="tab" aria-label="ประวัติล่าสุด" value="history" />
+      <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-b-box p-6 shadow-md">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold">ประวัติ 20 รายการล่าสุด</h3>
+            <button id="refreshHistoryBtn" class="btn btn-ghost btn-sm rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l1.5 1.5A9 9 0 0120.5 15M20 20l-1.5-1.5A9 9 0 003.5 9" /></svg>
+                รีเฟรช
+            </button>
+          </div>
+          <div class="bg-base-100 rounded-2xl overflow-hidden">
+            <div class="table-responsive">
+              <table class="table w-full table-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th>วันที่</th>
+                    <th>ประเภท</th>
+                    <th>รายละเอียด</th>
+                    <th>จำนวน</th>
+                    <th>ผู้ใช้</th>
+                  </tr>
+                </thead>
+                <tbody id="historyTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+      </div>
     </div>
   </template>
   
@@ -114,7 +145,8 @@
     // ==========================================================
     // ===                 GLOBAL VARIABLES                   ===
     // ==========================================================
-    const mainApp = document.getElementById('main-app'), appContainer = document.getElementById('app-container'), pageTitle = document.getElementById('pageTitle');
+    const mainApp = document.getElementById('main-app');
+    const appContainer = document.getElementById('app-container');
     
     // ==========================================================
     // ===                 HELPER FUNCTIONS                   ===
@@ -125,40 +157,11 @@
     async function postData(action, data) { try { const r = await fetch(CONFIG.GAS_URL_ADMIN, { method: 'POST', body: JSON.stringify({ action, ...data }) }); if (!r.ok) throw new Error(`Server responded with status: ${r.status}`); const responseText = await r.text(); try { const jsonData = JSON.parse(responseText); if(jsonData.success === false) throw new Error(jsonData.error || 'Unknown error from server'); return jsonData.message || responseText; } catch (jsonError) { return responseText; } } catch (e) { showAlert('Error', `Request failed: ${e.message}`); throw e; } }
 
     // ==========================================================
-    // ===               ROUTER & AUTHENTICATION              ===
-    // ==========================================================
-    const routes = {
-        '': { tpl: 'view-pos-scan', init: initPosScan, title: "POS & Scan" },
-        '#pos-scan': { tpl: 'view-pos-scan', init: initPosScan, title: "POS & Scan" },
-        // All other routes point to the same page for simplicity
-        '#dashboard': { tpl: 'view-pos-scan', init: initPosScan, title: "POS & Scan" },
-        '#users': { tpl: 'view-pos-scan', init: initPosScan, title: "POS & Scan" },
-    };
-    async function router() {
-        if (!sessionStorage.getItem('isLoggedIn')) return;
-        const route = routes['']; // Always load the same route
-        pageTitle.textContent = route.title; 
-        appContainer.classList.add('opacity-50'); 
-        appContainer.innerHTML = `<div class="page-loader"><div class="loading-spinner"></div><p>กำลังโหลด...</p></div>`;
-        
-        const template = document.getElementById(route.tpl);
-        if (template) { appContainer.innerHTML = ''; appContainer.appendChild(template.content.cloneNode(true)); try { await route.init(); } catch (e) { appContainer.innerHTML = `<p class="text-error text-center">Error loading page: ${e.message}</p>`; }
-        } else { appContainer.innerHTML = `<p class="text-error text-center">Page not found</p>`; }
-        appContainer.classList.remove('opacity-50');
-    }
-    function handleLogin() {
-        const loginOverlay = document.getElementById('login-overlay'), loginBtn = document.getElementById('loginBtn'), userInput = document.getElementById('username'), passInput = document.getElementById('password'), loginError = document.getElementById('login-error');
-        async function attemptLogin() { loginBtn.classList.add('loading'); loginError.classList.add('hidden'); try { const res = await fetch(CONFIG.GAS_URL_ADMIN, { method: 'POST', body: JSON.stringify({ action: 'login', username: userInput.value, password: passInput.value }) }); const data = await res.json(); if (data.success) { sessionStorage.setItem('isLoggedIn', 'true'); loginOverlay.classList.add('hidden'); mainApp.classList.remove('hidden'); await router(); } else { loginError.textContent = data.message || "Invalid credentials"; loginError.classList.remove('hidden'); } } catch (e) { loginError.textContent = 'Login request failed.'; loginError.classList.remove('hidden'); } finally { loginBtn.classList.remove('loading'); } }
-        loginBtn.onclick = attemptLogin; passInput.addEventListener('keypress', (e) => e.key === 'Enter' && attemptLogin());
-        document.getElementById('logoutBtn').onclick = () => { sessionStorage.removeItem('isLoggedIn'); location.reload(); };
-        if (sessionStorage.getItem('isLoggedIn')) { loginOverlay.classList.add('hidden'); mainApp.classList.remove('hidden'); router(); }
-    }
-
-    // ==========================================================
-    // ===                 PAGE INITIALIZERS                  ===
+    // ===                    APP LOGIC                       ===
     // ==========================================================
     
-    async function initPosScan() {
+    async function initCashierPage() {
+        // --- Common variables ---
         let html5QrCode = null;
         let isScannerActive = false;
 
@@ -180,16 +183,49 @@
         addPointsForm.onsubmit = async (e) => { e.preventDefault(); const identifier = document.getElementById('addPointsIdentifier').value.trim(); if (!identifier) return showAlert('ข้อมูลไม่ครบ', 'กรุณาระบุลูกค้า'); let payload = { identifier }, confirmMessage = ''; if (currentPosMode === 'product') { if (billItems.length === 0) return showAlert('ข้อมูลไม่ครบ', 'กรุณาเพิ่มสินค้าลงในบิล'); payload.itemsPurchased = billItems.map(item => ({ productId: item.id, quantity: item.quantity })); const totalPoints = billItems.reduce((sum, item) => sum + (item.points * item.quantity), 0); const itemSummary = billItems.map(item => `${item.name} x${item.quantity}`).join(',\n'); confirmMessage = `ยืนยันให้ ${totalPoints} แต้ม\nจาก:\n${itemSummary}\n\nสำหรับผู้ใช้: "${identifier}"?`; } else { const points = document.getElementById('addPointsAmount').value; const reason = document.getElementById('addPointsReason').value.trim(); if (!points || parseInt(points) < 1 || !reason) return showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกแต้มและเหตุผล'); payload.points = parseInt(points, 10); payload.reason = reason; confirmMessage = `ยืนยันให้ ${payload.points} แต้ม\nเหตุผล: ${payload.reason}\n\nสำหรับผู้ใช้: "${identifier}"?`; } if (await showConfirm('ยืนยันการให้แต้ม', confirmMessage)) { addPointsSubmitBtn.classList.add('loading'); addPointsSubmitBtn.disabled = true; try { const message = await postData('addPointsToUser', payload); showAlert('สำเร็จ', message || 'เพิ่มแต้มเรียบร้อยแล้ว'); addPointsForm.reset(); billItems = []; renderBill(); updateProductDropdown(); } catch(e) {} finally { addPointsSubmitBtn.classList.remove('loading'); addPointsSubmitBtn.disabled = false; } } };
         renderBill();
 
-        // --- PART 3: Tab Switching Logic ---
-        document.querySelectorAll('input[name="main_tabs"]').forEach(tabInput => { tabInput.addEventListener('change', () => { if (tabInput.value !== 'scan') { stopScanning(); } }); });
-        window.addEventListener('hashchange', stopScanning, { once: true });
+        // --- PART 3: Recent History Logic ---
+        const historyTableBody = document.getElementById('historyTableBody');
+        const refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
+        async function loadHistory() { 
+            historyTableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center"><span class="loading loading-spinner loading-sm"></span></td></tr>`;
+            try { 
+                const history = await fetchData('getAllHistory', { limit: 20 });
+                if (!history.length) { historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">ไม่พบประวัติ</td></tr>`; return; }
+                historyTableBody.innerHTML = history.map(h => `<tr><td>${new Date(h.date).toLocaleString('th-TH')}</td><td>${h.type}</td><td>${h.detail}</td><td class="${h.amount < 0 ? 'text-error' : 'text-success'} font-bold">${h.amount > 0 ? '+' : ''}${h.amount}</td><td class="font-mono text-xs">${h.lineId.substring(0, 15)}...</td></tr>`).join('');
+            } catch (e) { 
+                historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-error">Load failed</td></tr>`;
+            }
+        }
+        refreshHistoryBtn.onclick = loadHistory;
+        
+        // --- PART 4: Tab Switching Logic ---
+        document.querySelectorAll('input[name="main_tabs"]').forEach(tabInput => {
+            tabInput.addEventListener('change', () => {
+                if (tabInput.value !== 'scan') {
+                    stopScanning();
+                }
+                if (tabInput.value === 'history') {
+                    loadHistory();
+                }
+            });
+        });
+        window.addEventListener('hashchange', stopScanning, { once: true }); // Stop scanner if user navigates away (though not possible in this layout)
     }
-    
+
     // --- App Start ---
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof CONFIG === 'undefined' || !CONFIG.GAS_URL_ADMIN) { const gasUrl = prompt("Please enter your Google Apps Script URL:"); if (gasUrl) { window.CONFIG = { GAS_URL_ADMIN: gasUrl }; } else { document.body.innerHTML = '<div class="p-8 text-center text-error">Configuration not found. Please create config-admin.js or enter the URL.</div>'; return; } }
-        handleLogin();
-        window.addEventListener('hashchange', router);
+        
+        // No login, directly show the main app and run the single page initializer
+        mainApp.classList.remove('hidden');
+        const template = document.getElementById('view-cashier-page');
+        if(template) {
+            appContainer.innerHTML = '';
+            appContainer.appendChild(template.content.cloneNode(true));
+            initCashierPage();
+        } else {
+            appContainer.innerHTML = "Error: Main template not found.";
+        }
     });
 </script>
 
