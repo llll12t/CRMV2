@@ -417,99 +417,108 @@
       } catch (e) { console.error("Error in initDashboard:", e); if (historyListEl) historyListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาด</li>`; }
     }
 
-    async function initEvent() {
-        const eventListEl = document.getElementById('eventList');
-        if (eventListEl) eventListEl.innerHTML = generateListSkeleton(5);
-        
-        let events = dataCache.events || [];
-        if (!dataCache.events) {
-            try {
-                const res = await fetch(`${CONFIG.GAS_URL}?action=getEvents`);
-                events = await res.json();
-                dataCache.events = events;
-            } catch (e) {
-                console.error("Error fetching events:", e);
-                if (eventListEl) eventListEl.innerHTML = `<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดกิจกรรม</div>`;
-                return;
-            }
-        }
-
-        if (!events || events.length === 0) {
-            eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`;
+// โค้ดที่แก้ไขแล้วสำหรับ initEvent()
+async function initEvent() {
+    const eventListEl = document.getElementById('eventList');
+    if (eventListEl) eventListEl.innerHTML = generateListSkeleton(5);
+    
+    let events = dataCache.events || [];
+    if (!dataCache.events) {
+        try {
+            const res = await fetch(`${CONFIG.GAS_URL}?action=getEvents`);
+            events = await res.json();
+            dataCache.events = events;
+        } catch (e) {
+            console.error("Error fetching events:", e);
+            if (eventListEl) eventListEl.innerHTML = `<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดกิจกรรม</div>`;
             return;
         }
-
-        // ใช้ .map เพื่อสร้าง HTML สำหรับทุกกิจกรรม
-        eventListEl.innerHTML = events.map(e => {
-            let isUserAllowed = false;
-            let levelTagHTML = '';
-            
-            // ตรวจสอบว่าผู้ใช้มีสิทธิ์เข้าร่วมหรือไม่
-            if (!e.allowedLevels || e.allowedLevels.trim() === '') {
-                isUserAllowed = true; // ไม่มีข้อจำกัดเรื่องระดับ
-            } else {
-                // แปลง string "MEMBER, VIP" เป็น Array ["MEMBER", "VIP"]
-                const allowed = e.allowedLevels.split(',').map(level => level.trim().toUpperCase());
-                if (allowed.includes(userState.level.toUpperCase())) {
-                    isUserAllowed = true;
-                }
-                // สร้าง Tag แสดงระดับที่ต้องการ
-                levelTagHTML = `<div class="badge badge-outline badge-sm mt-2">สำหรับ: ${e.allowedLevels}</div>`;
-            }
-            
-            // สร้างปุ่มตามสิทธิ์ของผู้ใช้
-            const buttonHTML = isUserAllowed
-                ? `<a href="#event-detail?id=${e.id}" class="btn btn-neutral btn-sm">ดูรายละเอียด</a>`
-                : `<button class="btn btn-disabled btn-sm">ระดับไม่ถึง</button>`;
-
-            // ประกอบร่าง HTML ของรายการกิจกรรม
-            return `
-                <div class="bg-white rounded p-4 flex justify-between items-center shadow-sm">
-                    <div>
-                        <div class="font-semibold text-gray-800 text-sm">${e.title}</div>
-                        <div class="text-xs text-gray-500">${e.detail || 'ดูรายละเอียดกิจกรรม'}</div>
-                        ${levelTagHTML}
-                    </div>
-                    <div class="text-right">
-                        ${buttonHTML}
-                    </div>
-                </div>
-            `;
-        }).join('');
     }
 
-    async function initEventDetail() {
-      const params = new URLSearchParams(window.location.hash.split('?')[1]);
-      const eventId = params.get("id");
-      const cardSkeleton = document.getElementById('cardSkeleton'), card = document.getElementById('card'), titleEl = document.getElementById('eventDetailTitle'), descEl = document.getElementById('eventDetailDesc'), pointEl = document.getElementById('eventPoint'), joinBtn = document.getElementById('joinBtn');
-      cardSkeleton.classList.remove('hidden'); card.classList.add('hidden');
+    if (!events || events.length === 0) {
+        eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`;
+        return;
+    }
 
-      let eventData = dataCache.eventDetails[eventId];
-      if (!eventData) {
-        try { const res = await fetch(`${CONFIG.GAS_URL}?action=getEventById&id=${eventId}`); eventData = await res.json(); if (!eventData.error) dataCache.eventDetails[eventId] = eventData; }
-        catch (e) { console.error("Error fetching event detail:", e); eventData = { error: "ไม่สามารถโหลดรายละเอียดได้" }; }
-      }
+    eventListEl.innerHTML = events.map(e => {
+        let isUserAllowed = false;
+        let levelTagHTML = '';
+        
+        // **[แก้ไข]** ตรวจสอบว่าเป็น String และมีข้อมูลหรือไม่
+        const hasLevelRestriction = typeof e.allowedLevels === 'string' && e.allowedLevels.trim() !== '';
 
-      const history = await getFreshOrCachedHistory();
-      if (eventData.error) { 
+        if (hasLevelRestriction) {
+            const allowed = e.allowedLevels.split(',').map(level => level.trim().toUpperCase());
+            if (allowed.includes(userState.level.toUpperCase())) {
+                isUserAllowed = true;
+            }
+            levelTagHTML = `<div class="badge badge-outline badge-sm mt-2">สำหรับ: ${e.allowedLevels}</div>`;
+        } else {
+            // ไม่มีข้อจำกัดเรื่องระดับ หรือข้อมูลระดับไม่ถูกต้อง
+            isUserAllowed = true;
+        }
+        
+        const buttonHTML = isUserAllowed
+            ? `<a href="#event-detail?id=${e.id}" class="btn btn-neutral btn-sm">ดูรายละเอียด</a>`
+            : `<button class="btn btn-disabled btn-sm">ระดับไม่ถึง</button>`;
+
+        return `
+            <div class="bg-white rounded p-4 flex justify-between items-center shadow-sm">
+                <div>
+                    <div class="font-semibold text-gray-800 text-sm">${e.title}</div>
+                    <div class="text-xs text-gray-500">${e.detail || 'ดูรายละเอียดกิจกรรม'}</div>
+                    ${levelTagHTML}
+                </div>
+                <div class="text-right">
+                    ${buttonHTML}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+    // โค้ดที่แก้ไขแล้วสำหรับ initEventDetail()
+async function initEventDetail() {
+    const params = new URLSearchParams(window.location.hash.split('?')[1]);
+    const eventId = params.get("id");
+    const cardSkeleton = document.getElementById('cardSkeleton'), card = document.getElementById('card'), titleEl = document.getElementById('eventDetailTitle'), descEl = document.getElementById('eventDetailDesc'), pointEl = document.getElementById('eventPoint'), joinBtn = document.getElementById('joinBtn');
+    cardSkeleton.classList.remove('hidden'); card.classList.add('hidden');
+
+    let eventData = dataCache.eventDetails[eventId];
+    if (!eventData) {
+        try { 
+            const res = await fetch(`${CONFIG.GAS_URL}?action=getEventById&id=${eventId}`); 
+            eventData = await res.json(); 
+            if (!eventData.error) dataCache.eventDetails[eventId] = eventData; 
+        }
+        catch (e) { 
+            console.error("Error fetching event detail:", e); 
+            eventData = { error: "ไม่สามารถโหลดรายละเอียดได้" }; 
+        }
+    }
+
+    const history = await getFreshOrCachedHistory();
+    if (eventData.error) { 
         titleEl.textContent = "ไม่พบกิจกรรม"; 
         descEl.textContent = eventData.error; 
         joinBtn.disabled = true; 
-      } else {
+    } else {
         titleEl.textContent = eventData.title; 
         pointEl.textContent = `${eventData.point}+`; 
         descEl.textContent = eventData.desc;
         
         const hasJoined = history.some(item => item.type === 'event' && item.eventId === eventId);
         
+        // **[แก้ไข]** ตรวจสอบระดับผู้ใช้ให้ปลอดภัย
         let isLevelAllowed = false;
-        if (!eventData.allowedLevels || eventData.allowedLevels.trim() === '') {
-            isLevelAllowed = true;
-        } else {
+        const hasLevelRestriction = typeof eventData.allowedLevels === 'string' && eventData.allowedLevels.trim() !== '';
+
+        if (hasLevelRestriction) {
             const allowed = eventData.allowedLevels.split(',').map(level => level.trim().toUpperCase());
             if (allowed.includes(userState.level.toUpperCase())) {
                 isLevelAllowed = true;
             }
+        } else {
+            isLevelAllowed = true; // ไม่มีข้อจำกัด
         }
 
         if (hasJoined) { 
@@ -519,6 +528,7 @@
             joinBtn.textContent = `สำหรับระดับ ${eventData.allowedLevels}`; 
             joinBtn.disabled = true; 
         } else {
+            // ส่วนของ joinBtn.onclick เหมือนเดิม ไม่ต้องแก้ไข
             joinBtn.onclick = async () => {
                 if (!(await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`))) return;
                 
@@ -556,9 +566,9 @@
                 }
             };
         }
-      }
-      cardSkeleton.classList.add("hidden"); card.classList.remove("hidden");
     }
+    cardSkeleton.classList.add("hidden"); card.classList.remove("hidden");
+}
 
     async function initProfile() {
       const dpEl = document.getElementById('profileDisplayPicture'), dnEl = document.getElementById('profileDisplayName'), lineIdEl = document.getElementById('profileLineId'), levelBadgeEl = document.getElementById('profileLevelBadge'), tagBadgeEl = document.getElementById('profileCustomTagBadge'), progressEl = document.getElementById('profileProgressBar'), progressTextEl = document.getElementById('profilePointsToNextLevel'), totalPointsEl = document.getElementById('profileTotalPoints'), nameEl = document.getElementById('profileName'), phoneEl = document.getElementById('profilePhone'), emailEl = document.getElementById('profileEmail'), addressEl = document.getElementById('profileAddress'), noteEl = document.getElementById('profileNote'), editBtn = document.getElementById('editProfileBtn'), formContainer = document.getElementById('profileFormContainer'), editButtonsDiv = document.getElementById('profileEditButtons'), saveBtn = document.getElementById('saveProfileBtn'), cancelBtn = document.getElementById('cancelEditBtn');
