@@ -2,272 +2,196 @@
 <html lang="th" data-theme="light">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Scanner - ยืนยันการแลกของรางวัล</title>
-    <!-- 1. เรียกใช้ config-scan.js -->
-    <script src="config-admin.js"></script>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRM - POS & Scan</title>
+  
+  <script src="config-admin.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      daisyui: {
+        themes: [{
+          light: {
+            ...require("daisyui/src/theming/themes")["light"],
+            "primary": "#191919", "primary-focus": "#3d3d3d", "secondary": "#f000b8", "accent": "#37cdbe",
+            "--rounded-box": "1rem", "--rounded-btn": "0.8rem",
+          },
+        }],
+      },
+    }
+  </script>
 
-    <!-- DaisyUI & TailwindCSS -->
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- QR Code Scanner Library -->
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-    <style>
-        body {
-            background-color: #f0f2f5;
-        }
-
-        .qr-reader-container {
-            max-width: 500px;
-            margin: auto;
-        }
-
-        #qr-reader {
-            border: 2px dashed #9ca3af;
-            border-radius: 0.5rem;
-            background-color: #e5e7eb;
-        }
-        #qr-shaded-region{
-            border-width:0 !important ;
-        }
-
-        .scan-success {
-            color: #16a34a;
-        }
-
-        .scan-warning {
-            color: #f59e0b;
-        }
-
-        .scan-error {
-            color: #dc2626;
-        }
-    </style>
+  <style>
+    body { background-color: #f9fafb; font-family: 'Inter', 'Kanit', sans-serif; }
+    #qr-shaded-region{ border-width:0 !important ; } .hidden { display: none !important; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loading-spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: #191919; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    .page-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 2rem; color: #6b7280; }
+    /* Style for DaisyUI lifted tabs content */
+    [role="tabpanel"] { display: none; }
+    input[type="radio"]:checked + [role="tabpanel"] { display: block; }
+  </style>
 </head>
 
-<body class="p-4 md:p-8">
+<body>
+  <!-- Login Overlay -->
+  <div id="login-overlay" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-50"><div class="card w-96 bg-base-100 shadow-xl border border-gray-200"><div class="card-body"><h2 class="card-title justify-center text-2xl font-bold">Admin Login</h2><div id="login-error" class="text-error text-center text-sm hidden"></div><div class="form-control"><label class="label"><span class="label-text">Username</span></label><input type="text" id="username" placeholder="username" class="input input-bordered rounded-lg" /></div><div class="form-control"><label class="label"><span class="label-text">Password</span></label><input type="password" id="password" placeholder="password" class="input input-bordered rounded-lg" /></div><div class="card-actions justify-end mt-4"><button id="loginBtn" class="btn btn-primary w-full rounded-lg">Login</button></div></div></div></div>
 
-    <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <header class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">จุดสแกนรับของรางวัล</h1>
-            <p class="text-gray-600">สำหรับพนักงาน: กรุณาสแกน QR Code ของลูกค้าเพื่อยืนยัน</p>
-        </header>
-
-        <!-- Scanner Section -->
-        <section class="card bg-base-100 shadow-xl mb-8 qr-reader-container">
-            <div class="card-body items-center text-center">
-                <div id="qr-reader" class="w-full h-64 overflow-hidden"></div>
-                <div class="card-actions w-full mt-4">
-                    <button id="startScanBtn" class="btn btn-primary w-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#ffffff"
-                            fill="none">
-                            <path
-                                d="M2.5 8.18677C2.60406 6.08705 2.91537 4.77792 3.84664 3.84664C4.77792 2.91537 6.08705 2.60406 8.18677 2.5M21.5 8.18677C21.3959 6.08705 21.0846 4.77792 20.1534 3.84664C19.2221 2.91537 17.9129 2.60406 15.8132 2.5M15.8132 21.5C17.9129 21.3959 19.2221 21.0846 20.1534 20.1534C21.0846 19.2221 21.3959 17.9129 21.5 15.8132M8.18676 21.5C6.08705 21.3959 4.77792 21.0846 3.84664 20.1534C2.91537 19.2221 2.60406 17.9129 2.5 15.8132"
-                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                stroke-linejoin="round" />
-                            <path d="M2.49986 12H21.4999" stroke="currentColor" stroke-width="1.5"
-                                stroke-linecap="round" />
-                            <path
-                                d="M6 12C6 8.68629 8.68629 6 12 6C12 7.65685 13.3431 9 15 9C15.6755 9 16.2989 8.77672 16.8004 8.39993C17.5536 9.40273 18 10.6492 18 12M17.1973 15C16.1599 16.7934 14.2208 18 12 18C9.77915 18 7.84012 16.7934 6.80269 15"
-                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                stroke-linejoin="round" />
-                        </svg> เริ่มสแกน
-                    </button>
-                    <button id="stopScanBtn" class="btn btn-ghost w-full hidden">หยุดสแกน</button>
-                </div>
-                <div id="scan-result" class="mt-4 text-lg font-semibold h-16"></div>
-            </div>
-        </section>
-
-        <!-- History Section -->
-        <section>
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-gray-700">ประวัติการสแกนล่าสุด</h2>
-                <button id="refreshHistoryBtn" class="btn btn-sm btn-ghost">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" color="#000000" fill="none">
-    <path d="M20.0092 2V5.13219C20.0092 5.42605 19.6418 5.55908 19.4537 5.33333C17.6226 3.2875 14.9617 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-</svg> รีเฟรช
-                </button>
-            </div>
-            <div class="overflow-x-auto bg-base-100 rounded-lg shadow-md">
-                <table class="table w-full">
-                    <thead>
-                        <tr>
-                            <th>ของรางวัล</th>
-                            <th>ผู้รับ (Line ID)</th>
-                            <th>สถานะ</th>
-                            <th>วันที่แลก</th>
-                            <th>วันที่ยืนยัน</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTableBody">
-                        <tr>
-                            <td colspan="5" class="text-center p-4">กำลังโหลดประวัติ...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
-
-    <!-- Alert Dialog -->
-    <dialog id="alert-dialog" class="modal">
-        <div class="modal-box text-center">
-            <h3 id="alert-title" class="font-bold text-lg"></h3>
-            <p id="alert-message" class="py-4"></p>
-            <div class="modal-action">
-                <form method="dialog"><button class="btn btn-primary w-full">ตกลง</button></form>
-            </div>
+  <!-- Main App Content -->
+  <div id="main-app" class="flex flex-col h-screen hidden">
+      <header class="navbar bg-base-100 shadow-sm p-4 sticky top-0 z-30 border-b border-gray-200">
+        <div class="flex-1 px-2 mx-2"><h1 class="text-xl font-bold" id="pageTitle">POS & Scan</h1></div>
+        <div class="flex-none"><button id="logoutBtn" class="btn btn-sm btn-ghost rounded-lg">Logout</button></div>
+      </header>
+      <main class="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-50 overflow-y-auto">
+        <div id="app-container" class="transition-opacity duration-300">
+            <div class="page-loader"><div class="loading-spinner"></div><p>กำลังโหลด...</p></div>
         </div>
-    </dialog>
+      </main>
+  </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- DOM Elements ---
-            const readerElement = document.getElementById('qr-reader');
-            const startBtn = document.getElementById('startScanBtn');
-            const stopBtn = document.getElementById('stopScanBtn');
-            const resultElement = document.getElementById('scan-result');
-            const historyTableBody = document.getElementById('historyTableBody');
-            const refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
+  <!-- MODALS -->
+  <dialog id="customAlertDialog" class="modal"><div class="modal-box rounded-2xl"><h3 id="customAlertTitle" class="font-bold text-lg mb-3 text-center"></h3><p id="customAlertMessage" class="py-4 whitespace-pre-line text-center"></p><div class="modal-action justify-center"><form method="dialog"><button class="btn btn-primary w-full rounded-lg">ตกลง</button></form></div></div></dialog>
+  <dialog id="customConfirmDialog" class="modal"><div class="modal-box rounded-2xl"><h3 id="customConfirmTitle" class="font-bold text-lg mb-3 text-center"></h3><p id="customConfirmMessage" class="py-4 whitespace-pre-line text-center"></p><div class="modal-action justify-around"><button id="customConfirmCancelButton" class="btn btn-outline rounded-lg">ยกเลิก</button><button id="customConfirmConfirmButton" class="btn btn-primary rounded-lg">ยืนยัน</button></div></div></dialog>
+  
+  <!-- ONLY REQUIRED TEMPLATE -->
+  <template id="view-pos-scan">
+    <div role="tablist" class="tabs tabs-lifted">
+      <!-- Tab 1: Add Points (POS) -->
+      <input type="radio" name="main_tabs" role="tab" class="tab" aria-label="ให้แต้ม (POS)" value="pos" checked />
+      <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-b-box p-6">
+          <div class="card bg-base-100 max-w-2xl mx-auto">
+              <div class="card-body p-0">
+                  <form id="addPointsForm" onsubmit="event.preventDefault()" class="space-y-4">
+                      <div class="form-control"><label class="label"><span class="label-text font-semibold text-lg">1. ระบุลูกค้า</span></label><input type="text" id="addPointsIdentifier" placeholder="กรอก Line ID, เบอร์โทร หรือสแกน QR ลูกค้า" class="input input-bordered w-full input-lg rounded-lg" required /></div>
+                      <div class="form-control mt-6"><label class="label"><span class="label-text font-semibold text-lg">2. เลือกวิธีให้แต้ม</span></label><div role="tablist" class="tabs tabs-boxed rounded-lg"><a role="tab" class="tab tab-active" data-mode="product">จากรายการสินค้า</a><a role="tab" class="tab" data-mode="manual">กรอกแต้มเอง</a></div></div>
+                      <div id="productModeSection" class="space-y-4">
+                          <div class="divider">รายการสินค้าในบิล</div>
+                          <div id="billItemsContainer" class="space-y-2 max-h-60 overflow-y-auto pr-2"><p class="text-center text-gray-400">ยังไม่มีรายการ</p></div>
+                          <div class="divider"></div>
+                          <div class="flex items-end gap-2 p-2 bg-base-200 rounded-lg">
+                              <div class="flex-grow"><label class="label-text">เลือกสินค้า</label><select id="productList" class="select select-bordered w-full rounded-lg"><option disabled selected>กำลังโหลด...</option></select></div>
+                              <div><label class="label-text">จำนวน</label><input type="number" id="productQuantity" value="1" min="1" class="input input-bordered w-20 rounded-lg" /></div>
+                              <button type="button" id="addItemToBillBtn" class="btn btn-secondary rounded-lg">เพิ่ม</button>
+                          </div>
+                          <div class="text-right text-xl font-bold">แต้มที่จะได้รับรวม: <span id="totalPointsDisplay" class="text-primary">0</span> แต้ม</div>
+                      </div>
+                      <div id="manualModeSection" class="space-y-4 hidden">
+                          <div class="form-control"><label class="label"><span class="label-text">จำนวนแต้ม</span></label><input type="number" id="addPointsAmount" placeholder="เช่น 50" class="input input-bordered w-full rounded-lg" min="1" /></div>
+                          <div class="form-control"><label class="label"><span class="label-text">เหตุผล</span></label><input type="text" id="addPointsReason" placeholder="เช่น ของขวัญพิเศษ" class="input input-bordered w-full rounded-lg" /></div>
+                      </div>
+                      <div class="mt-8"><button type="submit" id="addPointsSubmitBtn" class="btn btn-primary w-full btn-lg rounded-lg">ยืนยันและให้แต้ม</button></div>
+                  </form>
+              </div>
+          </div>
+      </div>
 
-            let html5QrCode = null;
-            let lastScanTime = 0;
-            const SCAN_COOLDOWN = 3000; // 3 seconds cooldown to prevent multiple scans
+      <!-- Tab 2: Scan Claim -->
+      <input type="radio" name="main_tabs" role="tab" class="tab" aria-label="สแกนรับของ" value="scan" />
+      <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-b-box p-6">
+          <div class="card bg-base-100 shadow-lg max-w-lg mx-auto rounded-2xl border border-gray-200">
+              <div class="card-body items-center text-center">
+                  <h3 class="card-title mb-4">สแกน QR Code เพื่อยืนยันการรับของ</h3>
+                  <div id="qr-reader" class="w-full h-64 bg-gray-100 rounded-lg mb-4 border-2 border-dashed border-gray-300 overflow-hidden"></div>
+                  <div class="card-actions w-full">
+                      <button id="startScanBtn" class="btn btn-primary w-full rounded-lg">เริ่มสแกน</button>
+                      <button id="stopScanBtn" class="btn btn-ghost w-full rounded-lg hidden">หยุดสแกน</button>
+                  </div>
+                  <div id="scan-result" class="mt-4 text-lg font-semibold"></div>
+              </div>
+          </div>
+      </div>
+    </div>
+  </template>
+  
+<script>
+    // ==========================================================
+    // ===                 GLOBAL VARIABLES                   ===
+    // ==========================================================
+    const mainApp = document.getElementById('main-app'), appContainer = document.getElementById('app-container'), pageTitle = document.getElementById('pageTitle');
+    
+    // ==========================================================
+    // ===                 HELPER FUNCTIONS                   ===
+    // ==========================================================
+    function showAlert(title, message, cb) { const dialog = document.getElementById('customAlertDialog'); document.getElementById('customAlertTitle').textContent = title; document.getElementById('customAlertMessage').textContent = message; dialog.showModal(); const closeHandler = () => { dialog.removeEventListener('close', closeHandler); if (cb) cb(); }; dialog.addEventListener('close', closeHandler, { once: true }); }
+    function showConfirm(title, message) { return new Promise(res => { const dialog = document.getElementById('customConfirmDialog'); document.getElementById('customConfirmTitle').textContent = title; document.getElementById('customConfirmMessage').textContent = message; dialog.showModal(); const ok = document.getElementById('customConfirmConfirmButton'), no = document.getElementById('customConfirmCancelButton'); const onOk = () => { cleanup(); res(true); }, onNo = () => { cleanup(); res(false); }; function cleanup() { dialog.close(); ok.removeEventListener('click', onOk); no.removeEventListener('click', onNo); } ok.addEventListener('click', onOk, { once: true }); no.addEventListener('click', onNo, { once: true }); }); }
+    async function fetchData(action, params = {}) { const url = new URL(CONFIG.GAS_URL_ADMIN); url.searchParams.append('action', action); for (const k in params) { if (params[k]) url.searchParams.append(k, params[k]); } try { const r = await fetch(url); if (!r.ok) throw new Error(`Server responded with status: ${r.status}`); const data = await r.json(); if(data.error) throw new Error(data.error); return data; } catch (e) { showAlert('Error', `Fetch failed: ${e.message}`); throw e; } }
+    async function postData(action, data) { try { const r = await fetch(CONFIG.GAS_URL_ADMIN, { method: 'POST', body: JSON.stringify({ action, ...data }) }); if (!r.ok) throw new Error(`Server responded with status: ${r.status}`); const responseText = await r.text(); try { const jsonData = JSON.parse(responseText); if(jsonData.success === false) throw new Error(jsonData.error || 'Unknown error from server'); return jsonData.message || responseText; } catch (jsonError) { return responseText; } } catch (e) { showAlert('Error', `Request failed: ${e.message}`); throw e; } }
 
-            // --- Helper Functions ---
-            const showAlert = (title, message) => {
-                document.getElementById('alert-title').textContent = title;
-                document.getElementById('alert-message').textContent = message;
-                document.getElementById('alert-dialog').showModal();
-            };
+    // ==========================================================
+    // ===               ROUTER & AUTHENTICATION              ===
+    // ==========================================================
+    const routes = {
+        '': { tpl: 'view-pos-scan', init: initPosScan, title: "POS & Scan" },
+        '#pos-scan': { tpl: 'view-pos-scan', init: initPosScan, title: "POS & Scan" },
+        // All other routes point to the same page for simplicity
+        '#dashboard': { tpl: 'view-pos-scan', init: initPosScan, title: "POS & Scan" },
+        '#users': { tpl: 'view-pos-scan', init: initPosScan, title: "POS & Scan" },
+    };
+    async function router() {
+        if (!sessionStorage.getItem('isLoggedIn')) return;
+        const route = routes['']; // Always load the same route
+        pageTitle.textContent = route.title; 
+        appContainer.classList.add('opacity-50'); 
+        appContainer.innerHTML = `<div class="page-loader"><div class="loading-spinner"></div><p>กำลังโหลด...</p></div>`;
+        
+        const template = document.getElementById(route.tpl);
+        if (template) { appContainer.innerHTML = ''; appContainer.appendChild(template.content.cloneNode(true)); try { await route.init(); } catch (e) { appContainer.innerHTML = `<p class="text-error text-center">Error loading page: ${e.message}</p>`; }
+        } else { appContainer.innerHTML = `<p class="text-error text-center">Page not found</p>`; }
+        appContainer.classList.remove('opacity-50');
+    }
+    function handleLogin() {
+        const loginOverlay = document.getElementById('login-overlay'), loginBtn = document.getElementById('loginBtn'), userInput = document.getElementById('username'), passInput = document.getElementById('password'), loginError = document.getElementById('login-error');
+        async function attemptLogin() { loginBtn.classList.add('loading'); loginError.classList.add('hidden'); try { const res = await fetch(CONFIG.GAS_URL_ADMIN, { method: 'POST', body: JSON.stringify({ action: 'login', username: userInput.value, password: passInput.value }) }); const data = await res.json(); if (data.success) { sessionStorage.setItem('isLoggedIn', 'true'); loginOverlay.classList.add('hidden'); mainApp.classList.remove('hidden'); await router(); } else { loginError.textContent = data.message || "Invalid credentials"; loginError.classList.remove('hidden'); } } catch (e) { loginError.textContent = 'Login request failed.'; loginError.classList.remove('hidden'); } finally { loginBtn.classList.remove('loading'); } }
+        loginBtn.onclick = attemptLogin; passInput.addEventListener('keypress', (e) => e.key === 'Enter' && attemptLogin());
+        document.getElementById('logoutBtn').onclick = () => { sessionStorage.removeItem('isLoggedIn'); location.reload(); };
+        if (sessionStorage.getItem('isLoggedIn')) { loginOverlay.classList.add('hidden'); mainApp.classList.remove('hidden'); router(); }
+    }
 
-            const postData = async (action, data) => {
-                try {
-                    // 2. ใช้ CONFIG.GAS_URL_ADMIN ที่มาจาก config-scan.js
-                    const r = await fetch(CONFIG.GAS_URL_ADMIN, {
-                        method: 'POST',
-                        body: JSON.stringify({ action, ...data })
-                    });
-                    if (!r.ok) throw new Error(`Server error (${r.status}): ${await r.text()}`);
-                    return await r.text();
-                } catch (e) {
-                    showAlert('API Error', `Post request failed: ${e.message}`);
-                    throw e;
-                }
-            };
+    // ==========================================================
+    // ===                 PAGE INITIALIZERS                  ===
+    // ==========================================================
+    
+    async function initPosScan() {
+        let html5QrCode = null;
+        let isScannerActive = false;
 
-            const fetchData = async (action, params = {}) => {
-                // 3. ใช้ CONFIG.GAS_URL_ADMIN ที่มาจาก config-scan.js
-                const url = new URL(CONFIG.GAS_URL_ADMIN);
-                url.searchParams.append('action', action);
-                for (const k in params) if (params[k]) url.searchParams.append(k, params[k]);
-                try {
-                    const r = await fetch(url);
-                    if (!r.ok) throw new Error(`Server error (${r.status}): ${await r.text()}`);
-                    return await r.json();
-                } catch (e) {
-                    showAlert('API Error', `Fetch request failed: ${e.message}`);
-                    throw e;
-                }
-            };
+        // --- PART 1: Scan Claim Logic ---
+        const startScanBtn = document.getElementById('startScanBtn'), stopScanBtn = document.getElementById('stopScanBtn'), scanResultEl = document.getElementById('scan-result');
+        const onScanSuccess = async (decodedText) => { await stopScanning(); scanResultEl.innerHTML = `<span class="loading loading-dots loading-md"></span>`; try { const responseText = await postData('claimItemByUniqueId', { uniqueId: decodedText }); showAlert('ผลการยืนยัน', responseText); scanResultEl.innerHTML = responseText.includes('สำเร็จ') ? `✅ ${responseText}` : `⚠️ ${responseText}`; } catch (error) { scanResultEl.innerHTML = `❌ ${error.message}`; } };
+        const startScanning = () => { if (!html5QrCode) { html5QrCode = new Html5Qrcode("qr-reader"); } if (isScannerActive) return; isScannerActive = true; html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {}).then(() => { startScanBtn.classList.add('hidden'); stopScanBtn.classList.remove('hidden'); scanResultEl.textContent = 'กรุณาหันกล้องไปที่ QR Code'; }).catch(err => { showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องได้"); isScannerActive = false; }); };
+        const stopScanning = async () => { if (html5QrCode && html5QrCode.isScanning) { try { await html5QrCode.stop(); } catch (err) { console.error("Failed to stop scanning.", err); } } isScannerActive = false; startScanBtn.classList.remove('hidden'); stopScanBtn.classList.add('hidden'); };
+        startScanBtn.onclick = startScanning; stopScanBtn.onclick = stopScanning;
 
-            // --- Core Functions ---
-            const loadHistory = async () => {
-                historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4"><span class="loading loading-dots loading-md"></span></td></tr>`;
-                try {
-                    // ดึงเฉพาะรายการที่ยืนยันแล้ว และแสดงแค่ 10 รายการล่าสุด
-                    const items = await fetchData('getWarehouseItems', { status: 'claimed' });
-                    if (!items || items.length === 0) {
-                        historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">ยังไม่มีประวัติการยืนยัน</td></tr>`;
-                        return;
-                    }
-                    historyTableBody.innerHTML = items.slice(0, 10).map(item => `
-                    <tr>
-                        <td><strong>${item.itemName}</strong></td>
-                        <td class="font-mono text-xs">${item.lineId}</td>
-                        <td><span class="badge badge-success">${item.status}</span></td>
-                        <td>${item.redeemDate}</td>
-                        <td>${item.claimDate}</td>
-                    </tr>
-                `).join('');
-                } catch (error) {
-                    historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-error">ไม่สามารถโหลดประวัติได้</td></tr>`;
-                }
-            };
+        // --- PART 2: Add Points (POS) Logic ---
+        const addPointsForm = document.getElementById('addPointsForm'), addPointsSubmitBtn = document.getElementById('addPointsSubmitBtn'), productModeSection = document.getElementById('productModeSection'), manualModeSection = document.getElementById('manualModeSection'), productListSelect = document.getElementById('productList'), quantityInput = document.getElementById('productQuantity'), addItemBtn = document.getElementById('addItemToBillBtn'), billContainer = document.getElementById('billItemsContainer'), totalPointsDisplay = document.getElementById('totalPointsDisplay'), posModeTabs = addPointsForm.querySelectorAll('.tabs .tab');
+        let allProducts = [], billItems = [], currentPosMode = 'product';
+        try { allProducts = await fetchData('getProducts'); updateProductDropdown(); } catch (e) { productListSelect.innerHTML = `<option disabled selected>โหลดสินค้าล้มเหลว</option>`; }
+        function updateProductDropdown() { const productIdsInBill = billItems.map(item => item.id); const availableProducts = allProducts.filter(p => !productIdsInBill.includes(p.id)); productListSelect.innerHTML = ''; if (availableProducts.length > 0) { availableProducts.forEach(p => { const option = document.createElement('option'); option.value = p.id; option.textContent = `${p.name} (${p.points} แต้ม)`; productListSelect.appendChild(option); }); } else { productListSelect.innerHTML = '<option disabled selected>เพิ่มสินค้าครบแล้ว</option>'; } }
+        function renderBill() { billContainer.innerHTML = ''; let totalPoints = 0; if (billItems.length === 0) { billContainer.innerHTML = '<p class="text-center text-gray-400">ยังไม่มีรายการ</p>'; totalPointsDisplay.textContent = '0'; return; } billItems.forEach(item => { const itemPoints = item.points * item.quantity; totalPoints += itemPoints; const itemDiv = document.createElement('div'); itemDiv.className = 'flex items-center justify-between p-2 bg-base-200 rounded-lg'; itemDiv.innerHTML = `<div><span class="font-semibold">${item.name}</span> <span class="text-sm text-gray-500">x ${item.quantity}</span></div><div><span class="font-bold text-secondary">${itemPoints} แต้ม</span><button type="button" class="btn btn-xs btn-ghost btn-circle remove-item-btn" data-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div>`; billContainer.appendChild(itemDiv); }); totalPointsDisplay.textContent = totalPoints.toLocaleString(); document.querySelectorAll('.remove-item-btn').forEach(btn => { btn.onclick = (e) => { billItems = billItems.filter(item => item.id !== e.currentTarget.dataset.id); renderBill(); updateProductDropdown(); }; }); }
+        posModeTabs.forEach(tab => { tab.onclick = () => { currentPosMode = tab.dataset.mode; posModeTabs.forEach(t => t.classList.remove('tab-active')); tab.classList.add('tab-active'); productModeSection.classList.toggle('hidden', currentPosMode !== 'product'); manualModeSection.classList.toggle('hidden', currentPosMode !== 'manual'); }; });
+        addItemBtn.onclick = () => { const selectedId = productListSelect.value; if (!selectedId) return; const product = allProducts.find(p => p.id === selectedId); const quantity = parseInt(quantityInput.value, 10); if (product && quantity > 0) { billItems.push({ ...product, quantity }); renderBill(); updateProductDropdown(); quantityInput.value = 1; } };
+        addPointsForm.onsubmit = async (e) => { e.preventDefault(); const identifier = document.getElementById('addPointsIdentifier').value.trim(); if (!identifier) return showAlert('ข้อมูลไม่ครบ', 'กรุณาระบุลูกค้า'); let payload = { identifier }, confirmMessage = ''; if (currentPosMode === 'product') { if (billItems.length === 0) return showAlert('ข้อมูลไม่ครบ', 'กรุณาเพิ่มสินค้าลงในบิล'); payload.itemsPurchased = billItems.map(item => ({ productId: item.id, quantity: item.quantity })); const totalPoints = billItems.reduce((sum, item) => sum + (item.points * item.quantity), 0); const itemSummary = billItems.map(item => `${item.name} x${item.quantity}`).join(',\n'); confirmMessage = `ยืนยันให้ ${totalPoints} แต้ม\nจาก:\n${itemSummary}\n\nสำหรับผู้ใช้: "${identifier}"?`; } else { const points = document.getElementById('addPointsAmount').value; const reason = document.getElementById('addPointsReason').value.trim(); if (!points || parseInt(points) < 1 || !reason) return showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกแต้มและเหตุผล'); payload.points = parseInt(points, 10); payload.reason = reason; confirmMessage = `ยืนยันให้ ${payload.points} แต้ม\nเหตุผล: ${payload.reason}\n\nสำหรับผู้ใช้: "${identifier}"?`; } if (await showConfirm('ยืนยันการให้แต้ม', confirmMessage)) { addPointsSubmitBtn.classList.add('loading'); addPointsSubmitBtn.disabled = true; try { const message = await postData('addPointsToUser', payload); showAlert('สำเร็จ', message || 'เพิ่มแต้มเรียบร้อยแล้ว'); addPointsForm.reset(); billItems = []; renderBill(); updateProductDropdown(); } catch(e) {} finally { addPointsSubmitBtn.classList.remove('loading'); addPointsSubmitBtn.disabled = false; } } };
+        renderBill();
 
-            const onScanSuccess = async (decodedText, decodedResult) => {
-                const now = Date.now();
-                if (now - lastScanTime < SCAN_COOLDOWN) return;
-                lastScanTime = now;
-
-                await stopScanning();
-
-                resultElement.innerHTML = `<span class="loading loading-spinner loading-sm"></span> กำลังตรวจสอบ...`;
-                resultElement.className = 'mt-4 text-lg font-semibold h-8';
-
-                try {
-                    const responseText = await postData('claimItemByUniqueId', { uniqueId: decodedText });
-
-                    showAlert('ผลการยืนยัน', responseText);
-
-                    if (responseText.includes('สำเร็จ')) {
-                        resultElement.innerHTML = `✅ ยืนยันสำเร็จ`;
-                        resultElement.className = 'mt-4 text-lg font-semibold h-8 scan-success';
-                        await loadHistory();
-                    } else {
-                        resultElement.innerHTML = `⚠️ ${responseText.includes('แล้ว') ? 'ใช้ไปแล้ว' : 'ไม่สำเร็จ'}`;
-                        resultElement.className = `mt-4 text-lg font-semibold h-8 ${responseText.includes('แล้ว') ? 'scan-warning' : 'scan-error'}`;
-                    }
-                } catch (error) {
-                    resultElement.innerHTML = `❌ เกิดข้อผิดพลาด`;
-                    resultElement.className = 'mt-4 text-lg font-semibold h-8 scan-error';
-                }
-            };
-
-            const startScanning = () => {
-                if (!html5QrCode) {
-                    html5QrCode = new Html5Qrcode("qr-reader");
-                }
-
-                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-                html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, (error) => { })
-                    .then(() => {
-                        startBtn.classList.add('hidden');
-                        stopBtn.classList.remove('hidden');
-                        resultElement.textContent = 'กรุณาหันกล้องไปที่ QR Code';
-                        resultElement.className = 'mt-4 text-lg font-semibold h-8 text-gray-500';
-                    })
-                    .catch(err => {
-                        showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบการอนุญาตให้ใช้กล้องใน Browser");
-                    });
-            };
-
-            const stopScanning = async () => {
-                if (html5QrCode && html5QrCode.isScanning) {
-                    try {
-                        await html5QrCode.stop();
-                        startBtn.classList.remove('hidden');
-                        stopBtn.classList.add('hidden');
-                    } catch (err) { console.error("Failed to stop scanning.", err); }
-                }
-            };
-
-            // --- Event Listeners ---
-            startBtn.onclick = startScanning;
-            stopBtn.onclick = stopScanning;
-            refreshHistoryBtn.onclick = loadHistory;
-
-            // --- Initial Load ---
-            loadHistory();
-        });
-    </script>
+        // --- PART 3: Tab Switching Logic ---
+        document.querySelectorAll('input[name="main_tabs"]').forEach(tabInput => { tabInput.addEventListener('change', () => { if (tabInput.value !== 'scan') { stopScanning(); } }); });
+        window.addEventListener('hashchange', stopScanning, { once: true });
+    }
+    
+    // --- App Start ---
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof CONFIG === 'undefined' || !CONFIG.GAS_URL_ADMIN) { const gasUrl = prompt("Please enter your Google Apps Script URL:"); if (gasUrl) { window.CONFIG = { GAS_URL_ADMIN: gasUrl }; } else { document.body.innerHTML = '<div class="p-8 text-center text-error">Configuration not found. Please create config-admin.js or enter the URL.</div>'; return; } }
+        handleLogin();
+        window.addEventListener('hashchange', router);
+    });
+</script>
 
 </body>
-
 </html>
