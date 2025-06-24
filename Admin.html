@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CRM Admin</title>
   
-  <!-- Load config before main script (If you have one) -->
+  <!-- Load config before main script -->
   <script src="config-admin.js"></script>
   
   <!-- DaisyUI CDN (includes Tailwind CSS) -->
@@ -18,9 +18,7 @@
   <script>
     tailwind.config = {
       theme: {
-        extend: {
-          // You can extend other properties here if needed
-        }
+        extend: {}
       },
       daisyui: {
         themes: [{
@@ -45,13 +43,9 @@
 
   <style>
     body { background-color: #f9fafb; font-family: 'Inter', 'Kanit', sans-serif; }
-    /* You can import Google Fonts in your actual project for better look */
-    /* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Kanit:wght@400;500;600&display=swap'); */
-    
     #qr-shaded-region{ border-width:0 !important ; }
     .hidden { display: none !important; }
     
-    /* [NEW] Modern Loading Spinner */
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loading-spinner {
       border: 4px solid rgba(0, 0, 0, 0.1);
@@ -87,7 +81,7 @@
       </div>
   </div>
 
-  <!-- Main App Content (hidden until logged in) -->
+  <!-- Main App Content -->
   <div id="main-app" class="drawer lg:drawer-open hidden">
     <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
     <div class="drawer-content flex flex-col bg-gray-50">
@@ -98,10 +92,7 @@
       </header>
       <main class="flex-grow p-4 sm:p-6 lg:p-8">
         <div id="app-container" class="transition-opacity duration-300">
-            <div class="page-loader">
-                <div class="loading-spinner"></div>
-                <p>กำลังโหลด...</p>
-            </div>
+            <div class="page-loader"><div class="loading-spinner"></div><p>กำลังโหลด...</p></div>
         </div>
       </main>
     </div>
@@ -198,8 +189,19 @@
   </template>
 
   <template id="view-warehouse">
-      <div class="flex flex-wrap gap-4 mb-6"><input type="text" id="warehouseSearchInput" placeholder="ค้นหา..." class="input input-bordered flex-grow rounded-lg" /><select id="warehouseStatusFilter" class="select select-bordered w-full md:w-auto rounded-lg"><option value="">-- ทุกสถานะ --</option><option value="pending_claim" selected>รอรับ/จัดส่ง</option><option value="claimed">รับแล้ว</option></select><button id="warehouseSearchBtn" class="btn btn-primary rounded-lg">ค้นหา</button></div>
-      <div class="bg-base-100 rounded-2xl shadow-lg border border-gray-200 overflow-hidden"><div class="table-responsive"><table class="table w-full"><thead class="bg-gray-50"><tr><th>ID</th><th>ของรางวัล</th><th>ผู้ใช้</th><th>ข้อมูลจัดส่ง</th><th>วันที่แลก</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="warehouseTableBody"></tbody></table></div></div>
+      <div class="flex flex-wrap gap-4 mb-6">
+          <input type="text" id="warehouseSearchInput" placeholder="ค้นหา..." class="input input-bordered flex-grow rounded-lg" />
+          <select id="warehouseStatusFilter" class="select select-bordered w-full md:w-auto rounded-lg">
+              <option value="">-- ทุกสถานะ --</option>
+              <option value="pending_claim" selected>รอรับ/จัดส่ง</option>
+              <option value="shipped">จัดส่งแล้ว</option>
+              <option value="claimed">รับแล้ว</option>
+          </select>
+          <button id="warehouseSearchBtn" class="btn btn-primary rounded-lg">ค้นหา</button>
+      </div>
+      <div class="bg-base-100 rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+          <div class="table-responsive"><table class="table w-full"><thead class="bg-gray-50"><tr><th>ID</th><th>ของรางวัล</th><th>ผู้ใช้</th><th>ข้อมูลจัดส่ง</th><th>วันที่แลก</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="warehouseTableBody"></tbody></table></div>
+      </div>
   </template>
   
   <template id="view-scan-claim">
@@ -239,69 +241,18 @@
     // ==========================================================
     // ===                 GLOBAL VARIABLES                   ===
     // ==========================================================
-    const mainApp = document.getElementById('main-app');
-    const appContainer = document.getElementById('app-container');
-    const drawerToggle = document.getElementById('my-drawer-2');
-    const pageTitle = document.getElementById('pageTitle');
-
-    const dataFormModal = document.getElementById('dataFormModal');
-    const dataFormModalTitle = document.getElementById('dataFormModalTitle');
-    const formFieldsContainer = document.getElementById('formFields');
-    const formSaveBtn = document.getElementById('formSaveBtn');
-    const formCancelBtn = document.getElementById('formCancelBtn');
-
+    const mainApp = document.getElementById('main-app'), appContainer = document.getElementById('app-container'), drawerToggle = document.getElementById('my-drawer-2'), pageTitle = document.getElementById('pageTitle');
+    const dataFormModal = document.getElementById('dataFormModal'), dataFormModalTitle = document.getElementById('dataFormModalTitle'), formFieldsContainer = document.getElementById('formFields'), formSaveBtn = document.getElementById('formSaveBtn'), formCancelBtn = document.getElementById('formCancelBtn');
     const USER_LEVELS = ['MEMBER', 'VIP', 'SUPER'];
     let levelConfig = { VIP_points: 100, SUPER_points: 500 };
 
     // ==========================================================
     // ===                 HELPER FUNCTIONS                   ===
     // ==========================================================
-    function showAlert(title, message, cb) { 
-        const dialog = document.getElementById('customAlertDialog'); 
-        document.getElementById('customAlertTitle').textContent = title; 
-        document.getElementById('customAlertMessage').textContent = message; 
-        dialog.showModal(); 
-        const closeHandler = () => { dialog.removeEventListener('close', closeHandler); if (cb) cb(); };
-        dialog.addEventListener('close', closeHandler, { once: true });
-    }
-    
-    function showConfirm(title, message) { 
-        return new Promise(res => { 
-            const dialog = document.getElementById('customConfirmDialog'); 
-            document.getElementById('customConfirmTitle').textContent = title; 
-            document.getElementById('customConfirmMessage').textContent = message; 
-            dialog.showModal(); 
-            const ok = document.getElementById('customConfirmConfirmButton'), no = document.getElementById('customConfirmCancelButton');
-            const onOk = () => { cleanup(); res(true); }, onNo = () => { cleanup(); res(false); }; 
-            function cleanup() { dialog.close(); ok.removeEventListener('click', onOk); no.removeEventListener('click', onNo); } 
-            ok.addEventListener('click', onOk, { once: true }); no.addEventListener('click', onNo, { once: true }); 
-        }); 
-    }
-    
-    async function fetchData(action, params = {}) { 
-        const url = new URL(CONFIG.GAS_URL_ADMIN); url.searchParams.append('action', action); 
-        for (const k in params) { if (params[k]) url.searchParams.append(k, params[k]); } 
-        try { 
-            const r = await fetch(url); 
-            if (!r.ok) throw new Error(`Server responded with status: ${r.status}`);
-            const data = await r.json();
-            if(data.error) throw new Error(data.error);
-            return data;
-        } catch (e) { showAlert('Error', `Fetch failed: ${e.message}`); throw e; } 
-    }
-    
-    async function postData(action, data) { 
-        try { 
-            const r = await fetch(CONFIG.GAS_URL_ADMIN, { method: 'POST', body: JSON.stringify({ action, ...data }) }); 
-            if (!r.ok) throw new Error(`Server responded with status: ${r.status}`);
-            const responseText = await r.text();
-            try {
-                const jsonData = JSON.parse(responseText);
-                if(jsonData.success === false) throw new Error(jsonData.error || 'Unknown error from server');
-                return jsonData.message || responseText;
-            } catch (jsonError) { return responseText; }
-        } catch (e) { showAlert('Error', `Request failed: ${e.message}`); throw e; } 
-    }
+    function showAlert(title, message, cb) { const dialog = document.getElementById('customAlertDialog'); document.getElementById('customAlertTitle').textContent = title; document.getElementById('customAlertMessage').textContent = message; dialog.showModal(); const closeHandler = () => { dialog.removeEventListener('close', closeHandler); if (cb) cb(); }; dialog.addEventListener('close', closeHandler, { once: true }); }
+    function showConfirm(title, message) { return new Promise(res => { const dialog = document.getElementById('customConfirmDialog'); document.getElementById('customConfirmTitle').textContent = title; document.getElementById('customConfirmMessage').textContent = message; dialog.showModal(); const ok = document.getElementById('customConfirmConfirmButton'), no = document.getElementById('customConfirmCancelButton'); const onOk = () => { cleanup(); res(true); }, onNo = () => { cleanup(); res(false); }; function cleanup() { dialog.close(); ok.removeEventListener('click', onOk); no.removeEventListener('click', onNo); } ok.addEventListener('click', onOk, { once: true }); no.addEventListener('click', onNo, { once: true }); }); }
+    async function fetchData(action, params = {}) { const url = new URL(CONFIG.GAS_URL_ADMIN); url.searchParams.append('action', action); for (const k in params) { if (params[k]) url.searchParams.append(k, params[k]); } try { const r = await fetch(url); if (!r.ok) throw new Error(`Server responded with status: ${r.status}`); const data = await r.json(); if(data.error) throw new Error(data.error); return data; } catch (e) { showAlert('Error', `Fetch failed: ${e.message}`); throw e; } }
+    async function postData(action, data) { try { const r = await fetch(CONFIG.GAS_URL_ADMIN, { method: 'POST', body: JSON.stringify({ action, ...data }) }); if (!r.ok) throw new Error(`Server responded with status: ${r.status}`); const responseText = await r.text(); try { const jsonData = JSON.parse(responseText); if(jsonData.success === false) throw new Error(jsonData.error || 'Unknown error from server'); return jsonData.message || responseText; } catch (jsonError) { return responseText; } } catch (e) { showAlert('Error', `Request failed: ${e.message}`); throw e; } }
 
     // ==========================================================
     // ===               ROUTER & AUTHENTICATION              ===
@@ -320,55 +271,20 @@
         '#history': { tpl: 'view-history', init: initHistory, title: "ประวัติการทำรายการ" },
         '#settings': { tpl: 'view-settings', init: initSettings, title: "ตั้งค่าระบบ" },
     };
-
-    function setActiveNavLink(hash) { 
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.getAttribute('href') === hash)); 
-        if (drawerToggle.checked) drawerToggle.checked = false; 
-    }
-    
+    function setActiveNavLink(hash) { document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.getAttribute('href') === hash)); if (drawerToggle.checked) drawerToggle.checked = false; }
     async function router() {
         if (!sessionStorage.getItem('isLoggedIn')) return;
-        const hash = window.location.hash || '#dashboard';
-        const route = routes[hash] || routes[''];
-
-        // [NEW] Show loading feedback immediately
-        pageTitle.textContent = route.title || "Loading...";
-        appContainer.classList.add('opacity-50');
-        appContainer.innerHTML = `<div class="page-loader"><div class="loading-spinner"></div><p>กำลังเปลี่ยนไปที่เมนู ${route.title}...</p></div>`;
-        setActiveNavLink(hash);
-
-        // Fetch level config in the background
-        fetchData('getLevelConfig').then(config => {
-            if (config) levelConfig = { VIP_points: parseInt(config.VIP_points, 10), SUPER_points: parseInt(config.SUPER_points, 10) };
-        }).catch(e => console.warn("Using default level config."));
-
+        const hash = window.location.hash || '#dashboard'; const route = routes[hash] || routes[''];
+        pageTitle.textContent = route.title || "Loading..."; appContainer.classList.add('opacity-50'); appContainer.innerHTML = `<div class="page-loader"><div class="loading-spinner"></div><p>กำลังเปลี่ยนไปที่เมนู ${route.title}...</p></div>`; setActiveNavLink(hash);
+        fetchData('getLevelConfig').then(config => { if (config) levelConfig = { VIP_points: parseInt(config.VIP_points, 10), SUPER_points: parseInt(config.SUPER_points, 10) }; }).catch(e => console.warn("Using default level config."));
         const template = document.getElementById(route.tpl);
-        if (template) { 
-            appContainer.innerHTML = ''; 
-            appContainer.appendChild(template.content.cloneNode(true)); 
-            try { 
-                await route.init(); 
-            } catch (e) { 
-                appContainer.innerHTML = `<p class="text-error text-center">Error loading page: ${e.message}</p>`; 
-            }
-        } else { 
-            appContainer.innerHTML = `<p class="text-error text-center">Page not found</p>`; 
-        }
+        if (template) { appContainer.innerHTML = ''; appContainer.appendChild(template.content.cloneNode(true)); try { await route.init(); } catch (e) { appContainer.innerHTML = `<p class="text-error text-center">Error loading page: ${e.message}</p>`; }
+        } else { appContainer.innerHTML = `<p class="text-error text-center">Page not found</p>`; }
         appContainer.classList.remove('opacity-50');
     }
-    
     function handleLogin() {
         const loginOverlay = document.getElementById('login-overlay'), loginBtn = document.getElementById('loginBtn'), userInput = document.getElementById('username'), passInput = document.getElementById('password'), loginError = document.getElementById('login-error');
-        async function attemptLogin() { 
-            loginBtn.classList.add('loading'); loginError.classList.add('hidden'); 
-            try { 
-                const res = await fetch(CONFIG.GAS_URL_ADMIN, { method: 'POST', body: JSON.stringify({ action: 'login', username: userInput.value, password: passInput.value }) });
-                const data = await res.json();
-                if (data.success) { sessionStorage.setItem('isLoggedIn', 'true'); loginOverlay.classList.add('hidden'); mainApp.classList.remove('hidden'); await router(); } 
-                else { loginError.textContent = data.message || "Invalid credentials"; loginError.classList.remove('hidden'); } 
-            } catch (e) { loginError.textContent = 'Login request failed.'; loginError.classList.remove('hidden'); } 
-            finally { loginBtn.classList.remove('loading'); } 
-        }
+        async function attemptLogin() { loginBtn.classList.add('loading'); loginError.classList.add('hidden'); try { const res = await fetch(CONFIG.GAS_URL_ADMIN, { method: 'POST', body: JSON.stringify({ action: 'login', username: userInput.value, password: passInput.value }) }); const data = await res.json(); if (data.success) { sessionStorage.setItem('isLoggedIn', 'true'); loginOverlay.classList.add('hidden'); mainApp.classList.remove('hidden'); await router(); } else { loginError.textContent = data.message || "Invalid credentials"; loginError.classList.remove('hidden'); } } catch (e) { loginError.textContent = 'Login request failed.'; loginError.classList.remove('hidden'); } finally { loginBtn.classList.remove('loading'); } }
         loginBtn.onclick = attemptLogin; passInput.addEventListener('keypress', (e) => e.key === 'Enter' && attemptLogin());
         document.getElementById('logoutBtn').onclick = () => { sessionStorage.removeItem('isLoggedIn'); location.reload(); };
         if (sessionStorage.getItem('isLoggedIn')) { loginOverlay.classList.add('hidden'); mainApp.classList.remove('hidden'); router(); }
@@ -377,141 +293,40 @@
     // ==========================================================
     // ===                 PAGE INITIALIZERS                  ===
     // ==========================================================
-    // All init functions are largely the same, only minor class changes were made in templates.
-    // Pasting the full, correct JS for all inits below.
+    
+    // All init functions are included here for a complete, single-file solution.
 
     async function initDashboard() {
         const [sTotalUsers, sNewUsers, sTotalItems, sRedeemed, sTotalEvents, sTotalCodes] = ['statTotalUsers', 'statNewUsersToday', 'statTotalItems', 'statRedeemedItems', 'statTotalEvents', 'statTotalCodes'].map(id => document.getElementById(id));
         const userLevelChartCtx = document.getElementById('userLevelChart').getContext('2d'); const pointStatsChartCtx = document.getElementById('pointStatsChart').getContext('2d');
-        try { 
-            const data = await fetchData('getDashboardData'); 
-            sTotalUsers.textContent = data.users.length; 
-            const todayStr = new Date().toDateString(); 
-            sNewUsers.textContent = `+${data.users.filter(u => u.signupDate && new Date(u.signupDate).toDateString() === todayStr).length} วันนี้`; 
-            sTotalItems.textContent = data.items.length; 
-            sRedeemed.textContent = `แลกแล้ว ${data.allHistory.filter(h => h.type === 'redeem').length} ครั้ง`; 
-            sTotalEvents.textContent = data.events.length; sTotalCodes.textContent = `${data.codes.length} โค้ด`; 
-            const levelCounts = data.users.reduce((acc, user) => { const level = user.level || 'MEMBER'; acc[level.toUpperCase()] = (acc[level.toUpperCase()] || 0) + 1; return acc; }, { MEMBER: 0, VIP: 0, SUPER: 0 }); 
-            if (window.userLevelChartInstance) window.userLevelChartInstance.destroy(); 
-            window.userLevelChartInstance = new Chart(userLevelChartCtx, { type: 'bar', data: { labels: ['MEMBER', 'VIP', 'SUPER'], datasets: [{ label: 'จำนวน', data: [levelCounts.MEMBER, levelCounts.VIP, levelCounts.SUPER], backgroundColor: ['#a7d3f2', '#61a6d9', '#1e75b9'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } } }); 
-            const { earned, spent } = data.allHistory.reduce((acc, h) => { if (h.amount > 0) acc.earned += h.amount; else acc.spent += Math.abs(h.amount); return acc; }, { earned: 0, spent: 0 }); 
-            if (window.pointStatsChartInstance) window.pointStatsChartInstance.destroy(); 
-            window.pointStatsChartInstance = new Chart(pointStatsChartCtx, { type: 'doughnut', data: { labels: ['ได้รับ', 'ใช้ไป'], datasets: [{ data: [earned, spent], backgroundColor: ['#36d399', '#f87272'] }] }, options: { responsive: true, maintainAspectRatio: false } }); 
-        } catch (e) { /* Error handled */ }
+        try { const data = await fetchData('getDashboardData'); sTotalUsers.textContent = data.users.length; const todayStr = new Date().toDateString(); sNewUsers.textContent = `+${data.users.filter(u => u.signupDate && new Date(u.signupDate).toDateString() === todayStr).length} วันนี้`; sTotalItems.textContent = data.items.length; sRedeemed.textContent = `แลกแล้ว ${data.allHistory.filter(h => h.type === 'redeem').length} ครั้ง`; sTotalEvents.textContent = data.events.length; sTotalCodes.textContent = `${data.codes.length} โค้ด`; const levelCounts = data.users.reduce((acc, user) => { const level = user.level || 'MEMBER'; acc[level.toUpperCase()] = (acc[level.toUpperCase()] || 0) + 1; return acc; }, { MEMBER: 0, VIP: 0, SUPER: 0 }); if (window.userLevelChartInstance) window.userLevelChartInstance.destroy(); window.userLevelChartInstance = new Chart(userLevelChartCtx, { type: 'bar', data: { labels: ['MEMBER', 'VIP', 'SUPER'], datasets: [{ label: 'จำนวน', data: [levelCounts.MEMBER, levelCounts.VIP, levelCounts.SUPER], backgroundColor: ['#a7d3f2', '#61a6d9', '#1e75b9'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } } }); const { earned, spent } = data.allHistory.reduce((acc, h) => { if (h.amount > 0) acc.earned += h.amount; else acc.spent += Math.abs(h.amount); return acc; }, { earned: 0, spent: 0 }); if (window.pointStatsChartInstance) window.pointStatsChartInstance.destroy(); window.pointStatsChartInstance = new Chart(pointStatsChartCtx, { type: 'doughnut', data: { labels: ['ได้รับ', 'ใช้ไป'], datasets: [{ data: [earned, spent], backgroundColor: ['#36d399', '#f87272'] }] }, options: { responsive: true, maintainAspectRatio: false } }); } catch (e) { /* Error handled */ }
     }
 
     async function initUsers() {
-        const tableBody = document.getElementById('userTableBody'); const searchInput = document.getElementById('userSearchInput'); const searchBtn = document.getElementById('userSearchBtn'); 
-        document.getElementById('addUserBtn').onclick = () => showUserFormModal(); 
-        searchBtn.onclick = () => loadUsers(searchInput.value); 
-        searchInput.addEventListener('keypress', e => e.key === 'Enter' && searchBtn.click()); 
-        await loadUsers();
+        const tableBody = document.getElementById('userTableBody'); const searchInput = document.getElementById('userSearchInput'); const searchBtn = document.getElementById('userSearchBtn'); document.getElementById('addUserBtn').onclick = () => showUserFormModal(); searchBtn.onclick = () => loadUsers(searchInput.value); searchInput.addEventListener('keypress', e => e.key === 'Enter' && searchBtn.click()); await loadUsers();
         async function loadUsers(query) { tableBody.innerHTML = `<tr><td colspan="7" class="py-12 text-center"><span class="loading loading-spinner"></span></td></tr>`; try { const users = await fetchData('getUsers', { query }); renderUserTable(users); } catch (e) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-error">Load failed</td></tr>`; } }
-        function renderUserTable(users) { 
-            if (!users.length) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } 
-            tableBody.innerHTML = users.map(u => `<tr><td>${u.lineId}</td><td>${u.name}</td><td>${u.phone || '-'}</td><td>${u.point.toLocaleString()}</td><td><span class="badge ${u.level.toUpperCase() === 'SUPER' ? 'badge-primary' : u.level.toUpperCase() === 'VIP' ? 'badge-secondary' : 'badge-ghost'} rounded-md">${u.level}</span></td><td>${(u.tags || []).map(t => `<span class="badge badge-outline rounded-md">${t}</span>`).join(' ')}</td><td><button class="btn btn-xs btn-info edit-user-btn rounded-md">แก้ไข</button> <button class="btn btn-xs btn-error delete-user-btn rounded-md">ลบ</button></td></tr>`).join(''); 
-            tableBody.querySelectorAll('.edit-user-btn').forEach((b, i) => b.onclick = async () => { try { const user = await fetchData('getUserInfo', { lineId: users[i].lineId }); showUserFormModal(user); } catch (e) { /* handled */ } }); 
-            tableBody.querySelectorAll('.delete-user-btn').forEach((b, i) => b.onclick = () => deleteUser(users[i].lineId)); 
-        }
-        function showUserFormModal(user) { 
-            const isEdit = !!user; dataFormModalTitle.textContent = isEdit ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้'; 
-            formFieldsContainer.innerHTML = `<input type="text" id="formLineId" placeholder="Line ID" class="input input-bordered rounded-lg" ${isEdit ? 'readonly' : 'required'} value="${isEdit ? user.id : ''}" /><input type="text" id="formName" placeholder="Name" class="input input-bordered rounded-lg" required value="${isEdit ? user.name : ''}" /><input type="tel" id="formPhone" placeholder="Phone" class="input input-bordered rounded-lg" value="${isEdit ? (user.phone || '') : ''}" /><input type="number" id="formPoint" placeholder="Points" class="input input-bordered rounded-lg" required value="${isEdit ? user.point : 0}" /><input type="text" id="formTags" placeholder="Tags (คั่นด้วย ,)" class="input input-bordered rounded-lg" value="${isEdit ? (user.tags || []).join(', ') : ''}" />`; 
-            dataFormModal.showModal(); formSaveBtn.onclick = () => saveUser(isEdit); formCancelBtn.onclick = () => dataFormModal.close(); 
-        }
-        async function saveUser(isEdit) { 
-            const data = { lineId: document.getElementById('formLineId').value.trim(), name: document.getElementById('formName').value.trim(), phone: document.getElementById('formPhone').value.trim(), point: parseInt(document.getElementById('formPoint').value), tags: document.getElementById('formTags').value.split(',').map(t => t.trim()).filter(Boolean) }; 
-            if (!data.lineId || !data.name) return showAlert('Error', 'Line ID และชื่อห้ามว่าง'); 
-            formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateUserAdmin' : 'registerAdmin', data); showAlert('Success', `User ${isEdit ? 'updated' : 'added'}`, () => { dataFormModal.close(); loadUsers(); }); } catch(e) {/* handled */ } finally { formSaveBtn.classList.remove('loading'); } 
-        }
+        function renderUserTable(users) { if (!users.length) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = users.map(u => `<tr><td>${u.lineId}</td><td>${u.name}</td><td>${u.phone || '-'}</td><td>${u.point.toLocaleString()}</td><td><span class="badge ${u.level.toUpperCase() === 'SUPER' ? 'badge-primary' : u.level.toUpperCase() === 'VIP' ? 'badge-secondary' : 'badge-ghost'} rounded-md">${u.level}</span></td><td>${(u.tags || []).map(t => `<span class="badge badge-outline rounded-md">${t}</span>`).join(' ')}</td><td><button class="btn btn-xs btn-info edit-user-btn rounded-md" data-id='${u.lineId}'>แก้ไข</button> <button class="btn btn-xs btn-error delete-user-btn rounded-md" data-id='${u.lineId}'>ลบ</button></td></tr>`).join(''); tableBody.querySelectorAll('.edit-user-btn').forEach(b => b.onclick = async () => { try { const user = await fetchData('getUserInfo', { lineId: b.dataset.id }); showUserFormModal(user); } catch (e) { /* handled */ } }); tableBody.querySelectorAll('.delete-user-btn').forEach(b => b.onclick = () => deleteUser(b.dataset.id)); }
+        function showUserFormModal(user) { const isEdit = !!user; dataFormModalTitle.textContent = isEdit ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้'; formFieldsContainer.innerHTML = `<input type="text" id="formLineId" placeholder="Line ID" class="input input-bordered rounded-lg" ${isEdit ? 'readonly' : 'required'} value="${isEdit ? user.id : ''}" /><input type="text" id="formName" placeholder="Name" class="input input-bordered rounded-lg" required value="${isEdit ? user.name : ''}" /><input type="tel" id="formPhone" placeholder="Phone" class="input input-bordered rounded-lg" value="${isEdit ? (user.phone || '') : ''}" /><input type="number" id="formPoint" placeholder="Points" class="input input-bordered rounded-lg" required value="${isEdit ? user.point : 0}" /><input type="text" id="formTags" placeholder="Tags (คั่นด้วย ,)" class="input input-bordered rounded-lg" value="${isEdit ? (user.tags || []).join(', ') : ''}" />`; dataFormModal.showModal(); formSaveBtn.onclick = () => saveUser(isEdit); formCancelBtn.onclick = () => dataFormModal.close(); }
+        async function saveUser(isEdit) { const data = { lineId: document.getElementById('formLineId').value.trim(), name: document.getElementById('formName').value.trim(), phone: document.getElementById('formPhone').value.trim(), point: parseInt(document.getElementById('formPoint').value), tags: document.getElementById('formTags').value.split(',').map(t => t.trim()).filter(Boolean) }; if (!data.lineId || !data.name) return showAlert('Error', 'Line ID และชื่อห้ามว่าง'); formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateUserAdmin' : 'registerAdmin', data); showAlert('Success', `User ${isEdit ? 'updated' : 'added'}`, () => { dataFormModal.close(); loadUsers(); }); } catch(e) {/* handled */ } finally { formSaveBtn.classList.remove('loading'); } }
         async function deleteUser(lineId) { if (await showConfirm('Confirm', `ต้องการลบผู้ใช้ ${lineId}?`)) { try { await postData('deleteUser', { lineId }); showAlert('Success', 'User deleted', () => loadUsers()); } catch (e) { /* handled */ } } }
     }
 
     async function initAddPoints() {
         const form = document.getElementById('addPointsForm'), submitBtn = document.getElementById('addPointsSubmitBtn'), productModeSection = document.getElementById('productModeSection'), manualModeSection = document.getElementById('manualModeSection'), productListSelect = document.getElementById('productList'), quantityInput = document.getElementById('productQuantity'), addItemBtn = document.getElementById('addItemToBillBtn'), billContainer = document.getElementById('billItemsContainer'), totalPointsDisplay = document.getElementById('totalPointsDisplay'), modeTabs = document.querySelectorAll('.tabs .tab');
         let allProducts = [], billItems = [], currentMode = 'product';
-
         try { allProducts = await fetchData('getProducts'); updateProductDropdown(); } catch (e) { productListSelect.innerHTML = `<option disabled selected>โหลดสินค้าล้มเหลว</option>`; }
-        
-        function updateProductDropdown() {
-            const productIdsInBill = billItems.map(item => item.id);
-            const availableProducts = allProducts.filter(p => !productIdsInBill.includes(p.id));
-            productListSelect.innerHTML = '';
-            if (availableProducts.length > 0) {
-                availableProducts.forEach(p => { const option = document.createElement('option'); option.value = p.id; option.textContent = `${p.name} (${p.points} แต้ม)`; productListSelect.appendChild(option); });
-            } else { productListSelect.innerHTML = '<option disabled selected>เพิ่มสินค้าครบแล้ว</option>'; }
-        }
-
-        function renderBill() {
-            billContainer.innerHTML = ''; let totalPoints = 0;
-            if (billItems.length === 0) { billContainer.innerHTML = '<p class="text-center text-gray-400">ยังไม่มีรายการ</p>'; totalPointsDisplay.textContent = '0'; return; }
-            billItems.forEach(item => {
-                const itemPoints = item.points * item.quantity; totalPoints += itemPoints;
-                const itemDiv = document.createElement('div'); itemDiv.className = 'flex items-center justify-between p-2 bg-base-200 rounded-lg';
-                itemDiv.innerHTML = `<div><span class="font-semibold">${item.name}</span> <span class="text-sm text-gray-500">x ${item.quantity}</span></div><div><span class="font-bold text-secondary">${itemPoints} แต้ม</span><button type="button" class="btn btn-xs btn-ghost btn-circle remove-item-btn" data-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div>`;
-                billContainer.appendChild(itemDiv);
-            });
-            totalPointsDisplay.textContent = totalPoints.toLocaleString();
-            document.querySelectorAll('.remove-item-btn').forEach(btn => {
-                btn.onclick = (e) => { billItems = billItems.filter(item => item.id !== e.currentTarget.dataset.id); renderBill(); updateProductDropdown(); };
-            });
-        }
-
-        modeTabs.forEach(tab => {
-            tab.onclick = () => {
-                currentMode = tab.dataset.mode;
-                modeTabs.forEach(t => t.classList.remove('tab-active'));
-                tab.classList.add('tab-active');
-                productModeSection.classList.toggle('hidden', currentMode !== 'product');
-                manualModeSection.classList.toggle('hidden', currentMode !== 'manual');
-            };
-        });
-
-        addItemBtn.onclick = () => {
-            const selectedId = productListSelect.value; if (!selectedId) return;
-            const product = allProducts.find(p => p.id === selectedId);
-            const quantity = parseInt(quantityInput.value, 10);
-            if (product && quantity > 0) { billItems.push({ ...product, quantity }); renderBill(); updateProductDropdown(); quantityInput.value = 1; }
-        };
-
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            const identifier = document.getElementById('addPointsIdentifier').value.trim();
-            if (!identifier) return showAlert('ข้อมูลไม่ครบ', 'กรุณาระบุลูกค้า');
-            let payload = { identifier }, confirmMessage = '', totalPoints = 0;
-
-            if (currentMode === 'product') {
-                if (billItems.length === 0) return showAlert('ข้อมูลไม่ครบ', 'กรุณาเพิ่มสินค้าลงในบิล');
-                payload.itemsPurchased = billItems.map(item => ({ productId: item.id, quantity: item.quantity }));
-                totalPoints = billItems.reduce((sum, item) => sum + (item.points * item.quantity), 0);
-                const itemSummary = billItems.map(item => `${item.name} x${item.quantity}`).join(',\n');
-                confirmMessage = `ยืนยันให้ ${totalPoints} แต้ม\nจาก:\n${itemSummary}\n\nสำหรับผู้ใช้: "${identifier}"?`;
-            } else {
-                const points = document.getElementById('addPointsAmount').value;
-                const reason = document.getElementById('addPointsReason').value.trim();
-                if (!points || parseInt(points) < 1 || !reason) return showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกแต้มและเหตุผล');
-                payload.points = parseInt(points, 10); payload.reason = reason;
-                totalPoints = payload.points;
-                confirmMessage = `ยืนยันให้ ${totalPoints} แต้ม\nเหตุผล: ${payload.reason}\n\nสำหรับผู้ใช้: "${identifier}"?`;
-            }
-
-            if (await showConfirm('ยืนยันการให้แต้ม', confirmMessage)) {
-                submitBtn.classList.add('loading'); submitBtn.disabled = true;
-                try {
-                    const message = await postData('addPointsToUser', payload);
-                    showAlert('สำเร็จ', message || 'เพิ่มแต้มเรียบร้อยแล้ว');
-                    form.reset(); billItems = []; renderBill(); updateProductDropdown();
-                } catch(e) { /* handled */ } finally {
-                    submitBtn.classList.remove('loading'); submitBtn.disabled = false;
-                }
-            }
-        };
+        function updateProductDropdown() { const productIdsInBill = billItems.map(item => item.id); const availableProducts = allProducts.filter(p => !productIdsInBill.includes(p.id)); productListSelect.innerHTML = ''; if (availableProducts.length > 0) { availableProducts.forEach(p => { const option = document.createElement('option'); option.value = p.id; option.textContent = `${p.name} (${p.points} แต้ม)`; productListSelect.appendChild(option); }); } else { productListSelect.innerHTML = '<option disabled selected>เพิ่มสินค้าครบแล้ว</option>'; } }
+        function renderBill() { billContainer.innerHTML = ''; let totalPoints = 0; if (billItems.length === 0) { billContainer.innerHTML = '<p class="text-center text-gray-400">ยังไม่มีรายการ</p>'; totalPointsDisplay.textContent = '0'; return; } billItems.forEach(item => { const itemPoints = item.points * item.quantity; totalPoints += itemPoints; const itemDiv = document.createElement('div'); itemDiv.className = 'flex items-center justify-between p-2 bg-base-200 rounded-lg'; itemDiv.innerHTML = `<div><span class="font-semibold">${item.name}</span> <span class="text-sm text-gray-500">x ${item.quantity}</span></div><div><span class="font-bold text-secondary">${itemPoints} แต้ม</span><button type="button" class="btn btn-xs btn-ghost btn-circle remove-item-btn" data-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div>`; billContainer.appendChild(itemDiv); }); totalPointsDisplay.textContent = totalPoints.toLocaleString(); document.querySelectorAll('.remove-item-btn').forEach(btn => { btn.onclick = (e) => { billItems = billItems.filter(item => item.id !== e.currentTarget.dataset.id); renderBill(); updateProductDropdown(); }; }); }
+        modeTabs.forEach(tab => { tab.onclick = () => { currentMode = tab.dataset.mode; modeTabs.forEach(t => t.classList.remove('tab-active')); tab.classList.add('tab-active'); productModeSection.classList.toggle('hidden', currentMode !== 'product'); manualModeSection.classList.toggle('hidden', currentMode !== 'manual'); }; });
+        addItemBtn.onclick = () => { const selectedId = productListSelect.value; if (!selectedId) return; const product = allProducts.find(p => p.id === selectedId); const quantity = parseInt(quantityInput.value, 10); if (product && quantity > 0) { billItems.push({ ...product, quantity }); renderBill(); updateProductDropdown(); quantityInput.value = 1; } };
+        form.onsubmit = async (e) => { e.preventDefault(); const identifier = document.getElementById('addPointsIdentifier').value.trim(); if (!identifier) return showAlert('ข้อมูลไม่ครบ', 'กรุณาระบุลูกค้า'); let payload = { identifier }, confirmMessage = '', totalPoints = 0; if (currentMode === 'product') { if (billItems.length === 0) return showAlert('ข้อมูลไม่ครบ', 'กรุณาเพิ่มสินค้าลงในบิล'); payload.itemsPurchased = billItems.map(item => ({ productId: item.id, quantity: item.quantity })); totalPoints = billItems.reduce((sum, item) => sum + (item.points * item.quantity), 0); const itemSummary = billItems.map(item => `${item.name} x${item.quantity}`).join(',\n'); confirmMessage = `ยืนยันให้ ${totalPoints} แต้ม\nจาก:\n${itemSummary}\n\nสำหรับผู้ใช้: "${identifier}"?`; } else { const points = document.getElementById('addPointsAmount').value; const reason = document.getElementById('addPointsReason').value.trim(); if (!points || parseInt(points) < 1 || !reason) return showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกแต้มและเหตุผล'); payload.points = parseInt(points, 10); payload.reason = reason; totalPoints = payload.points; confirmMessage = `ยืนยันให้ ${totalPoints} แต้ม\nเหตุผล: ${payload.reason}\n\nสำหรับผู้ใช้: "${identifier}"?`; } if (await showConfirm('ยืนยันการให้แต้ม', confirmMessage)) { submitBtn.classList.add('loading'); submitBtn.disabled = true; try { const message = await postData('addPointsToUser', payload); showAlert('สำเร็จ', message || 'เพิ่มแต้มเรียบร้อยแล้ว'); form.reset(); billItems = []; renderBill(); updateProductDropdown(); } catch(e) { /* handled */ } finally { submitBtn.classList.remove('loading'); submitBtn.disabled = false; } } };
         renderBill();
     }
     
     async function initItems() {
         const tableBody = document.getElementById('itemTableBody'); document.getElementById('addItemBtn').onclick = () => showItemFormModal(); await loadItems();
         async function loadItems() { tableBody.innerHTML = `<tr><td colspan="6" class="py-12 text-center"><span class="loading loading-spinner"></span></td></tr>`; try { const items = await fetchData('getItems'); renderItemTable(items); } catch (e) { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-error">Load failed</td></tr>`; } }
-        function renderItemTable(items) { if (!items.length) { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = items.map(i => `<tr><td>${i.id}</td><td>${i.name}</td><td>${i.point.toLocaleString()}</td><td><span class="badge badge-accent rounded-md">${i.type}</span></td><td>${i.image ? `<img src="${i.image}" class="w-12 h-12 object-cover rounded-lg">` : '-'}</td><td><button class="btn btn-xs btn-info edit-item-btn rounded-md">แก้ไข</button> <button class="btn btn-xs btn-error delete-item-btn rounded-md">ลบ</button></td></tr>`).join(''); tableBody.querySelectorAll('.edit-item-btn').forEach((b,i) => b.onclick = () => showItemFormModal(items[i])); tableBody.querySelectorAll('.delete-item-btn').forEach((b,i) => b.onclick = () => deleteItem(items[i].id)); }
+        function renderItemTable(items) { if (!items.length) { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = items.map(i => `<tr><td>${i.id}</td><td>${i.name}</td><td>${i.point.toLocaleString()}</td><td><span class="badge badge-accent rounded-md">${i.type}</span></td><td>${i.image ? `<img src="${i.image}" class="w-12 h-12 object-cover rounded-lg">` : '-'}</td><td><button class="btn btn-xs btn-info edit-item-btn rounded-md" data-id='${i.id}'>แก้ไข</button> <button class="btn btn-xs btn-error delete-item-btn rounded-md" data-id='${i.id}'>ลบ</button></td></tr>`).join(''); tableBody.querySelectorAll('.edit-item-btn').forEach(b => b.onclick = () => showItemFormModal(items.find(i => i.id === b.dataset.id))); tableBody.querySelectorAll('.delete-item-btn').forEach(b => b.onclick = () => deleteItem(b.dataset.id)); }
         function showItemFormModal(item) { const isEdit = !!item; dataFormModalTitle.textContent = isEdit ? 'แก้ไขของรางวัล' : 'เพิ่มของรางวัล'; formFieldsContainer.innerHTML = `<input type="text" id="formId" placeholder="ID (auto)" class="input input-bordered rounded-lg" ${isEdit ? 'readonly' : ''} value="${isEdit ? item.id : ''}" /><input type="text" id="formName" placeholder="Name" class="input input-bordered rounded-lg" required value="${isEdit ? item.name : ''}" /><input type="number" id="formPoint" placeholder="Points" class="input input-bordered rounded-lg" required value="${isEdit ? item.point : ''}" /><select id="formType" class="select select-bordered rounded-lg"><option value="digital" ${isEdit && item.type === 'digital' ? 'selected' : ''}>Digital</option><option value="physical" ${isEdit && item.type === 'physical' ? 'selected' : ''}>Physical</option></select><input type="url" id="formImage" placeholder="Image URL" class="input input-bordered rounded-lg" value="${isEdit ? item.image : ''}" />`; dataFormModal.showModal(); formSaveBtn.onclick = () => saveItem(isEdit); formCancelBtn.onclick = () => dataFormModal.close(); }
         async function saveItem(isEdit) { const data = { id: document.getElementById('formId').value.trim() || undefined, name: document.getElementById('formName').value.trim(), point: parseInt(document.getElementById('formPoint').value), type: document.getElementById('formType').value, image: document.getElementById('formImage').value.trim() }; if (!data.name) return showAlert('Error', 'Name is required.'); formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateItem' : 'addItem', data); showAlert('Success', `Item ${isEdit ? 'updated' : 'added'}`, () => { dataFormModal.close(); loadItems(); }); } catch(e) {/* handled */ } finally { formSaveBtn.classList.remove('loading'); } }
         async function deleteItem(id) { if (await showConfirm('Confirm', `ต้องการลบของรางวัล ${id}?`)) { try { await postData('deleteItem', { id }); showAlert('Success', 'Item deleted', () => loadItems()); } catch (e) { /* handled */ } } }
@@ -520,22 +335,9 @@
     async function initProducts() {
         const tableBody = document.getElementById('productTableBody'); document.getElementById('addProductBtn').onclick = () => showProductFormModal(); await loadProducts();
         async function loadProducts() { tableBody.innerHTML = `<tr><td colspan="6" class="py-12 text-center"><span class="loading loading-spinner"></span></td></tr>`; try { const products = await fetchData('getProducts'); renderProductTable(products); } catch (e) { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-error">Load failed: ${e.message}</td></tr>`; } }
-        function renderProductTable(products) {
-            if (!products || !products.length) { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4">ไม่พบข้อมูลสินค้า</td></tr>`; return; }
-            tableBody.innerHTML = products.map(p => `<tr><td class="font-mono text-xs">${p.id}</td><td><div class="font-bold">${p.name}</div><div class="text-xs opacity-70 truncate max-w-xs">${p.description || '-'}</div></td><td><span class="badge badge-ghost rounded-md">${p.category || '-'}</span></td><td>${p.price.toLocaleString()}</td><td><span class="font-bold text-success">${p.points}</span></td><td><button class="btn btn-xs btn-info edit-product-btn rounded-md">แก้ไข</button> <button class="btn btn-xs btn-error delete-product-btn rounded-md">ลบ</button></td></tr>`).join('');
-            tableBody.querySelectorAll('.edit-product-btn').forEach((b,i) => b.onclick = () => showProductFormModal(products[i]));
-            tableBody.querySelectorAll('.delete-product-btn').forEach((b,i) => b.onclick = () => deleteProduct(products[i].id));
-        }
-        function showProductFormModal(product) {
-            const isEdit = !!product; dataFormModalTitle.textContent = isEdit ? 'แก้ไขสินค้า' : 'เพิ่มสินค้าใหม่';
-            formFieldsContainer.innerHTML = `<input type="text" id="formProductId" placeholder="ID (auto-generate if empty)" class="input input-bordered rounded-lg" ${isEdit ? 'readonly' : ''} value="${isEdit ? product.id : ''}" /><input type="text" id="formProductName" placeholder="ชื่อสินค้า" class="input input-bordered rounded-lg" required value="${isEdit ? product.name : ''}" /><textarea id="formProductDesc" placeholder="รายละเอียดสินค้า (ไม่บังคับ)" class="textarea textarea-bordered rounded-lg h-20">${isEdit ? (product.description || '') : ''}</textarea><input type="text" id="formProductCategory" placeholder="หมวดหมู่ (เช่น เครื่องดื่ม)" class="input input-bordered rounded-lg" value="${isEdit ? (product.category || '') : ''}" /><div class="grid grid-cols-2 gap-4"><div class="form-control"><label class="label"><span class="label-text">ราคา (บาท)</span></label><input type="number" id="formProductPrice" placeholder="0" class="input input-bordered rounded-lg" required value="${isEdit ? product.price : '0'}" min="0" step="any" /></div><div class="form-control"><label class="label"><span class="label-text">แต้มที่ได้/หน่วย</span></label><input type="number" id="formProductPoints" placeholder="0" class="input input-bordered rounded-lg" required value="${isEdit ? product.points : '0'}" min="0" /></div></div>`;
-            dataFormModal.showModal(); formSaveBtn.onclick = () => saveProduct(isEdit); formCancelBtn.onclick = () => dataFormModal.close();
-        }
-        async function saveProduct(isEdit) {
-            const data = { id: document.getElementById('formProductId').value.trim() || undefined, name: document.getElementById('formProductName').value.trim(), description: document.getElementById('formProductDesc').value.trim(), category: document.getElementById('formProductCategory').value.trim(), price: parseFloat(document.getElementById('formProductPrice').value), points: parseInt(document.getElementById('formProductPoints').value, 10) };
-            if (!data.name) return showAlert('Error', 'กรุณากรอกชื่อสินค้า'); if (isNaN(data.price) || isNaN(data.points)) return showAlert('Error', 'ราคาและแต้มต้องเป็นตัวเลข');
-            formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateProduct' : 'addProduct', data); showAlert('สำเร็จ', `สินค้าถูก${isEdit ? 'แก้ไข' : 'เพิ่ม'}แล้ว`, () => { dataFormModal.close(); loadProducts(); }); } catch(e) {/* handled */ } finally { formSaveBtn.classList.remove('loading'); }
-        }
+        function renderProductTable(products) { if (!products || !products.length) { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4">ไม่พบข้อมูลสินค้า</td></tr>`; return; } tableBody.innerHTML = products.map(p => `<tr><td class="font-mono text-xs">${p.id}</td><td><div class="font-bold">${p.name}</div><div class="text-xs opacity-70 truncate max-w-xs">${p.description || '-'}</div></td><td><span class="badge badge-ghost rounded-md">${p.category || '-'}</span></td><td>${p.price.toLocaleString()}</td><td><span class="font-bold text-success">${p.points}</span></td><td><button class="btn btn-xs btn-info edit-product-btn rounded-md" data-id='${p.id}'>แก้ไข</button> <button class="btn btn-xs btn-error delete-product-btn rounded-md" data-id='${p.id}'>ลบ</button></td></tr>`).join(''); tableBody.querySelectorAll('.edit-product-btn').forEach(b => b.onclick = () => showProductFormModal(products.find(p => p.id === b.dataset.id))); tableBody.querySelectorAll('.delete-product-btn').forEach(b => b.onclick = () => deleteProduct(b.dataset.id)); }
+        function showProductFormModal(product) { const isEdit = !!product; dataFormModalTitle.textContent = isEdit ? 'แก้ไขสินค้า' : 'เพิ่มสินค้าใหม่'; formFieldsContainer.innerHTML = `<input type="text" id="formProductId" placeholder="ID (auto-generate if empty)" class="input input-bordered rounded-lg" ${isEdit ? 'readonly' : ''} value="${isEdit ? product.id : ''}" /><input type="text" id="formProductName" placeholder="ชื่อสินค้า" class="input input-bordered rounded-lg" required value="${isEdit ? product.name : ''}" /><textarea id="formProductDesc" placeholder="รายละเอียดสินค้า (ไม่บังคับ)" class="textarea textarea-bordered rounded-lg h-20">${isEdit ? (product.description || '') : ''}</textarea><input type="text" id="formProductCategory" placeholder="หมวดหมู่ (เช่น เครื่องดื่ม)" class="input input-bordered rounded-lg" value="${isEdit ? (product.category || '') : ''}" /><div class="grid grid-cols-2 gap-4"><div class="form-control"><label class="label"><span class="label-text">ราคา (บาท)</span></label><input type="number" id="formProductPrice" placeholder="0" class="input input-bordered rounded-lg" required value="${isEdit ? product.price : '0'}" min="0" step="any" /></div><div class="form-control"><label class="label"><span class="label-text">แต้มที่ได้/หน่วย</span></label><input type="number" id="formProductPoints" placeholder="0" class="input input-bordered rounded-lg" required value="${isEdit ? product.points : '0'}" min="0" /></div></div>`; dataFormModal.showModal(); formSaveBtn.onclick = () => saveProduct(isEdit); formCancelBtn.onclick = () => dataFormModal.close(); }
+        async function saveProduct(isEdit) { const data = { id: document.getElementById('formProductId').value.trim() || undefined, name: document.getElementById('formProductName').value.trim(), description: document.getElementById('formProductDesc').value.trim(), category: document.getElementById('formProductCategory').value.trim(), price: parseFloat(document.getElementById('formProductPrice').value), points: parseInt(document.getElementById('formProductPoints').value, 10) }; if (!data.name) return showAlert('Error', 'กรุณากรอกชื่อสินค้า'); if (isNaN(data.price) || isNaN(data.points)) return showAlert('Error', 'ราคาและแต้มต้องเป็นตัวเลข'); formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateProduct' : 'addProduct', data); showAlert('สำเร็จ', `สินค้าถูก${isEdit ? 'แก้ไข' : 'เพิ่ม'}แล้ว`, () => { dataFormModal.close(); loadProducts(); }); } catch(e) {/* handled */ } finally { formSaveBtn.classList.remove('loading'); } }
         async function deleteProduct(id) { if (await showConfirm('ยืนยันการลบ', `คุณต้องการลบสินค้า ID: ${id} ใช่หรือไม่?`)) { try { await postData('deleteProduct', { id }); showAlert('สำเร็จ', 'ลบสินค้าเรียบร้อยแล้ว', loadProducts); } catch (e) { /* handled */ } } }
     }
 
@@ -543,24 +345,36 @@
         const tableBody = document.getElementById('warehouseTableBody'), searchInput = document.getElementById('warehouseSearchInput'), statusFilter = document.getElementById('warehouseStatusFilter'), searchBtn = document.getElementById('warehouseSearchBtn');
         searchBtn.onclick = () => loadWarehouseItems(); searchInput.addEventListener('keypress', e => e.key === 'Enter' && searchBtn.click()); statusFilter.onchange = () => loadWarehouseItems(); await loadWarehouseItems();
         async function loadWarehouseItems() { tableBody.innerHTML = `<tr><td colspan="7" class="py-12 text-center"><span class="loading loading-spinner"></span></td></tr>`; try { const items = await fetchData('getWarehouseItems', { query: searchInput.value, status: statusFilter.value }); renderWarehouseTable(items); } catch (e) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-error">Load failed</td></tr>`; } }
-        function renderWarehouseTable(items) { if (!items.length) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = items.map(i => { const shippingInfo = i.shippingName ? `<div class="text-xs"><strong>${i.shippingName}</strong><br>${i.shippingPhone}<br><div class="whitespace-normal">${i.shippingAddress}</div></div>` : '-'; const actionBtn = i.status === 'claimed' ? `<div class="text-xs text-success font-semibold">ยืนยันแล้ว<br>${i.claimDate}</div>` : `<button class="btn btn-xs btn-success claim-item-btn rounded-md">ยืนยัน</button>`; return `<tr><td>${i.warehouseId}</td><td>${i.itemName}</td><td class="font-mono text-xs">${i.lineId}</td><td>${shippingInfo}</td><td>${i.redeemDate}</td><td><span class="badge ${i.status === 'claimed' ? 'badge-success' : 'badge-warning'} rounded-md">${i.status.replace('_', ' ')}</span></td><td>${actionBtn}</td></tr>`; }).join(''); tableBody.querySelectorAll('.claim-item-btn').forEach((b,i) => b.onclick = () => claimItem(items[i].warehouseId)); }
-        async function claimItem(id) { if (await showConfirm('Confirm', `ยืนยันการรับ/จัดส่งสำหรับ ${id}?`)) { try { await postData('claimWarehouseItemAdmin', { warehouseId: id }); showAlert('Success', 'อัปเดตสถานะสำเร็จ', () => loadWarehouseItems()); } catch (e) { /* handled */ } } }
+        function renderWarehouseTable(items) {
+            if (!items.length) { tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; }
+            tableBody.innerHTML = items.map(i => { const shippingInfo = i.shippingName ? `<div class="text-xs"><strong>${i.shippingName}</strong><br>${i.shippingPhone}<br><div class="whitespace-normal">${i.shippingAddress}</div></div>` : '-'; let statusBadge, actionBtn;
+                switch(i.status) {
+                    case 'pending_claim': statusBadge = `<span class="badge badge-warning rounded-md">รอรับ/จัดส่ง</span>`; if (i.itemType === 'physical') { actionBtn = `<button class="btn btn-xs btn-info ship-item-btn rounded-md" data-id="${i.warehouseId}">จัดการจัดส่ง</button>`; } else { actionBtn = `<button class="btn btn-xs btn-success claim-item-btn rounded-md" data-id="${i.warehouseId}">ยืนยันรับของ</button>`; } break;
+                    case 'shipped': statusBadge = `<span class="badge badge-info rounded-md">จัดส่งแล้ว</span>`; actionBtn = `<div class="text-xs text-info font-semibold">เลขพัสดุ:<br>${i.trackingNumber}</div>`; break;
+                    case 'claimed': statusBadge = `<span class="badge badge-success rounded-md">รับแล้ว</span>`; actionBtn = `<div class="text-xs text-success font-semibold">ยืนยันแล้ว<br>${i.claimDate}</div>`; break;
+                    default: statusBadge = `<span class="badge badge-ghost rounded-md">${i.status}</span>`; actionBtn = '-';
+                }
+                return `<tr><td>${i.warehouseId}</td><td>${i.itemName} <span class="badge badge-ghost badge-sm rounded">${i.itemType}</span></td><td class="font-mono text-xs">${i.lineId}</td><td>${shippingInfo}</td><td>${i.redeemDate}</td><td>${statusBadge}</td><td>${actionBtn}</td></tr>`;
+            }).join('');
+            tableBody.querySelectorAll('.claim-item-btn').forEach(b => b.onclick = () => claimItem(b.dataset.id)); tableBody.querySelectorAll('.ship-item-btn').forEach(b => b.onclick = () => showShippingModal(b.dataset.id));
+        }
+        async function claimItem(id) { if (await showConfirm('ยืนยันรับของ', `ยืนยันการรับของสำหรับ ID: ${id} ใช่หรือไม่?`)) { try { await postData('claimWarehouseItemAdmin', { warehouseId: id }); showAlert('สำเร็จ', 'อัปเดตสถานะสำเร็จ', loadWarehouseItems); } catch (e) { /* handled */ } } }
+        function showShippingModal(warehouseId) { dataFormModalTitle.textContent = `จัดการจัดส่งสำหรับ ID: ${warehouseId}`; formFieldsContainer.innerHTML = `<div class="form-control"><label class="label"><span class="label-text">เลขพัสดุ (Tracking Number)</span></label><input type="text" id="formTrackingNumber" placeholder="เช่น TH1234567890" class="input input-bordered rounded-lg" required /></div>`; dataFormModal.showModal(); formSaveBtn.textContent = "ยืนยันการจัดส่ง"; formSaveBtn.onclick = () => saveShipping(warehouseId); formCancelBtn.onclick = () => dataFormModal.close(); }
+        async function saveShipping(warehouseId) { const trackingNumber = document.getElementById('formTrackingNumber').value.trim(); if (!trackingNumber) { return showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกเลขพัสดุ'); } formSaveBtn.classList.add('loading'); try { await postData('shipWarehouseItem', { warehouseId, trackingNumber }); showAlert('สำเร็จ', 'บันทึกเลขพัสดุและแจ้งลูกค้าแล้ว', () => { dataFormModal.close(); loadWarehouseItems(); }); } catch (e) { /* handled */ } finally { formSaveBtn.classList.remove('loading'); formSaveBtn.textContent = "บันทึก"; } }
     }
 
     async function initScanClaim() {
-        const readerElement = document.getElementById('qr-reader'), startBtn = document.getElementById('startScanBtn'), stopBtn = document.getElementById('stopScanBtn'), resultElement = document.getElementById('scan-result');
-        let html5QrCode = null;
+        const readerElement = document.getElementById('qr-reader'), startBtn = document.getElementById('startScanBtn'), stopBtn = document.getElementById('stopScanBtn'), resultElement = document.getElementById('scan-result'); let html5QrCode = null;
         const onScanSuccess = async (decodedText) => { await stopScanning(); resultElement.innerHTML = `<span class="loading loading-dots loading-md"></span>`; try { const responseText = await postData('claimItemByUniqueId', { uniqueId: decodedText }); showAlert('ผลการยืนยัน', responseText); resultElement.innerHTML = responseText.includes('สำเร็จ') ? `✅ ${responseText}` : `⚠️ ${responseText}`; } catch (error) { resultElement.innerHTML = `❌ ${error.message}`; } };
         const startScanning = () => { if (!html5QrCode) { html5QrCode = new Html5Qrcode("qr-reader"); } html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, ()=>{}) .then(() => { startBtn.classList.add('hidden'); stopBtn.classList.remove('hidden'); resultElement.textContent = 'กรุณาหันกล้องไปที่ QR Code'; }).catch(err => showAlert("ข้อผิดพลาด", "ไม่สามารถเปิดกล้องได้")); };
         const stopScanning = async () => { if (html5QrCode && html5QrCode.isScanning) { try { await html5QrCode.stop(); startBtn.classList.remove('hidden'); stopBtn.classList.add('hidden'); } catch (err) { console.error("Failed to stop scanning.", err); } } };
-        startBtn.onclick = startScanning; stopBtn.onclick = stopScanning;
-        window.addEventListener('hashchange', stopScanning, { once: true });
+        startBtn.onclick = startScanning; stopBtn.onclick = stopScanning; window.addEventListener('hashchange', stopScanning, { once: true });
     }
 
     async function initEvents() {
         const tableBody = document.getElementById('eventTableBody'); document.getElementById('addEventBtn').onclick = () => showEventFormModal(); await loadEvents();
         async function loadEvents() { tableBody.innerHTML = `<tr><td colspan="6" class="py-12 text-center"><span class="loading loading-spinner"></span></td></tr>`; try { const events = await fetchData('getEvents'); renderEventTable(events); } catch (e) { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-error">Load failed</td></tr>`; } }
-        function renderEventTable(events) { if (!events.length) { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = events.map(event => `<tr><td>${event.id}</td><td>${event.title}</td><td>${event.point}</td><td>${(event.allowedLevels || []).map(l => `<span class="badge badge-outline rounded-md">${l}</span>`).join(' ') || 'ทุกคน'}</td><td>${event.image ? `<img src="${event.image}" class="w-12 h-12 object-cover rounded-lg">` : '-'}</td><td><button class="btn btn-xs btn-info edit-event-btn rounded-md">แก้ไข</button> <button class="btn btn-xs btn-error delete-event-btn rounded-md">ลบ</button></td></tr>`).join(''); tableBody.querySelectorAll('.edit-event-btn').forEach((b,i) => b.onclick = () => showEventFormModal(events[i])); tableBody.querySelectorAll('.delete-event-btn').forEach((b,i) => b.onclick = () => deleteEvent(events[i].id)); }
+        function renderEventTable(events) { if (!events.length) { tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = events.map(event => `<tr><td>${event.id}</td><td>${event.title}</td><td>${event.point}</td><td>${(event.allowedLevels || []).map(l => `<span class="badge badge-outline rounded-md">${l}</span>`).join(' ') || 'ทุกคน'}</td><td>${event.image ? `<img src="${event.image}" class="w-12 h-12 object-cover rounded-lg">` : '-'}</td><td><button class="btn btn-xs btn-info edit-event-btn rounded-md" data-id="${event.id}">แก้ไข</button> <button class="btn btn-xs btn-error delete-event-btn rounded-md" data-id="${event.id}">ลบ</button></td></tr>`).join(''); tableBody.querySelectorAll('.edit-event-btn').forEach(b => b.onclick = () => showEventFormModal(events.find(e => e.id === b.dataset.id))); tableBody.querySelectorAll('.delete-event-btn').forEach(b => b.onclick = () => deleteEvent(b.dataset.id)); }
         function showEventFormModal(event) { const isEdit = !!event; dataFormModalTitle.textContent = isEdit ? 'แก้ไขกิจกรรม' : 'เพิ่มกิจกรรม'; const levelsHtml = USER_LEVELS.map(l => `<label class="label cursor-pointer justify-start gap-2"><input type="checkbox" name="allowedLevels" value="${l}" class="checkbox" ${event?.allowedLevels?.includes(l) ? 'checked' : ''}><span class="label-text">${l}</span></label>`).join(''); formFieldsContainer.innerHTML = `<input type="text" id="formEventId" placeholder="ID (auto)" class="input input-bordered rounded-lg" ${isEdit ? 'readonly' : ''} value="${isEdit ? event.id : ''}" /><input type="text" id="formEventTitle" placeholder="Title" class="input input-bordered rounded-lg" required value="${isEdit ? event.title : ''}" /><input type="number" id="formEventPoint" placeholder="Points" class="input input-bordered rounded-lg" required value="${isEdit ? event.point : 0}" /><div class="form-control"><label class="label"><span class="label-text">ระดับที่เข้าร่วมได้ (ไม่เลือก=ทุกคน)</span></label><div class="flex gap-4">${levelsHtml}</div></div><textarea id="formEventDesc" placeholder="Description" class="textarea textarea-bordered rounded-lg h-24">${isEdit ? (event.desc || '') : ''}</textarea><input type="url" id="formEventImage" placeholder="Image URL" class="input input-bordered rounded-lg" value="${isEdit ? (event.image || '') : ''}" />`; dataFormModal.showModal(); formSaveBtn.onclick = () => saveEvent(isEdit); formCancelBtn.onclick = () => dataFormModal.close(); }
         async function saveEvent(isEdit) { const data = { id: document.getElementById('formEventId').value.trim() || undefined, title: document.getElementById('formEventTitle').value.trim(), point: parseInt(document.getElementById('formEventPoint').value, 10), desc: document.getElementById('formEventDesc').value.trim(), image: document.getElementById('formEventImage').value.trim(), allowedLevels: Array.from(document.querySelectorAll('input[name="allowedLevels"]:checked')).map(cb => cb.value) }; if (!data.title) return showAlert('Error', 'Title is required.'); formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateEvent' : 'addEvent', data); showAlert('Success', `Event ${isEdit ? 'updated' : 'added'}`, () => { dataFormModal.close(); loadEvents(); }); } catch(e) {/* handled */ } finally { formSaveBtn.classList.remove('loading'); } }
         async function deleteEvent(id) { if (await showConfirm('Confirm', `ต้องการลบกิจกรรม ${id}?`)) { try { await postData('deleteEvent', { id }); showAlert('Success', 'Event deleted', loadEvents); } catch (e) {} } }
@@ -569,7 +383,7 @@
     async function initCodes() {
         const tableBody = document.getElementById('codeTableBody'); document.getElementById('addCodeBtn').onclick = () => showCodeFormModal(); await loadCodes();
         async function loadCodes() { tableBody.innerHTML = `<tr><td colspan="5" class="py-12 text-center"><span class="loading loading-spinner"></span></td></tr>`; try { const codes = await fetchData('getCodes'); renderCodeTable(codes); } catch (e) { tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-error">Load failed</td></tr>`; } }
-        function renderCodeTable(codes) { if (!codes.length) { tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = codes.map(c => `<tr><td class="font-mono text-xs">${c.id}</td><td>${c.title}</td><td>${c.point}</td><td class="max-w-xs truncate">${c.desc || '-'}</td><td><button class="btn btn-xs btn-accent qr-gen-btn rounded-md">QR</button> <button class="btn btn-xs btn-info edit-code-btn rounded-md">แก้ไข</button> <button class="btn btn-xs btn-error delete-code-btn rounded-md">ลบ</button></td></tr>`).join(''); tableBody.querySelectorAll('.qr-gen-btn').forEach((b,i) => b.onclick = () => { const canvas = document.getElementById('qrCodeCanvas'); document.getElementById('qrCodeModalTitle').textContent = `QR Code: ${codes[i].title}`; canvas.innerHTML = ''; new QRCode(canvas, { text: codes[i].id, width: 256, height: 256 }); document.getElementById('qrCodeModal').showModal(); }); tableBody.querySelectorAll('.edit-code-btn').forEach((b,i) => b.onclick = () => showCodeFormModal(codes[i])); tableBody.querySelectorAll('.delete-code-btn').forEach((b,i) => b.onclick = () => deleteCode(codes[i].id)); }
+        function renderCodeTable(codes) { if (!codes.length) { tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4">ไม่พบข้อมูล</td></tr>`; return; } tableBody.innerHTML = codes.map(c => `<tr><td class="font-mono text-xs">${c.id}</td><td>${c.title}</td><td>${c.point}</td><td class="max-w-xs truncate">${c.desc || '-'}</td><td><button class="btn btn-xs btn-accent qr-gen-btn rounded-md">QR</button> <button class="btn btn-xs btn-info edit-code-btn rounded-md">แก้ไข</button> <button class="btn btn-xs btn-error delete-code-btn rounded-md">ลบ</button></td></tr>`).join(''); tableBody.querySelectorAll('.qr-gen-btn').forEach(b => { b.onclick = () => { const code = codes.find(c=>c.id === b.parentElement.parentElement.children[0].textContent); const canvas = document.getElementById('qrCodeCanvas'); document.getElementById('qrCodeModalTitle').textContent = `QR Code: ${code.title}`; canvas.innerHTML = ''; new QRCode(canvas, { text: code.id, width: 256, height: 256 }); document.getElementById('qrCodeModal').showModal(); }; }); tableBody.querySelectorAll('.edit-code-btn').forEach(b => b.onclick = () => showCodeFormModal(codes.find(c => c.id === b.parentElement.parentElement.children[0].textContent))); tableBody.querySelectorAll('.delete-code-btn').forEach(b => b.onclick = () => deleteCode(b.parentElement.parentElement.children[0].textContent)); }
         function showCodeFormModal(code) { const isEdit = !!code; dataFormModalTitle.textContent = isEdit ? 'แก้ไขโค้ด' : 'เพิ่มโค้ด'; formFieldsContainer.innerHTML = `<input type="text" id="formCodeId" placeholder="ID (QR Value)" class="input input-bordered rounded-lg" ${isEdit ? 'readonly' : 'required'} value="${isEdit ? code.id : ''}" /><input type="text" id="formCodeTitle" placeholder="Title" class="input input-bordered rounded-lg" required value="${isEdit ? code.title : ''}" /><input type="number" id="formCodePoint" placeholder="Points" class="input input-bordered rounded-lg" required value="${isEdit ? code.point : 0}" /><textarea id="formCodeDesc" placeholder="Description" class="textarea textarea-bordered rounded-lg h-24">${isEdit ? (code.desc || '') : ''}</textarea>`; dataFormModal.showModal(); formSaveBtn.onclick = () => saveCode(isEdit); formCancelBtn.onclick = () => dataFormModal.close(); }
         async function saveCode(isEdit) { const data = { id: document.getElementById('formCodeId').value.trim(), title: document.getElementById('formCodeTitle').value.trim(), point: parseInt(document.getElementById('formCodePoint').value, 10), desc: document.getElementById('formCodeDesc').value.trim() }; if (!data.id || !data.title) return showAlert('Error', 'ID and Title are required.'); formSaveBtn.classList.add('loading'); try { await postData(isEdit ? 'updateCode' : 'addCode', data); showAlert('Success', `Code ${isEdit ? 'updated' : 'added'}`, () => { dataFormModal.close(); loadCodes(); }); } catch(e) {/* handled */ } finally { formSaveBtn.classList.remove('loading'); } }
         async function deleteCode(id) { if (await showConfirm('Confirm', `ต้องการลบโค้ด ${id}?`)) { try { await postData('deleteCode', { id }); showAlert('Success', 'Code deleted', loadCodes); } catch (e) {} } }
