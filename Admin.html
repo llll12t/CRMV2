@@ -64,6 +64,7 @@
         <li><a href="#dashboard" class="nav-link">ภาพรวม</a></li>
         <li><a href="#users" class="nav-link">จัดการผู้ใช้</a></li>
         <li><a href="#items" class="nav-link">จัดการของรางวัล</a></li>
+        <li><a href="#add-points" class="nav-link">เพิ่มแต้มให้ลูกค้า</a></li> 
         <li><a href="#warehouse" class="nav-link">คลังสินค้า</a></li>
         <li><a href="#scan-claim" class="nav-link">สแกนรับของ</a></li>
         <li><a href="#events" class="nav-link">จัดการกิจกรรม</a></li>
@@ -150,7 +151,34 @@
         </div>
     </div>
   </dialog>
-
+<!-- TEMPLATES -->
+  <template id="view-add-points">
+    <h2 class="text-2xl font-bold mb-4">เพิ่มแต้มให้ลูกค้า</h2>
+    <div class="card bg-base-100 shadow-xl max-w-lg mx-auto">
+        <div class="card-body">
+            <p class="text-sm opacity-70 mb-4">กรอก Line ID หรือเบอร์โทรศัพท์ของลูกค้า, จำนวนแต้ม, และเหตุผลที่ให้แต้ม ระบบจะเพิ่มแต้มและส่งการแจ้งเตือนไปยัง LINE ของลูกค้าโดยอัตโนมัติ</p>
+            <form id="addPointsForm" onsubmit="event.preventDefault()" class="space-y-4">
+                <div class="form-control">
+                    <label class="label"><span class="label-text">Line ID หรือ เบอร์โทรศัพท์</span></label>
+                    <input type="text" id="addPointsIdentifier" placeholder="ค้นหาลูกค้า..." class="input input-bordered w-full" required />
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">จำนวนแต้มที่ให้</span></label>
+                    <input type="number" id="addPointsAmount" placeholder="เช่น 20" class="input input-bordered w-full" required min="1" />
+                </div>
+                <div class="form-control">
+                    <label class="label"><span class="label-text">เหตุผลที่ให้แต้ม</span></label>
+                    <input type="text" id="addPointsReason" placeholder="เช่น ซื้อกาแฟ 2 แก้ว" class="input input-bordered w-full" required />
+                </div>
+                <div class="mt-6">
+                    <button type="submit" id="addPointsSubmitBtn" class="btn btn-primary w-full">
+                        ยืนยันและส่งการแจ้งเตือน
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+  </template>
 <script>
     // ==========================================================
     // ===                 GLOBAL VARIABLES                   ===
@@ -185,6 +213,8 @@
         '': { tpl: 'view-dashboard', init: initDashboard },
         '#dashboard': { tpl: 'view-dashboard', init: initDashboard },
         '#users': { tpl: 'view-users', init: initUsers },
+         '#add-points': { tpl: 'view-add-points', init: initAddPoints }, // <-- เพิ่มบรรทัดนี้
+ 
         '#items': { tpl: 'view-items', init: initItems },
         '#warehouse': { tpl: 'view-warehouse', init: initWarehouse },
         '#scan-claim': { tpl: 'view-scan-claim', init: initScanClaim },
@@ -380,6 +410,59 @@
         try { const config = await fetchData('getLevelConfig'); vipInput.value = config.VIP_points; superInput.value = config.SUPER_points; } catch (e) { /* Handled */ }
         form.onsubmit = async (e) => { e.preventDefault(); const vip = parseInt(vipInput.value), superP = parseInt(superInput.value); if (isNaN(vip) || isNaN(superP)) return showAlert('Error', 'กรุณากรอกตัวเลข'); if (vip >= superP && superP !== 0) return showAlert('Error', 'แต้ม SUPER ต้องมากกว่า VIP'); const btn = document.getElementById('saveLevelSettingsBtn'); btn.classList.add('loading'); try { await postData('setLevelConfig', { VIP_points: vip, SUPER_points: superP }); showAlert('Success', 'บันทึกการตั้งค่าแล้ว'); } finally { btn.classList.remove('loading'); } };
     }
+
+    
+async function initAddPoints() {
+    const form = document.getElementById('addPointsForm');
+    const submitBtn = document.getElementById('addPointsSubmitBtn');
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const identifier = document.getElementById('addPointsIdentifier').value.trim();
+        const points = document.getElementById('addPointsAmount').value;
+        const reason = document.getElementById('addPointsReason').value.trim();
+
+        if (!identifier || !points || !reason) {
+            showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกข้อมูลทุกช่อง');
+            return;
+        }
+
+        if (await showConfirm('ยืนยันการเพิ่มแต้ม', `คุณต้องการเพิ่ม ${points} แต้มให้ผู้ใช้ "${identifier}" \nเหตุผล: ${reason}\n\nระบบจะส่งการแจ้งเตือนไปที่ LINE ของลูกค้าด้วย`)) {
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+
+            try {
+                // ที่นี่เราใช้ postData ไม่ใช่ fetchData เพราะเราจะส่งข้อมูลไปแก้ไข
+                const responseText = await postData('addPointsToUser', {
+                    identifier: identifier,
+                    points: points,
+                    reason: reason
+                });
+                
+                // ลองพยายาม parse JSON จาก response
+                let result;
+                try {
+                   result = JSON.parse(responseText);
+                } catch(jsonError){
+                   result = { success: true, message: responseText }; // ถ้าไม่ใช่ JSON ให้ถือว่าสำเร็จและใช้ text ตรงๆ
+                }
+
+                if (result.success === false) { // เช็ค error จาก backend
+                   showAlert('เกิดข้อผิดพลาด', result.error || 'ไม่สามารถทำรายการได้');
+                } else {
+                   showAlert('สำเร็จ', result.message || 'เพิ่มแต้มเรียบร้อยแล้ว');
+                   form.reset(); // ล้างฟอร์มเมื่อสำเร็จ
+                }
+
+            } catch (error) {
+                showAlert('เกิดข้อผิดพลาดรุนแรง', error.message);
+            } finally {
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+            }
+        }
+    };
+}
 
     // --- App Start ---
     document.addEventListener('DOMContentLoaded', () => {
