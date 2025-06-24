@@ -150,9 +150,6 @@
                     // *** เปลี่ยน URL ไปยัง Cloud Function สำหรับ POST requests ***
                     const response = await fetch(CONFIG.GAS_URL, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
                         body: JSON.stringify({
                             action: 'register',
                             lineId: userLineId,
