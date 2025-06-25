@@ -11,31 +11,27 @@
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
-    /* Custom Base Styles */
     body {
-      background-color: #f3f4f6; /* bg-gray-100 */
+      background-color: #f3f4f6; 
       font-family: 'Inter', 'Kanit', sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
     #qr-shaded-region { border-width: 0 !important; } 
-    .hidden { display: none !important; }
-    
+    .hidden { display: none !important; }  
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loading-spinner { 
-      border: 4px solid rgba(0, 0, 0, 0.1); 
-      border-left-color: #1f2937; /* border-left-gray-800 */
+      border: 2px solid rgba(0, 0, 0, 0.5); 
+      border-left-color: #1f2937; 
       border-radius: 50%; 
-      width: 40px; 
-      height: 40px; 
+      width: 80px; 
+      height: 80px; 
       animation: spin 1s linear infinite; 
     }
     .page-loader { 
       display: flex; flex-direction: column; align-items: center; 
       justify-content: center; gap: 1rem; padding: 2rem; 
-      color: #6b7280; /* text-gray-500 */
+      color: #6b7280; 
     }
-
-    /* Custom Modal Styles */
     .modal-overlay {
         position: fixed; inset: 0; z-index: 50;
         display: flex; align-items: center; justify-content: center;
@@ -50,12 +46,12 @@
     .modal-box {
         background-color: white;
         padding: 1.5rem;
-        border-radius: 0.75rem; /* rounded-xl */
+        border-radius: 0.75rem; 
         box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
         transform: scale(0.95);
         transition: transform 0.3s ease;
         width: 90%;
-        max-width: 28rem; /* max-w-md */
+        max-width: 28rem; 
     }
     .modal-overlay.active .modal-box {
         transform: scale(1);
@@ -73,7 +69,6 @@
         <div id="app-container" class="transition-opacity duration-300"></div>
       </main>
   </div>
-
   <!-- MODALS -->
   <div id="customAlertDialog" class="modal-overlay">
     <div class="modal-box">
@@ -99,18 +94,40 @@
       <button id="closeScanCustomerBtn" class="w-full bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">ยกเลิก</button>
     </div>
   </div>
-
   <!-- Main Template -->
   <template id="view-cashier-page">
     <div class="w-full max-w-4xl mx-auto">
-      <!-- Custom Tabs -->
+      <!-- Custom Tabs -- (REORDERED) -->
       <div class="flex border-b border-gray-200 mb-4" id="main-tabs-container">
-        <button data-tab="pos" class="tab-button flex-1 py-3 px-1 text-center font-semibold text-gray-500 border-b-2 border-transparent hover:border-gray-300 hover:text-gray-700">ให้แต้ม</button>
         <button data-tab="scan" class="tab-button flex-1 py-3 px-1 text-center font-semibold text-gray-500 border-b-2 border-transparent hover:border-gray-300 hover:text-gray-700">สแกนรับของ</button>
         <button data-tab="history" class="tab-button flex-1 py-3 px-1 text-center font-semibold text-gray-500 border-b-2 border-transparent hover:border-gray-300 hover:text-gray-700">ประวัติ</button>
+        <button data-tab="pos" class="tab-button flex-1 py-3 px-1 text-center font-semibold text-gray-500 border-b-2 border-transparent hover:border-gray-300 hover:text-gray-700">ให้แต้ม</button>
       </div>
-      
-      <!-- Tab Content Panels -->
+      <!-- Tab Content Panels -- (REORDERED) -->
+      <div id="scan-tab-panel" class="tab-panel hidden">
+        <div class="bg-white shadow-md rounded-lg p-4 sm:p-6 text-center">
+            <h3 class="text-xl font-bold mb-4 text-gray-800">สแกน QR Code รับของ</h3>
+            <div id="qr-reader" class="w-full max-w-sm h-64 mx-auto bg-gray-200 rounded-lg mb-4 border-2 border-dashed border-gray-300 overflow-hidden"></div>
+            <div class="w-full max-w-sm mx-auto">
+                <button id="startScanBtn" class="w-full bg-gray-800 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700">เริ่มสแกน</button>
+                <button id="stopScanBtn" class="w-full bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 hidden">หยุดสแกน</button>
+            </div>
+            <div id="scan-result" class="mt-4 text-md font-semibold h-10 text-gray-700"></div>
+        </div>
+      </div>
+      <div id="history-tab-panel" class="tab-panel hidden">
+        <div class="bg-white shadow-md rounded-lg p-4 sm:p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">ประวัติล่าสุด</h3>
+                <button id="refreshHistoryBtn" class="p-2 rounded-lg bg-white hover:bg-gray-100 border border-gray-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="#000000" fill="none">
+                        <path d="M20.0092 2V5.13219C20.0092 5.42605 19.6418 5.55908 19.4537 5.33333C17.6226 3.2875 14.9617 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>                
+                </button>
+            </div>
+            <div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-4 py-3">วันที่</th><th class="px-4 py-3">ประเภท</th><th class="px-4 py-3">รายละเอียด</th><th class="px-4 py-3 text-right">แต้ม</th></tr></thead><tbody id="historyTableBody" class="bg-white"></tbody></table></div>
+        </div>
+      </div>
       <div id="pos-tab-panel" class="tab-panel">
         <div class="bg-white shadow-md rounded-lg p-4 sm:p-6">
             <form id="addPointsForm" onsubmit="event.preventDefault()" class="space-y-6">
@@ -136,31 +153,8 @@
             </form>
         </div>
       </div>
-      
-      <div id="scan-tab-panel" class="tab-panel hidden">
-        <div class="bg-white shadow-md rounded-lg p-4 sm:p-6 text-center">
-            <h3 class="text-xl font-bold mb-4 text-gray-800">สแกน QR Code รับของ</h3>
-            <div id="qr-reader" class="w-full max-w-sm h-64 mx-auto bg-gray-200 rounded-lg mb-4 border-2 border-dashed border-gray-300 overflow-hidden"></div>
-            <div class="w-full max-w-sm mx-auto">
-                <button id="startScanBtn" class="w-full bg-gray-800 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700">เริ่มสแกน</button>
-                <button id="stopScanBtn" class="w-full bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 hidden">หยุดสแกน</button>
-            </div>
-            <div id="scan-result" class="mt-4 text-md font-semibold h-10 text-gray-700"></div>
-        </div>
-      </div>
-
-      <div id="history-tab-panel" class="tab-panel hidden">
-        <div class="bg-white shadow-md rounded-lg p-4 sm:p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800">ประวัติล่าสุด</h3>
-                <button id="refreshHistoryBtn" class="p-2 rounded-lg bg-white hover:bg-gray-100 border border-gray-300"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 4l1.5 1.5A9 9 0 0120.5 15M20 20l-1.5-1.5A9 9 0 003.5 9" /></svg></button>
-            </div>
-            <div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-4 py-3">วันที่</th><th class="px-4 py-3">ประเภท</th><th class="px-4 py-3">รายละเอียด</th><th class="px-4 py-3 text-right">แต้ม</th></tr></thead><tbody id="historyTableBody" class="bg-white"></tbody></table></div>
-        </div>
-      </div>
     </div>
   </template>
-  
 <script>
     // === GLOBAL VARIABLES ===
     const appContainer = document.getElementById('app-container');
@@ -251,7 +245,7 @@
         refreshHistoryBtn.onclick = loadHistory;
 
         // Initialize first tab
-        switchTab('pos');
+        switchTab('scan');
     }
 
     // --- App Start ---
