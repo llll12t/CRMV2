@@ -104,7 +104,7 @@
         <button data-tab="pos" class="tab-button flex-1 py-3 px-1 text-center font-semibold text-gray-500 border-b-2 border-transparent hover:border-gray-300 hover:text-gray-700">ให้แต้ม</button>
       </div>
       <!-- Tab Content Panels -- (REORDERED) -->
-      <div id="scan-tab-panel" class="tab-panel hidden">
+      <div id="scan-tab-panel" class="tab-panel ">
         <div class="bg-white shadow-md rounded-lg p-4 sm:p-6 text-center">
             <h3 class="text-xl font-bold mb-4 text-gray-800">สแกน QR Code รับของ</h3>
             <div id="qr-reader" class="w-full max-w-sm h-64 mx-auto bg-gray-200 rounded-lg mb-4 border-2 border-dashed border-gray-300 overflow-hidden"></div>
@@ -128,7 +128,7 @@
             <div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-4 py-3">วันที่</th><th class="px-4 py-3">ประเภท</th><th class="px-4 py-3">รายละเอียด</th><th class="px-4 py-3 text-right">แต้ม</th></tr></thead><tbody id="historyTableBody" class="bg-white"></tbody></table></div>
         </div>
       </div>
-      <div id="pos-tab-panel" class="tab-panel">
+      <div id="pos-tab-panel" class="tab-panel hidden">
         <div class="bg-white shadow-md rounded-lg p-4 sm:p-6">
             <form id="addPointsForm" onsubmit="event.preventDefault()" class="space-y-6">
                 <div><label class="block text-sm font-semibold text-gray-700 mb-1">1. ระบุลูกค้า</label><input type="text" id="addPointsIdentifier" placeholder="กรอก Line ID, เบอร์โทร..." class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required /><button type="button" id="scanCustomerBtn" class="w-full mt-2 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"> <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5" /></svg> สแกน QR ลูกค้า </button></div>
