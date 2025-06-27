@@ -10,32 +10,6 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          // Base Light Mode
-          'thm-bg': '#ffffff',         // พื้นหลังหลัก (ขาว)
-          'thm-text': '#000000',       // ตัวหนังสือหลัก (ดำ)
-
-          // Brand Colors
-          'thm-primary': '#866147',        // สีน้ำตาลหลัก
-          'thm-secondary': '#A67F68',      // สีน้ำตาลอ่อน
-          'thm-accent': '#C5A894',         // สีไฮไลต์
-          'thm-primary-dark': '#6c4e38',   // สำหรับ hover หรือปุ่มเข้ม
-          'thm-secondary-dark': '#85634d', // สำหรับ hover หรือองค์ประกอบรอง
-          
-          // UI Extras (optional)
-          'thm-card': '#f8f8f8',
-          'thm-border': '#e5e7eb',
-        },
-      },
-    },
-  };
-</script>
-
-
   <!-- Load config before main script -->
   <script src="Config.js"></script>
   <!-- LIFF SDK -->
@@ -48,167 +22,144 @@
       display: none !important;
     }
 
-    .neon-text {
-      color: #fff;
-      text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e, 0 0 40px #ff005e, 0 0 80px #ff005e;
-      animation: glow 1.5s infinite alternate;
-    }
-
+    /* Removed neon text effect as it does not fit the new theme */
     @keyframes glow {
-      from {
-        text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e;
-      }
-
-      to {
-        text-shadow: 0 0 10px #00d4ff, 0 0 20px #00d4ff, 0 0 40px #00d4ff;
-      }
+      from { text-shadow: none; }
+      to { text-shadow: none; }
     }
-
+    
     @keyframes pulse-opacity {
-
-      0%,
-      100% {
-        opacity: 0.5;
-      }
-
-      50% {
-        opacity: 1;
-      }
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
     }
-
     .loading-card-animation {
       animation: pulse-opacity 1.5s infinite ease-in-out;
     }
 
-    /* Adjusted for the new theme */
-    .glass-effect {
-      background: rgba(134, 97, 71, 0.2); /* thm-primary with alpha */
+    /* New Glassmorphism Style based on the provided image */
+    .glass-ui {
+      background: rgba(255, 255, 255, 0.4);
       box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-      backdrop-filter: blur(8.1px);
-      -webkit-backdrop-filter: blur(8.1px);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
       border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Custom scrollbar for webkit browsers */
+    #app::-webkit-scrollbar {
+      width: 5px;
+    }
+    #app::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #app::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+    #app::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.4);
     }
   </style>
 </head>
 
-<body class="bg-gradient-to-b from-thm-primary via-white to-white min-h-screen relative bg-fixed p-6 text-gray-800 bg-fixed">
-  <!-- Header -->
-  <div class="flex justify-between items-center mb-6">
-    <h2 id="pageTitle" class="text-xl font-bold text-white">กำลังโหลด...</h2>
-    <div class="glass-effect rounded-full flex items-center p-1 space-x-2">
-      <div id="pointVal" class="font-bold text-white text-lg px-2">0</div>
-      <img id="lineDisplayPicture" class="w-10 h-10 rounded-full object-cover border-2 border-white"
-        src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" />
+<body class="bg-[#f0f0f0] min-h-screen flex items-center justify-center p-4 font-sans text-black">
+  <!-- Background Sun Gradient -->
+  <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] bg-orange-400 rounded-full blur-[150px] opacity-60"></div>
+  <div class="fixed top-[48%] left-[52%] -translate-x-1/2 -translate-y-1/2 w-[25vw] h-[25vw] max-w-[250px] max-h-[250px] bg-yellow-200 rounded-full blur-[100px] opacity-80"></div>
+
+  <!-- Main UI Container -->
+  <div class="glass-ui w-full max-w-[420px] h-[90vh] max-h-[800px] rounded-3xl p-6 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <div class="flex-shrink-0 flex justify-between items-center mb-6">
+      <h2 id="pageTitle" class="text-xl font-bold text-black">กำลังโหลด...</h2>
+      <div class="flex items-center p-1 space-x-2">
+        <div id="pointVal" class="font-bold text-black text-lg px-2">0</div>
+        <img id="lineDisplayPicture" class="w-10 h-10 rounded-full object-cover border-2 border-white/50" src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" />
+      </div>
+    </div>
+
+    <!-- Main App Container (Scrollable) -->
+    <div id="app" class="flex-grow overflow-y-auto -mr-4 pr-4">
+      <div class="text-center text-gray-700 py-8">กำลังโหลดเนื้อหา...</div>
     </div>
   </div>
 
-  <!-- Main App Container -->
-  <div id="app">
-    <div class="text-center text-gray-100 py-8">กำลังโหลดเนื้อหา...</div>
-  </div>
-
-  <!-- Dialogs (Tailwind Styled) -->
-  <dialog id="customAlertDialog" class="p-0 rounded-lg shadow-xl backdrop:bg-black/50">
-    <div class="bg-thm-bg rounded-lg p-6 w-full max-w-sm mx-auto text-center">
-      <h3 id="customAlertTitle" class="font-bold text-lg mb-3 text-thm-primary-dark"></h3>
-      <p id="customAlertMessage" class="py-4 whitespace-pre-line text-gray-700"></p>
+  <!-- Dialogs (Styled with new Glass UI) -->
+  <dialog id="customAlertDialog" class="p-0 rounded-3xl shadow-xl backdrop:bg-black/50 bg-transparent">
+    <div class="glass-ui rounded-3xl p-6 w-full max-w-sm mx-auto text-center">
+      <h3 id="customAlertTitle" class="font-bold text-lg mb-3 text-black"></h3>
+      <p id="customAlertMessage" class="py-4 whitespace-pre-line text-gray-800"></p>
       <div class="mt-6 flex justify-center">
-        <button id="customAlertButton" class="w-full bg-thm-primary text-white font-bold py-2 px-4 rounded hover:bg-thm-primary-dark transition-colors">ตกลง</button>
+        <button id="customAlertButton" class="w-full bg-black text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors">ตกลง</button>
       </div>
     </div>
   </dialog>
 
-  <dialog id="customConfirmDialog" class="p-0 rounded-lg shadow-xl backdrop:bg-black/50">
-    <div class="bg-thm-bg rounded-lg p-6 w-full max-w-sm mx-auto text-center">
-      <h3 id="customConfirmTitle" class="font-bold text-lg mb-3 text-thm-primary-dark"></h3>
+  <dialog id="customConfirmDialog" class="p-0 rounded-3xl shadow-xl backdrop:bg-black/50 bg-transparent">
+    <div class="glass-ui rounded-3xl p-6 w-full max-w-sm mx-auto text-center">
+      <h3 id="customConfirmTitle" class="font-bold text-lg mb-3 text-black"></h3>
       <p id="customConfirmMessage" class="py-4 text-gray-700"></p>
       <div class="mt-6 flex justify-around space-x-4">
-        <button id="customConfirmCancelButton" class="flex-1 border border-thm-primary text-thm-primary font-bold py-2 px-4 rounded hover:bg-thm-accent transition-colors">ยกเลิก</button>
-        <button id="customConfirmConfirmButton" class="flex-1 bg-thm-primary text-white font-bold py-2 px-4 rounded hover:bg-thm-primary-dark transition-colors">ยืนยัน</button>
+        <button id="customConfirmCancelButton" class="flex-1 border border-black text-black font-bold py-2 px-4 rounded-lg hover:bg-black/10 transition-colors">ยกเลิก</button>
+        <button id="customConfirmConfirmButton" class="flex-1 bg-black text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors">ยืนยัน</button>
       </div>
     </div>
   </dialog>
 
-  <!-- QR Code Dialog (for Warehouse) -->
-  <dialog id="qrDialog" class="p-0 rounded-lg shadow-xl backdrop:bg-black/50">
-    <div class="bg-thm-bg rounded-lg p-6 w-full max-w-sm mx-auto text-center">
-      <h3 id="qrDialogTitle" class="font-bold text-lg mb-2 text-thm-primary-dark">สแกนเพื่อรับของ</h3>
+  <dialog id="qrDialog" class="p-0 rounded-3xl shadow-xl backdrop:bg-black/50 bg-transparent">
+    <div class="glass-ui rounded-3xl p-6 w-full max-w-sm mx-auto text-center">
+      <h3 id="qrDialogTitle" class="font-bold text-lg mb-2 text-black">สแกนเพื่อรับของ</h3>
       <p id="qrDialogItemName" class="mb-4 text-sm text-gray-600"></p>
       <div id="qrcode" class="flex justify-center mb-4 p-4 bg-white rounded-lg"></div>
       <p class="text-xs text-gray-500 mb-4">ให้พนักงานสแกน QR Code นี้เพื่อตรวจสอบและยืนยันการรับสินค้า</p>
       <div class="mt-6 flex flex-wrap justify-around gap-2">
-        <button id="qrDialogCloseBtn" class="flex-1 border border-thm-primary text-thm-primary font-bold py-2 px-4 rounded hover:bg-thm-accent transition-colors">ปิด</button>
-        <button id="sendMessageToOABtn" class="flex-1 bg-thm-secondary text-white font-bold py-2 px-4 rounded hover:bg-thm-secondary-dark transition-colors">แจ้งพนักงาน</button>
-        <button id="qrDialogConfirmBtn" class="w-full bg-thm-primary text-white font-bold py-2 px-4 rounded hover:bg-thm-primary-dark transition-colors hidden mt-2">ยืนยันการรับของ</button>
+        <button id="qrDialogCloseBtn" class="flex-1 border border-black text-black font-bold py-2 px-4 rounded-lg hover:bg-black/10 transition-colors">ปิด</button>
+        <button id="sendMessageToOABtn" class="flex-1 bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">แจ้งพนักงาน</button>
+        <button id="qrDialogConfirmBtn" class="w-full bg-black text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors hidden mt-2">ยืนยันการรับของ</button>
       </div>
     </div>
   </dialog>
 
-
   <!-- Template: Dashboard (Main Menu) -->
   <template id="view-dashboard">
-    <div class="glass-effect rounded-2xl p-4 grid grid-cols-3 gap-3 text-center text-sm font-medium mb-6">
-      <a href="#event" class="bg-white/80 text-thm-primary-dark p-3 rounded-2xl flex flex-col items-center justify-center space-y-1 hover:bg-white transition-all">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-        </svg>
+    <div class="bg-black/5 rounded-2xl p-4 grid grid-cols-3 gap-3 text-center text-sm font-medium mb-6">
+      <a href="#event" class="bg-white/40 text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1 hover:bg-white/60 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
         <span>กิจกรรม</span>
       </a>
-      <a href="#warehouse" class="bg-white/80 text-thm-primary-dark p-3 rounded-2xl flex flex-col items-center justify-center space-y-1 hover:bg-white transition-all">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-        </svg>
+      <a href="#warehouse" class="bg-white/40 text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1 hover:bg-white/60 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
         <span>คลัง</span>
       </a>
-      <a href="#addpoint" class="bg-white/80 text-thm-primary-dark p-3 rounded-2xl flex flex-col items-center justify-center space-y-1 hover:bg-white transition-all">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none">
-          <path
-            d="M2.5 8.18677C2.60406 6.08705 2.91537 4.77792 3.84664 3.84664C4.77792 2.91537 6.08705 2.60406 8.18677 2.5M21.5 8.18677C21.3959 6.08705 21.0846 4.77792 20.1534 3.84664C19.2221 2.91537 17.9129 2.60406 15.8132 2.5M15.8132 21.5C17.9129 21.3959 19.2221 21.0846 20.1534 20.1534C21.0846 19.2221 21.3959 17.9129 21.5 15.8132M8.18676 21.5C6.08705 21.3959 4.77792 21.0846 3.84664 20.1534C2.91537 19.2221 2.60406 17.9129 2.5 15.8132"
-            stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-          <path d="M2.49986 12H21.4999" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-          <path
-            d="M6 12C6 8.68629 8.68629 6 12 6C12 7.65685 13.3431 9 15 9C15.6755 9 16.2989 8.77672 16.8004 8.39993C17.5536 9.40273 18 10.6492 18 12M17.1973 15C16.1599 16.7934 14.2208 18 12 18C9.77915 18 7.84012 16.7934 6.80269 15"
-            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-        </svg>
+      <a href="#addpoint" class="bg-white/40 text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1 hover:bg-white/60 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none"><path d="M2.5 8.18677C2.60406 6.08705 2.91537 4.77792 3.84664 3.84664C4.77792 2.91537 6.08705 2.60406 8.18677 2.5M21.5 8.18677C21.3959 6.08705 21.0846 4.77792 20.1534 3.84664C19.2221 2.91537 17.9129 2.60406 15.8132 2.5M15.8132 21.5C17.9129 21.3959 19.2221 21.0846 20.1534 20.1534C21.0846 19.2221 21.3959 17.9129 21.5 15.8132M8.18676 21.5C6.08705 21.3959 4.77792 21.0846 3.84664 20.1534C2.91537 19.2221 2.60406 17.9129 2.5 15.8132" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M2.49986 12H21.4999" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M6 12C6 8.68629 8.68629 6 12 6C12 7.65685 13.3431 9 15 9C15.6755 9 16.2989 8.77672 16.8004 8.39993C17.5536 9.40273 18 10.6492 18 12M17.1973 15C16.1599 16.7934 14.2208 18 12 18C9.77915 18 7.84012 16.7934 6.80269 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
         <span>สแกนรับ</span>
       </a>
-      <a href="#transfer" class="bg-white/80 text-thm-primary-dark p-3 rounded-2xl flex flex-col items-center justify-center space-y-1 hover:bg-white transition-all">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-        </svg>
+      <a href="#transfer" class="bg-white/40 text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1 hover:bg-white/60 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
         <span>โอนพ้อย</span>
       </a>
-      <a href="#redeem" class="bg-white/80 text-thm-primary-dark p-3 rounded-2xl flex flex-col items-center justify-center space-y-1 hover:bg-white transition-all">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-        </svg>
+      <a href="#redeem" class="bg-white/40 text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1 hover:bg-white/60 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
         <span>แลกพ้อย</span>
       </a>
-      <a href="#profile" class="bg-white/80 text-thm-primary-dark p-3 rounded-2xl flex flex-col items-center justify-center space-y-1 hover:bg-white transition-all">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
+      <a href="#profile" class="bg-white/40 text-black p-3 rounded-2xl flex flex-col items-center justify-center space-y-1 hover:bg-white/60 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
         <span>บัญชี</span>
       </a>
     </div>
 
     <div id="checkinBox" class="flex items-center justify-between mb-8 hidden">
-      <div class="bg-thm-accent rounded-full px-4 py-2 flex items-center space-x-2 text-thm-primary-dark">
+      <div class="bg-black/10 rounded-full px-4 py-2 flex items-center space-x-2 text-black">
         <span class="text-sm">วันที่</span><span id="todayDate" class="font-bold text-md">00</span>
       </div>
-      <div class="bg-yellow-400 rounded-full w-10 h-10 flex items-center justify-center text-white font-bold text-sm">+1
-      </div>
-      <button id="checkinBtn" class="bg-thm-primary text-white font-bold py-1.5 px-3 text-sm rounded-lg hover:bg-thm-primary-dark transition-colors">เช็คอิน</button>
+      <div class="bg-yellow-400 rounded-full w-10 h-10 flex items-center justify-center text-black font-bold text-sm">+1</div>
+      <button id="checkinBtn" class="bg-black text-white font-bold py-1.5 px-3 text-sm rounded-lg hover:bg-gray-800 transition-colors">เช็คอิน</button>
     </div>
 
     <div>
       <div class="flex justify-between items-center mb-4">
-        <div class="font-bold text-lg text-thm-primary-dark">รายการล่าสุด</div>
+        <div class="font-bold text-lg text-black">รายการล่าสุด</div>
         <div class="text-xs text-gray-500 font-medium">POINT</div>
       </div>
       <ul id="historyList" class="space-y-4"></ul>
@@ -223,19 +174,19 @@
   <!-- Template: Event Detail -->
   <template id="view-event-detail">
     <div id="cardWrapper">
-      <div id="cardSkeleton" class="bg-white p-6 rounded-lg shadow-md mb-6 animate-pulse">
-        <div class="h-6 bg-gray-200 rounded-lg w-1/3 mb-4"></div>
-        <div class="h-4 bg-gray-200 rounded-lg w-1/4 mb-2"></div>
-        <div class="h-3 bg-gray-200 rounded-lg w-full mb-6"></div>
-        <div class="h-12 bg-gray-200 rounded-full w-full"></div>
+      <div id="cardSkeleton" class="bg-black/5 p-6 rounded-lg shadow-md mb-6 animate-pulse">
+        <div class="h-6 bg-gray-300 rounded-lg w-1/3 mb-4"></div>
+        <div class="h-4 bg-gray-300 rounded-lg w-1/4 mb-2"></div>
+        <div class="h-3 bg-gray-300 rounded-lg w-full mb-6"></div>
+        <div class="h-12 bg-gray-300 rounded-full w-full"></div>
       </div>
-      <div id="card" class="bg-thm-bg/80 p-6 rounded-lg shadow-md text-gray-800 mb-6 hidden">
+      <div id="card" class="bg-black/5 p-6 rounded-lg shadow-md text-gray-800 mb-6 hidden">
         <div class="flex justify-between items-start mb-3">
-          <div class="font-bold text-lg text-thm-primary-dark" id="eventDetailTitle">–</div>
+          <div class="font-bold text-lg text-black" id="eventDetailTitle">–</div>
           <div class="bg-yellow-400 text-black font-bold text-md px-3 py-1 rounded-full" id="eventPoint">0+</div>
         </div>
         <div class="text-sm text-gray-700 mb-6 leading-relaxed" id="eventDetailDesc">...</div>
-        <button id="joinBtn" class="w-full bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark transition-colors disabled:bg-gray-400">เข้าร่วม</button>
+        <button id="joinBtn" class="w-full bg-black text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors disabled:bg-gray-400">เข้าร่วม</button>
       </div>
     </div>
   </template>
@@ -243,36 +194,28 @@
   <!-- Template: Profile -->
   <template id="view-profile">
     <div class="space-y-4">
-      <div class="glass-effect p-6 rounded-lg text-center shadow-md text-white">
+      <div class="p-6 rounded-lg text-center text-black">
         <div class="relative w-24 h-24 mx-auto mb-4">
-          <img id="profileDisplayPicture"
-            class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-            src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" alt="รูปโปรไฟล์" />
-          <button id="editProfileBtn"
-            class="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md hover:scale-110 transition-transform"><svg
-              xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.389-8.389-2.828-2.828z" />
-            </svg></button>
+          <img id="profileDisplayPicture" class="w-24 h-24 rounded-full object-cover border-4 border-white/50 shadow-lg" src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" alt="รูปโปรไฟล์" />
+          <button id="editProfileBtn" class="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md hover:scale-110 transition-transform"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.389-8.389-2.828-2.828z" /></svg></button>
         </div>
         <div class="text-2xl font-bold mb-2" id="profileDisplayName">กำลังโหลด...</div>
         <div class="flex items-center justify-center space-x-2 mb-2"><span id="profileLevelBadge"></span><span id="profileCustomTagBadge"></span></div>
-        <!-- Progress Bar -->
-        <div class="w-full bg-thm-accent rounded-full h-2.5 my-2">
-            <div id="profileProgressBar" class="bg-thm-primary h-2.5 rounded-full" style="width: 0%;"></div>
+        <div class="w-full bg-black/10 rounded-full h-2.5 my-2">
+            <div id="profileProgressBar" class="bg-black h-2.5 rounded-full" style="width: 0%;"></div>
         </div>
-        <div id="profilePointsToNextLevel" class="text-sm text-gray-100 mt-1"></div>
+        <div id="profilePointsToNextLevel" class="text-sm text-gray-700 mt-1"></div>
         <div class="text-xl font-bold mt-2">พ้อยคงเหลือ: <span id="profileCurrentPoints">0</span></div>
-        <div class=" text-sm mt-1 text-gray-200">แต้มสะสมทั้งหมด: <span id="profileTotalPoints">0</span></div>
+        <div class="text-sm mt-1 text-gray-600">แต้มสะสมทั้งหมด: <span id="profileTotalPoints">0</span></div>
       </div>
-      <div id="profileFormContainer" class="bg-white p-6 rounded-lg shadow-md space-y-4 hidden">
-        <div><label class="block text-sm font-medium text-gray-700 mb-1">LINE ID</label><input id="profileLineId" readonly class="w-full bg-gray-100 border border-thm-accent rounded-md px-3 py-2 text-gray-500 cursor-not-allowed" /></div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ</label><input id="profileName" readonly class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent cursor-not-allowed" /></div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-1">เบอร์โทรศัพท์</label><input id="profilePhone" readonly class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent cursor-not-allowed" /></div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label><input id="profileEmail" readonly class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent cursor-not-allowed" /></div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-1">ที่อยู่</label><input id="profileAddress" readonly class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent cursor-not-allowed" /></div>
-        <div><label class="block text-sm font-medium text-gray-700 mb-1">หมายเหตุ</label><input id="profileNote" readonly class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent cursor-not-allowed" /></div>
-        <div id="profileEditButtons" class="flex space-x-2 hidden"><button id="saveProfileBtn" class="flex-1 bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark">บันทึกข้อมูล</button><button id="cancelEditBtn" class="flex-1 border border-thm-primary text-thm-primary font-bold py-2 px-4 rounded-lg hover:bg-thm-accent">ยกเลิก</button></div>
+      <div id="profileFormContainer" class="bg-black/5 p-6 rounded-lg space-y-4 hidden">
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">LINE ID</label><input id="profileLineId" readonly class="w-full bg-gray-200/50 border border-gray-400 rounded-md px-3 py-2 text-gray-500 cursor-not-allowed" /></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ</label><input id="profileName" readonly class="w-full bg-white/80 border border-gray-400 rounded-md px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent cursor-not-allowed" /></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">เบอร์โทรศัพท์</label><input id="profilePhone" readonly class="w-full bg-white/80 border border-gray-400 rounded-md px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent cursor-not-allowed" /></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label><input id="profileEmail" readonly class="w-full bg-white/80 border border-gray-400 rounded-md px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent cursor-not-allowed" /></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">ที่อยู่</label><input id="profileAddress" readonly class="w-full bg-white/80 border border-gray-400 rounded-md px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent cursor-not-allowed" /></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">หมายเหตุ</label><input id="profileNote" readonly class="w-full bg-white/80 border border-gray-400 rounded-md px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent cursor-not-allowed" /></div>
+        <div id="profileEditButtons" class="flex space-x-2 hidden"><button id="saveProfileBtn" class="flex-1 bg-black text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800">บันทึกข้อมูล</button><button id="cancelEditBtn" class="flex-1 border border-black text-black font-bold py-2 px-4 rounded-lg hover:bg-black/10">ยกเลิก</button></div>
       </div>
     </div>
   </template>
@@ -286,10 +229,10 @@
 
   <!-- Template: Transfer -->
   <template id="view-transfer">
-    <div class="bg-white/80 p-6 rounded-lg shadow-md space-y-4 mb-6">
-      <input id="transferTo" placeholder="LINE ID เพื่อน / เบอร์โทรปลายทาง" type="text" class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent">
-      <input id="transferAmount" placeholder="จำนวนพ้อยที่ต้องการโอน" type="number" class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent">
-      <button id="transferBtn" class="w-full bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark transition-colors">โอนพ้อย</button>
+    <div class="bg-black/5 p-6 rounded-lg space-y-4 mb-6">
+      <input id="transferTo" placeholder="LINE ID เพื่อน / เบอร์โทรปลายทาง" type="text" class="w-full bg-white/80 border border-gray-400 rounded-md px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent">
+      <input id="transferAmount" placeholder="จำนวนพ้อยที่ต้องการโอน" type="number" class="w-full bg-white/80 border border-gray-400 rounded-md px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent">
+      <button id="transferBtn" class="w-full bg-black text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors">โอนพ้อย</button>
     </div>
   </template>
 
@@ -300,36 +243,36 @@
 
   <!-- Template: Add Points (Scan/Manual Code) -->
   <template id="view-addpoint">
-    <div id="scanContainer" class="bg-white/80 p-6 rounded-lg shadow-md space-y-4 mb-6">
-      <button id="scanBtn" class="w-full bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark transition-colors">สแกน QR Code</button>
+    <div id="scanContainer" class="bg-black/5 p-6 rounded-lg space-y-4 mb-6">
+      <button id="scanBtn" class="w-full bg-black text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors">สแกน QR Code</button>
       <div class="flex space-x-2">
-        <input id="manualCode" type="text" placeholder="กรอกโค้ดที่นี่" class="flex-1 w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent">
-        <button id="enterBtn" class="bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark transition-colors">รับโค้ด</button>
+        <input id="manualCode" type="text" placeholder="กรอกโค้ดที่นี่" class="flex-1 w-full bg-white/80 border border-gray-400 rounded-md px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent">
+        <button id="enterBtn" class="bg-black text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors">รับโค้ด</button>
       </div>
     </div>
   </template>
 
-  <!-- Shipping Form Dialog (for Physical Items) -->
-  <dialog id="shippingFormDialog" class="p-0 rounded-lg shadow-xl backdrop:bg-black/50">
-    <div class="bg-thm-bg rounded-lg p-6 w-full max-w-md mx-auto">
-      <h3 id="shippingFormTitle" class="font-bold text-lg mb-4 text-thm-primary-dark">ข้อมูลสำหรับจัดส่ง</h3>
+  <!-- Shipping Form Dialog -->
+  <dialog id="shippingFormDialog" class="p-0 rounded-3xl shadow-xl backdrop:bg-black/50 bg-transparent">
+    <div class="glass-ui rounded-3xl p-6 w-full max-w-md mx-auto">
+      <h3 id="shippingFormTitle" class="font-bold text-lg mb-4 text-black">ข้อมูลสำหรับจัดส่ง</h3>
       <div class="space-y-4">
         <div>
           <label for="shippingName" class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล ผู้รับ</label>
-          <input id="shippingName" type="text" placeholder="กรอกชื่อ-นามสกุล" class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent" />
+          <input id="shippingName" type="text" placeholder="กรอกชื่อ-นามสกุล" class="w-full bg-white/80 border border-gray-400 rounded-md px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent" />
         </div>
         <div>
           <label for="shippingPhone" class="block text-sm font-medium text-gray-700 mb-1">เบอร์โทรศัพท์ติดต่อ</label>
-          <input id="shippingPhone" type="tel" placeholder="กรอกเบอร์โทรศัพท์" class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent" />
+          <input id="shippingPhone" type="tel" placeholder="กรอกเบอร์โทรศัพท์" class="w-full bg-white/80 border border-gray-400 rounded-md px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent" />
         </div>
         <div>
           <label for="shippingAddress" class="block text-sm font-medium text-gray-700 mb-1">ที่อยู่สำหรับจัดส่ง</label>
-          <textarea id="shippingAddress" class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent" rows="4" placeholder="บ้านเลขที่, ถนน, ตำบล, อำเภอ, จังหวัด, รหัสไปรษณีย์"></textarea>
+          <textarea id="shippingAddress" class="w-full bg-white/80 border border-gray-400 rounded-md px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent" rows="4" placeholder="บ้านเลขที่, ถนน, ตำบล, อำเภอ, จังหวัด, รหัสไปรษณีย์"></textarea>
         </div>
       </div>
       <div class="mt-6 flex justify-between space-x-4">
-        <button id="shippingFormCancelBtn" class="flex-1 border border-thm-primary text-thm-primary font-bold py-2 px-4 rounded-lg hover:bg-thm-accent">ยกเลิก</button>
-        <button id="shippingFormConfirmBtn" class="flex-1 bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark">ยืนยันและแลกของ</button>
+        <button id="shippingFormCancelBtn" class="flex-1 border border-black text-black font-bold py-2 px-4 rounded-lg hover:bg-black/10">ยกเลิก</button>
+        <button id="shippingFormConfirmBtn" class="flex-1 bg-black text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800">ยืนยันและแลกของ</button>
       </div>
     </div>
   </dialog>
@@ -353,17 +296,17 @@
     qrConfirmBtn = document.getElementById('qrDialogConfirmBtn'),
     qrCloseBtn = document.getElementById('qrDialogCloseBtn');
 
-    // --- STYLES (TAILWIND REPLACEMENT) ---
+    // --- STYLES (UPDATED FOR NEW THEME) ---
     const LEVEL_STYLES = {
-        'Member': { text: 'Member', class: 'bg-transparent border border-thm-secondary text-thm-secondary' },
-        'VIP': { text: 'VIP', class: 'bg-transparent border border-thm-primary text-thm-primary' },
-        'Super': { text: 'Super', class: 'bg-transparent border border-amber-500 text-amber-500' }
+        'Member': { text: 'Member', class: 'bg-transparent border border-gray-500 text-gray-500' },
+        'VIP': { text: 'VIP', class: 'bg-transparent border border-black text-black' },
+        'Super': { text: 'Super', class: 'bg-black text-white' }
     };
     const CUSTOM_TAG_STYLES = {
-        'newuser': { class: 'bg-yellow-200 text-yellow-800', text: 'สมาชิกใหม่' },
-        'ceo': { class: 'bg-thm-accent text-thm-primary-dark font-semibold', text: 'CEO' },
-        'admin': { class: 'bg-red-200 text-red-800', text: 'ผู้ดูแล' },
-        'tester': { class: 'bg-thm-secondary text-white', text: 'ผู้ทดสอบ' },
+        'newuser': { class: 'bg-yellow-400/30 text-yellow-800', text: 'สมาชิกใหม่' },
+        'ceo': { class: 'bg-blue-400/30 text-blue-800', text: 'CEO' },
+        'admin': { class: 'bg-red-400/30 text-red-800', text: 'ผู้ดูแล' },
+        'tester': { class: 'bg-gray-400/30 text-gray-800', text: 'ผู้ทดสอบ' },
         'default': { class: 'bg-gray-200 text-gray-700', text: '' }
     };
 
@@ -515,15 +458,15 @@
       catch (error) { console.error(`Error initializing view ${route.tpl}:`, error); showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลหน้านี้ได้'); }
     }
 
-    function generateListSkeleton(count) { return Array.from({ length: count }).map(_ => `<li class="flex justify-between items-center animate-pulse py-3"><div class="space-y-2 flex-1"><div class="h-4 bg-gray-200 rounded w-1/2"></div><div class="h-3 bg-gray-200 rounded w-1/3 mt-1"></div></div><div class="h-6 w-12 bg-gray-200 rounded-full"></div></li>`).join(""); }
-    function generateCardSkeleton(count) { return Array.from({ length: count }).map(_ => `<li class="bg-white p-4 rounded shadow-sm loading-card-animation"><div class="h-24 bg-gray-200 rounded-md mb-3"></div><div class="h-4 bg-gray-200 rounded w-2/3 mb-2"></div><div class="h-3 bg-gray-200 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-200 rounded-full w-full"></div></li>`).join(''); }
+    function generateListSkeleton(count) { return Array.from({ length: count }).map(_ => `<li class="flex justify-between items-center animate-pulse py-3"><div class="space-y-2 flex-1"><div class="h-4 bg-gray-300 rounded w-1/2"></div><div class="h-3 bg-gray-300 rounded w-1/3 mt-1"></div></div><div class="h-6 w-12 bg-gray-300 rounded-full"></div></li>`).join(""); }
+    function generateCardSkeleton(count) { return Array.from({ length: count }).map(_ => `<li class="bg-black/5 p-4 rounded-lg loading-card-animation"><div class="h-24 bg-gray-300 rounded-md mb-3"></div><div class="h-4 bg-gray-300 rounded w-2/3 mb-2"></div><div class="h-3 bg-gray-300 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-300 rounded-full w-full"></div></li>`).join(''); }
     function renderHistoryList(historyData) {
       const el = document.getElementById('historyList'); if (!el) return;
       const latest = historyData.slice().reverse().slice(0, 10);
       if (latest.length === 0) { el.innerHTML = `<li class="text-center text-gray-500 py-4">ไม่มีประวัติการทำรายการ</li>`; return; }
       el.innerHTML = latest.map(item => {
         const isDebit = ['redeem', 'transfer_out'].includes(item.type);
-        return `<li class="flex justify-between items-center bg-white/70 p-3 rounded-lg"><div><div class="font-medium text-thm-primary-dark text-sm">${item.detail}</div><div class="text-xs text-gray-500 mt-1">${item.date}</div></div><div class="text-sm font-bold px-4 py-1.5 rounded-full ${isDebit ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">${isDebit ? '-' : '+'} ${item.amount}</div></li>`;
+        return `<li class="flex justify-between items-center bg-black/5 p-3 rounded-lg"><div><div class="font-medium text-black text-sm">${item.detail}</div><div class="text-xs text-gray-500 mt-1">${item.date}</div></div><div class="text-sm font-bold px-4 py-1.5 rounded-full ${isDebit ? 'bg-red-500/10 text-red-700' : 'bg-green-500/10 text-green-700'}">${isDebit ? '-' : '+'} ${item.amount}</div></li>`;
       }).join("");
     }
     async function getFreshOrCachedHistory() {
@@ -575,7 +518,7 @@
       }
 
       if (!events || events.length === 0) {
-        eventListEl.innerHTML = `<div class="text-center text-gray-400 py-8">ไม่มีกิจกรรมในขณะนี้</div>`;
+        eventListEl.innerHTML = `<div class="text-center text-gray-500 py-8">ไม่มีกิจกรรมในขณะนี้</div>`;
         return;
       }
       eventListEl.innerHTML = events.map(e => {
@@ -588,20 +531,20 @@
           if (allowed.includes(userState.level.toUpperCase())) {
             isUserAllowed = true;
           }
-          levelTagHTML = `<div class="inline-block text-xs px-2 py-0.5 rounded-full mt-2 bg-transparent border border-thm-accent text-thm-primary-dark">สำหรับ: ${e.allowedLevels}</div>`;
+          levelTagHTML = `<div class="inline-block text-xs px-2 py-0.5 rounded-full mt-2 bg-black/10 text-black">สำหรับ: ${e.allowedLevels}</div>`;
         } else {
           isUserAllowed = true;
         }
 
         const buttonHTML = isUserAllowed
-          ? `<a href="#event-detail?id=${e.id}" class="bg-thm-primary text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-thm-primary-dark transition-colors">ดูรายละเอียด</a>`
+          ? `<a href="#event-detail?id=${e.id}" class="bg-black text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-gray-800 transition-colors">ดูรายละเอียด</a>`
           : `<button class="bg-gray-300 text-gray-500 cursor-not-allowed font-bold py-1 px-3 text-sm rounded-lg">ระดับไม่ถึง</button>`;
 
         return `
-                <div class="bg-thm-bg/80 p-4 rounded-lg flex justify-between items-center shadow-sm">
+                <div class="bg-black/5 p-4 rounded-lg flex justify-between items-center shadow-sm">
                     <div>
-                        <div class="font-semibold text-thm-primary-dark text-sm">${e.title}</div>
-                        <div class="text-xs text-gray-500">${e.detail || 'ดูรายละเอียดกิจกรรม'}</div>
+                        <div class="font-semibold text-black text-sm">${e.title}</div>
+                        <div class="text-xs text-gray-600">${e.detail || 'ดูรายละเอียดกิจกรรม'}</div>
                         ${levelTagHTML}
                     </div>
                     <div class="text-right">
@@ -719,10 +662,10 @@
       const toggleEditMode = (enable) => {
           editableInputs.forEach(input => {
               input.readOnly = !enable;
-              input.classList.toggle('bg-white', enable);
-              input.classList.toggle('border-thm-primary', enable);
+              input.classList.toggle('bg-white/80', enable);
+              input.classList.toggle('border-black', enable);
               input.classList.toggle('cursor-not-allowed', !enable);
-              input.classList.toggle('bg-gray-100', !enable);
+              input.classList.toggle('bg-gray-200/50', !enable);
               input.classList.toggle('text-gray-500', !enable);
           });
           formContainer.classList.toggle('hidden', !enable);
@@ -765,15 +708,15 @@
         return;
       }
       redeemListEl.innerHTML = items.map(item => `
-            <li class="bg-white/80 p-4 rounded-lg shadow-sm text-center flex flex-col justify-between">
+            <li class="bg-black/5 p-4 rounded-lg text-center flex flex-col justify-between">
                 <div>
                   <img src="${item.image}" alt="${item.name}" class="h-24 w-full object-cover mx-auto mb-2 rounded-lg">
-                  <div class="font-bold mb-1 text-thm-primary-dark">${item.name}</div>
+                  <div class="font-bold mb-1 text-black">${item.name}</div>
                   <div class="text-sm text-gray-600 mb-2">${item.point} พ้อยต์</div>
                 </div>
                 <button
                     data-item-id="${item.id}" data-item-name="${item.name}" data-item-point="${item.point}" data-item-type="${item.type}"
-                    class="redeem-btn bg-thm-primary text-white font-bold py-1.5 px-3 text-sm rounded-lg hover:bg-thm-primary-dark transition-colors mt-2 disabled:bg-gray-400">แลกเลย</button>
+                    class="redeem-btn bg-black text-white font-bold py-1.5 px-3 text-sm rounded-lg hover:bg-gray-800 transition-colors mt-2 disabled:bg-gray-400">แลกเลย</button>
             </li>
         `).join('');
       document.querySelectorAll('.redeem-btn').forEach(btn => btn.addEventListener('click', handleRedeemClick));
@@ -885,7 +828,7 @@
           const res = await fetch(`${CONFIG.GAS_URL}?action=getCodeById&id=${code}`);
           const data = await res.json();
           if (data.error) { showAlert('ไม่พบโค้ด', data.error); return; }
-          scanContainer.innerHTML = `<div class="bg-white/80 p-6 rounded-lg shadow-md mb-4 text-center"><div class="font-bold text-lg mb-2 text-thm-primary-dark">${data.title}</div><div class="text-sm text-gray-700 mb-4">${data.desc}</div><div class="font-bold text-yellow-600 mb-4 text-xl">คุณจะได้รับ: ${data.point} พ้อยต์</div><button id="acceptBtn" class="w-full bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark">ยืนยันการรับพ้อยต์</button></div>`;
+          scanContainer.innerHTML = `<div class="bg-black/5 p-6 rounded-lg mb-4 text-center"><div class="font-bold text-lg mb-2 text-black">${data.title}</div><div class="text-sm text-gray-700 mb-4">${data.desc}</div><div class="font-bold text-yellow-600 mb-4 text-xl">คุณจะได้รับ: ${data.point} พ้อยต์</div><button id="acceptBtn" class="w-full bg-black text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800">ยืนยันการรับพ้อยต์</button></div>`;
           document.getElementById('acceptBtn').addEventListener('click', () => joinCode(data));
         } catch (e) { console.error("Error processing code:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถประมวลผลโค้ดได้'); }
       }
@@ -937,11 +880,11 @@
 
                 switch (item.status) {
                     case 'claimed':
-                        statusBlockHTML = `<div class="inline-block px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">รับแล้ว</div>`;
+                        statusBlockHTML = `<div class="inline-block px-2 py-1 text-xs font-semibold text-green-800 bg-green-200/80 rounded-full">รับแล้ว</div>`;
                         detailsBlockHTML = `<div class="text-xs text-gray-500">วันที่รับ: ${item.claimDate || '-'}</div>`;
                         break;
                     case 'shipped':
-                        statusBlockHTML = `<div class="inline-block px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">จัดส่งแล้ว</div>`;
+                        statusBlockHTML = `<div class="inline-block px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-200/80 rounded-full">จัดส่งแล้ว</div>`;
                         if (item.expressTracking && String(item.expressTracking).trim() !== '') {
                             detailsBlockHTML = `<div class="text-xs text-gray-500">วันที่จัดส่ง: ${item.claimDate || '-'}</div><div class="text-xs text-gray-700 font-semibold mt-1">Tracking: ${item.expressTracking}</div>`;
                         } else {
@@ -950,16 +893,16 @@
                         break;
                     case 'pending_claim':
                     default:
-                        statusBlockHTML = `<button class="claim-btn bg-thm-primary text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-thm-primary-dark transition-colors" data-unique-id="${item.uniqueId}" data-item-name="${item.itemName}">รับของ</button>`;
-                        detailsBlockHTML = `<div class="inline-block px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full">รอรับ</div>`;
+                        statusBlockHTML = `<button class="claim-btn bg-black text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-gray-800 transition-colors" data-unique-id="${item.uniqueId}" data-item-name="${item.itemName}">รับของ</button>`;
+                        detailsBlockHTML = `<div class="inline-block px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-200/80 rounded-full">รอรับ</div>`;
                         break;
                 }
 
                 return `
-                    <li class="bg-white/80 p-4 rounded-lg shadow-sm">
+                    <li class="bg-black/5 p-4 rounded-lg">
                         <div class="flex justify-between items-start space-x-4">
                             <div class="flex-grow">
-                                <div class="font-semibold text-thm-primary-dark">${item.itemName}</div>
+                                <div class="font-semibold text-black">${item.itemName}</div>
                                 <div class="text-xs text-gray-500 mt-2">วันที่แลก: ${item.redeemDate}</div>
                             </div>
                             <div class="flex-shrink-0 text-right space-y-2">
