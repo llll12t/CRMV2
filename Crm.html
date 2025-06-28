@@ -19,8 +19,8 @@
           colors: {
             'thm-bg': '#b9b9b9', // Main background color
             'thm-primary': '#000000', // Primary action/accent color
-            'thm-secondary': '#66615e', // A lighter shade of primary for secondary actions
-            'thm-accent': '#dbd7d5', // A light accent color
+            'thm-secondary': '#CCCCCC', // A lighter shade of primary for secondary actions
+            'thm-accent': '#EEEEEE', // A light accent color
             'thm-primary-dark': '#333333', // Darker shade for hover
             'thm-secondary-dark': '#adacac', // Darker shade for hover
           },
@@ -587,7 +587,7 @@
         }
 
         const buttonHTML = isUserAllowed
-          ? `<a href="#event-detail?id=${e.id}" class="bg-thm-primary text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-thm-primary-dark transition-colors">ดูรายละเอียด</a>`
+          ? `<a href="#event-detail?id=${e.id}" class="bg-thm-accent text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-thm-primary-dark transition-colors">ดูรายละเอียด</a>`
           : `<button class="bg-gray-300 text-gray-500 cursor-not-allowed font-bold py-1 px-3 text-sm rounded-lg">ระดับไม่ถึง</button>`;
 
         return `
