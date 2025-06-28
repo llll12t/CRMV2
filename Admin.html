@@ -828,7 +828,7 @@
         const menuContainer = document.getElementById('main-menu');
         menuContainer.innerHTML = MENU_STRUCTURE.map(item => {
             if (item.title) {
-                return `<li class="px-4 pt-4 pb-2 text-xs font-semibold text-thm-text-light uppercase tracking-wider">${item.title}</li>`;
+                return `<li class=" pt-4 pb-2 text-xs  text-gray-400 uppercase tracking-wider">${item.title}</li>`;
             }
             return `<li><a href="${item.href}" class="nav-link flex items-center p-2 rounded-lg text-thm-text-light hover:bg-gray-100 hover:text-thm-text">${item.name}</a></li>`;
         }).join('');
