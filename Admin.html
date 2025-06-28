@@ -481,9 +481,17 @@
             tableBody.querySelectorAll('.delete-user-btn').forEach((b, i) => b.onclick = () => deleteUser(users[i].lineId)); 
         }
         function showUserFormModal(user) { 
-            const isEdit = !!user; dataFormModalTitle.textContent = isEdit ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้'; 
-            formFieldsContainer.innerHTML = `<input type="text" name="lineId" placeholder="Line ID" class="w-full px-4 py-2 bg-white border border-thm-border rounded-lg" ${isEdit ? 'readonly' : 'required'} value="${isEdit ? user.id : ''}" /><input type="text" name="name" placeholder="Name" class="w-full px-4 py-2 bg-white border border-thm-border rounded-lg" required value="${isEdit ? user.name : ''}" /><input type="tel" name="phone" placeholder="Phone" class="w-full px-4 py-2 bg-white border border-thm-border rounded-lg" value="${isEdit ? (user.phone || '') : ''}" /><input type="number" name="point" placeholder="Points" class="w-full px-4 py-2 bg-white border border-thm-border rounded-lg" required value="${isEdit ? user.point : 0}" /><input type="text" name="tags" placeholder="Tags (คั่นด้วย ,)" class="w-full px-4 py-2 bg-white border border-thm-border rounded-lg" value="${isEdit ? (user.tags || []).join(', ') : ''}" />`; 
-            dataFormModal.showModal(); formSaveBtn.onclick = () => saveUser(isEdit); formCancelBtn.onclick = () => dataFormModal.close(); 
+            const isEdit = !!user; 
+            dataFormModalTitle.textContent = isEdit ? 'แก้ไขผู้ใช้' : 'เพิ่มผู้ใช้'; 
+            formFieldsContainer.innerHTML = `
+                <input type="text" name="lineId" placeholder="Line ID" class="w-full px-4 py-2 bg-white border border-thm-border rounded-lg" ${isEdit ? 'readonly' : 'required'} value="${isEdit ? user.lineId : ''}" />
+                <input type="text" name="name" placeholder="Name" class="w-full px-4 py-2 bg-white border border-thm-border rounded-lg" required value="${isEdit ? user.name : ''}" />
+                <input type="tel" name="phone" placeholder="Phone" class="w-full px-4 py-2 bg-white border border-thm-border rounded-lg" value="${isEdit ? (user.phone || '') : ''}" />
+                <input type="number" name="point" placeholder="Points" class="w-full px-4 py-2 bg-white border border-thm-border rounded-lg" required value="${isEdit ? user.point : 0}" />
+                <input type="text" name="tags" placeholder="Tags (คั่นด้วย ,)" class="w-full px-4 py-2 bg-white border border-thm-border rounded-lg" value="${isEdit ? (user.tags || []).join(', ') : ''}" />`; 
+            dataFormModal.showModal(); 
+            formSaveBtn.onclick = () => saveUser(isEdit); 
+            formCancelBtn.onclick = () => dataFormModal.close(); 
         }
         async function saveUser(isEdit) { 
             const data = { lineId: formFieldsContainer.querySelector('[name=lineId]').value.trim(), name: formFieldsContainer.querySelector('[name=name]').value.trim(), phone: formFieldsContainer.querySelector('[name=phone]').value.trim(), point: parseInt(formFieldsContainer.querySelector('[name=point]').value), tags: formFieldsContainer.querySelector('[name=tags]').value.split(',').map(t => t.trim()).filter(Boolean) }; 
