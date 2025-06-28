@@ -587,11 +587,11 @@
         }
 
         const buttonHTML = isUserAllowed
-          ? `<a href="#event-detail?id=${e.id}" class="bg-thm-accent text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-thm-primary-dark transition-colors">ดูรายละเอียด</a>`
+          ? `<a href="#event-detail?id=${e.id}" class="bg-thm-primary text-white font-bold py-1 px-3 text-sm rounded-lg hover:bg-thm-primary-dark transition-colors">ดูรายละเอียด</a>`
           : `<button class="bg-gray-300 text-gray-500 cursor-not-allowed font-bold py-1 px-3 text-sm rounded-lg">ระดับไม่ถึง</button>`;
 
         return `
-                <div class="bg-thm-bg/80 p-4 rounded-lg flex justify-between items-center shadow-sm">
+                <div class="bg-thm-accent p-4 rounded-lg flex justify-between items-center shadow-sm">
                     <div>
                         <div class="font-semibold text-thm-primary-dark text-sm">${e.title}</div>
                         <div class="text-xs text-gray-500">${e.detail || 'ดูรายละเอียดกิจกรรม'}</div>
