@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 
@@ -41,6 +40,7 @@
       display: none !important;
     }
 
+    /* Neon text animation remains unchanged */
     .neon-text {
       color: #fff;
       text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e, 0 0 40px #ff005e, 0 0 80px #ff005e;
@@ -57,23 +57,9 @@
       }
     }
 
-    @keyframes pulse-opacity {
+    /* Removed unused animations, Tailwind's animate-pulse is used instead */
 
-      0%,
-      100% {
-        opacity: 0.5;
-      }
-
-      50% {
-        opacity: 1;
-      }
-    }
-
-    .loading-card-animation {
-      animation: pulse-opacity 1.5s infinite ease-in-out;
-    }
-
-    /* Adjusted for the new theme */
+    /* Glass effect style remains */
     .glass-effect {
        background: rgba(255, 255, 255, 0.4);
         box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
@@ -89,15 +75,49 @@
   <div class="flex justify-between items-center mb-6">
     <h2 id="pageTitle" class="text-xl font-bold text-primary">CRM</h2>
     <div class="glass-effect rounded-full flex items-center p-1 space-x-2">
-      <div id="pointVal" class="font-bold text-primary text-lg px-2">0</div>
+      <div id="pointVal" class="font-bold text-primary text-lg px-2">...</div>
       <img id="lineDisplayPicture" class="w-10 h-10 rounded-full object-cover border-2 border-thm-primary-dark"
         src="https://img.daisyui.com/images/stock/photo-1567653418876-5bb0e566e1c2.webp" />
     </div>
   </div>
 
   <!-- Main App Container -->
+  <!-- [MODIFIED] Initial loading state is now a skeleton UI -->
   <div id="app">
-    <div class="text-center text-thm-primary-dark py-8">กำลังโหลดเนื้อหา...</div>
+    <div class="animate-pulse">
+      <!-- Skeleton for Menu Grid -->
+      <div class="glass-effect rounded-2xl p-4 grid grid-cols-3 gap-3 mb-6">
+        <div class="bg-gray-200/80 h-20 rounded-2xl"></div>
+        <div class="bg-gray-200/80 h-20 rounded-2xl"></div>
+        <div class="bg-gray-200/80 h-20 rounded-2xl"></div>
+        <div class="bg-gray-200/80 h-20 rounded-2xl"></div>
+        <div class="bg-gray-200/80 h-20 rounded-2xl"></div>
+        <div class="bg-gray-200/80 h-20 rounded-2xl"></div>
+      </div>
+      <!-- Skeleton for History List -->
+      <div>
+        <div class="flex justify-between items-center mb-4">
+          <div class="h-6 bg-gray-300/80 rounded w-1/3"></div>
+          <div class="h-4 bg-gray-300/80 rounded w-1/6"></div>
+        </div>
+        <ul class="space-y-4">
+          <li class="flex justify-between items-center bg-gray-200/70 p-3 rounded-lg h-14">
+            <div class="flex-1 space-y-2">
+              <div class="h-4 bg-gray-300/80 rounded w-3/4"></div>
+              <div class="h-3 bg-gray-300/80 rounded w-1/2"></div>
+            </div>
+            <div class="h-8 w-16 bg-gray-300/80 rounded-full ml-4"></div>
+          </li>
+          <li class="flex justify-between items-center bg-gray-200/70 p-3 rounded-lg h-14">
+            <div class="flex-1 space-y-2">
+              <div class="h-4 bg-gray-300/80 rounded w-2/3"></div>
+              <div class="h-3 bg-gray-300/80 rounded w-1/3"></div>
+            </div>
+            <div class="h-8 w-16 bg-gray-300/80 rounded-full ml-4"></div>
+          </li>
+        </ul>
+      </div>
+    </div>
   </div>
 
   <!-- Dialogs (Tailwind Styled) -->
@@ -216,11 +236,12 @@
   <!-- Template: Event Detail -->
   <template id="view-event-detail">
     <div id="cardWrapper">
+      <!-- [MODIFIED] Using Tailwind's animate-pulse -->
       <div id="cardSkeleton" class="bg-white p-6 rounded-lg shadow-md mb-6 animate-pulse">
-        <div class="h-6 bg-gray-200 rounded-lg w-1/3 mb-4"></div>
-        <div class="h-4 bg-gray-200 rounded-lg w-1/4 mb-2"></div>
-        <div class="h-3 bg-gray-200 rounded-lg w-full mb-6"></div>
-        <div class="h-12 bg-gray-200 rounded-full w-full"></div>
+        <div class="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+        <div class="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+        <div class="h-3 bg-gray-200 rounded w-full mb-6"></div>
+        <div class="h-12 bg-gray-200 rounded-lg w-full"></div>
       </div>
       <div id="card" class="bg-thm-bg/80 p-6 rounded-lg shadow-md text-gray-800 mb-6 hidden">
         <div class="flex justify-between items-start mb-3">
@@ -235,7 +256,24 @@
 
   <!-- Template: Profile -->
   <template id="view-profile">
-    <div class="space-y-4">
+    <!-- [NEW] Skeleton for Profile Page -->
+    <div id="profileSkeleton" class="space-y-4 animate-pulse">
+        <div class="glass-effect p-6 rounded-lg text-center shadow-md">
+            <div class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <div class="h-7 bg-gray-300 rounded w-1/2 mx-auto mb-3"></div>
+            <div class="flex items-center justify-center space-x-2 mb-4">
+                <div class="h-5 w-20 bg-gray-300 rounded-full"></div>
+                <div class="h-5 w-24 bg-gray-300 rounded-full"></div>
+            </div>
+            <div class="w-full bg-gray-300 rounded-full h-2.5 my-2"></div>
+            <div class="h-3 bg-gray-300 rounded w-1/3 mx-auto mt-2"></div>
+            <div class="h-6 bg-gray-300 rounded w-2/5 mx-auto mt-4"></div>
+            <div class="h-4 bg-gray-300 rounded w-1/4 mx-auto mt-2"></div>
+        </div>
+    </div>
+
+    <!-- Original Profile Content (hidden by default) -->
+    <div id="profileContent" class="space-y-4 hidden">
       <div class="glass-effect p-6 rounded-lg text-center shadow-md text-white">
         <div class="relative w-24 h-24 mx-auto mb-4">
           <img id="profileDisplayPicture"
@@ -508,8 +546,10 @@
       catch (error) { console.error(`Error initializing view ${route.tpl}:`, error); showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลหน้านี้ได้'); }
     }
 
-    function generateListSkeleton(count) { return Array.from({ length: count }).map(_ => `<li class="flex justify-between items-center animate-pulse py-3"><div class="space-y-2 flex-1"><div class="h-4 bg-gray-200 rounded w-1/2"></div><div class="h-3 bg-gray-200 rounded w-1/3 mt-1"></div></div><div class="h-6 w-12 bg-gray-200 rounded-full"></div></li>`).join(""); }
-    function generateCardSkeleton(count) { return Array.from({ length: count }).map(_ => `<li class="bg-white p-4 rounded shadow-sm loading-card-animation"><div class="h-24 bg-gray-200 rounded-md mb-3"></div><div class="h-4 bg-gray-200 rounded w-2/3 mb-2"></div><div class="h-3 bg-gray-200 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-200 rounded-full w-full"></div></li>`).join(''); }
+    // [MODIFIED] Skeleton functions now use animate-pulse for consistency
+    function generateListSkeleton(count) { return Array.from({ length: count }).map(_ => `<li class="flex justify-between items-center animate-pulse py-3 bg-white/70 p-3 rounded-lg"><div class="space-y-2 flex-1"><div class="h-4 bg-gray-200 rounded w-1/2"></div><div class="h-3 bg-gray-200 rounded w-1/3 mt-1"></div></div><div class="h-8 w-16 bg-gray-200 rounded-full"></div></li>`).join(""); }
+    function generateCardSkeleton(count) { return Array.from({ length: count }).map(_ => `<li class="bg-white p-4 rounded-lg shadow-sm animate-pulse"><div class="h-24 bg-gray-200 rounded-md mb-3"></div><div class="h-4 bg-gray-200 rounded w-2/3 mb-2"></div><div class="h-3 bg-gray-200 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-200 rounded-lg w-full"></div></li>`).join(''); }
+    
     function renderHistoryList(historyData) {
       const el = document.getElementById('historyList'); if (!el) return;
       const latest = historyData.slice().reverse().slice(0, 10);
@@ -682,9 +722,34 @@
     }
 
     async function initProfile() {
+      // [MODIFIED] Added skeleton elements
+      const skeletonEl = document.getElementById('profileSkeleton');
+      const contentEl = document.getElementById('profileContent');
+
+      // Show skeleton, hide content initially
+      skeletonEl.classList.remove('hidden');
+      contentEl.classList.add('hidden');
+
       const dpEl = document.getElementById('profileDisplayPicture'), dnEl = document.getElementById('profileDisplayName'), lineIdEl = document.getElementById('profileLineId'), levelBadgeEl = document.getElementById('profileLevelBadge'), tagBadgeEl = document.getElementById('profileCustomTagBadge'), progressEl = document.getElementById('profileProgressBar'), progressTextEl = document.getElementById('profilePointsToNextLevel'), totalPointsEl = document.getElementById('profileTotalPoints'), nameEl = document.getElementById('profileName'), phoneEl = document.getElementById('profilePhone'), emailEl = document.getElementById('profileEmail'), addressEl = document.getElementById('profileAddress'), noteEl = document.getElementById('profileNote'), editBtn = document.getElementById('editProfileBtn'), formContainer = document.getElementById('profileFormContainer'), editButtonsDiv = document.getElementById('profileEditButtons'), saveBtn = document.getElementById('saveProfileBtn'), cancelBtn = document.getElementById('cancelEditBtn');
       const editableInputs = [nameEl, phoneEl, emailEl, addressEl, noteEl]; let initialData = {};
 
+      let uData = dataCache.userProfileFull;
+      if (!uData || userState.pointsChanged) { 
+        try { 
+            const res = await fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`);
+            uData = await res.json(); 
+            if (!uData.error) dataCache.userProfileFull = uData; 
+        } catch (e) { uData = { error: 'โหลดข้อมูลล้มเหลว' }; } 
+      }
+      
+      if (uData.error) { 
+        showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้'); 
+        // Hide skeleton and show an error message or leave skeleton
+        skeletonEl.innerHTML = '<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดโปรไฟล์</div>';
+        return; 
+      }
+      
+      // Populate data
       dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/96';
       dnEl.textContent = userState.profile.displayName || 'ผู้ใช้ LINE';
       totalPointsEl.textContent = userState.totalPoints.toLocaleString();
@@ -700,11 +765,6 @@
 
       if (progressEl) { progressEl.style.width = `${progressValue}%`; }
       progressTextEl.textContent = nextLevelName ? `อีก ${pointsToNext.toLocaleString()} พ้อยต์สู่ ${nextLevelName}` : `คุณอยู่ระดับสูงสุดแล้ว!`;
-
-      let uData = dataCache.userProfileFull;
-      if (!uData) { try { uData = await fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`).then(r => r.json()); if (!uData.error) dataCache.userProfileFull = uData; } catch (e) { uData = { error: 'โหลดข้อมูลล้มเหลว' }; } }
-
-      if (uData.error) { showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้'); return; }
 
       initialData = { name: uData.name || '', phone: uData.phone || '', email: uData.email || '', address: uData.address || '', note: uData.note || '' };
       lineIdEl.value = userState.lineId; nameEl.value = initialData.name; phoneEl.value = initialData.phone; emailEl.value = initialData.email; addressEl.value = initialData.address; noteEl.value = initialData.note;
@@ -735,6 +795,10 @@
         } catch (e) { console.error("Update profile failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถอัปเดตได้'); } finally { saveBtn.disabled = false; cancelBtn.disabled = false; }
       };
       toggleEditMode(false);
+
+      // [MODIFIED] Hide skeleton and show content after everything is ready
+      skeletonEl.classList.add('hidden');
+      contentEl.classList.remove('hidden');
     }
 
     async function initRedeem() {
