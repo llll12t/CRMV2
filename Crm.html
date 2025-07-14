@@ -283,7 +283,7 @@
             </svg></button>
         </div>
         <div class="text-2xl text-thm-primary-dark font-bold mb-2" id="profileDisplayName">กำลังโหลด...</div>
-        <div class="flex items-center justify-center space-x-2 mb-2"><span id="profileLevelBadge" class="text-thm-primary"></span><span id="profileCustomTagBadge"></span></div>
+        <div class="flex items-center justify-center space-x-2 mb-2"><span id="profileLevelBadge"></span><span id="profileCustomTagBadge"></span></div>
         <!-- Progress Bar -->
         <div class="w-full bg-thm-accent rounded-full h-2.5 my-2">
             <div id="profileProgressBar" class="bg-thm-primary h-2.5 rounded-full" style="width: 0%;"></div>
@@ -382,9 +382,9 @@
 
     // --- STYLES (TAILWIND REPLACEMENT) ---
     const LEVEL_STYLES = {
-        'Member': { text: 'Member', class: 'bg-transparent border border-thm-secondary text-thm-secondary' },
-        'VIP': { text: 'VIP', class: 'bg-transparent border border-thm-primary text-thm-primary' },
-        'Super': { text: 'Super', class: 'bg-transparent border border-amber-500 text-amber-500' }
+        'Member': { text: 'Member', class: 'bg-transparent border border-[#949494] text-[#949494]' },
+        'VIP': { text: 'VIP', class: 'bg-transparent border border-[#FFB700] text-[#FFB700]' },
+        'Super': { text: 'Super', class: 'bg-transparent border border-[#FE2B91] text-[#FE2B91]' }
     };
     const CUSTOM_TAG_STYLES = {
         'newuser': { class: 'bg-yellow-200 text-yellow-800', text: 'สมาชิกใหม่' },
