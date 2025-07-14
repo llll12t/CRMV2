@@ -39,14 +39,6 @@
     .hidden {
       display: none !important;
     }
-
-    /* Neon text animation remains unchanged */
-    .neon-text {
-      color: #fff;
-      text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e, 0 0 40px #ff005e, 0 0 80px #ff005e;
-      animation: glow 1.5s infinite alternate;
-    }
-
     @keyframes glow {
       from {
         text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e;
@@ -56,12 +48,9 @@
         text-shadow: 0 0 10px #00d4ff, 0 0 20px #00d4ff, 0 0 40px #00d4ff;
       }
     }
-
-    /* Removed unused animations, Tailwind's animate-pulse is used instead */
-
     /* Glass effect style remains */
     .glass-effect {
-       background: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.6);
         box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         backdrop-filter: blur(15px);
         -webkit-backdrop-filter: blur(15px);
