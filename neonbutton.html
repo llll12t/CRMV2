@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Neon Vertical Menu</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Feather Icons CDN -->
+  <script src="https://unpkg.com/feather-icons"></script>
+  <style>
+    /* Custom CSS for pseudo-elements and keyframes not directly supported by Tailwind utility classes */
+    .nav-button::after {
+      content: "";
+      position: absolute;
+      bottom: 0px;
+      width: 50%;
+      height: 5px;
+      background: #4f3445;
+      border-radius: 4px;
+      opacity: 1;
+      transition: 0.3s;
+    }
+
+    .nav-button.active::after {
+      background: linear-gradient(to right, #ff00cc, #ff007a);
+      box-shadow:
+        0 0 8px #ff00cc,
+        0 0 0px #ff00cc,
+        0 0 0px #ff00cc,
+        0 0 0px #ff007a;
+    }
+
+    .nav-button:hover::after {
+      animation: blink 0.4s ease-in-out;
+    }
+
+    @keyframes blink {
+      0% {
+        opacity: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      30% {
+        opacity: 1;
+        background: linear-gradient(to right, #ff00cc, #ff007a);
+        box-shadow: 0 0 8px #ff00cc;
+      }
+
+      60% {
+        opacity: 0.5;
+        box-shadow: 0 0 4px #ff00cc;
+      }
+
+      100% {
+        opacity: 1;
+
+        background: rgba(255, 255, 255, 0.05); /* or transparent if it's just the glow */
+        box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-black flex justify-center items-center h-screen m-0 font-sans">
+
+  <div class="grid grid-cols-3 gap-5">
+    <div class="nav-button w-[110px] h-[100px] bg-gradient-to-b from-[#1c1c1c] to-[#2b1120] rounded-[20px] border border-white/5 text-[#f8c9ec] flex flex-col justify-center items-center relative cursor-pointer transition-all duration-300 ease-in-out active"
+      onclick="setActive(this)">
+      <i data-feather="home" class="w-5 h-5 stroke-2"></i>
+      <span class="mt-2.5 text-base text-sm">Home</span>
+    </div>
+    <div class="nav-button w-[110px] h-[100px] bg-gradient-to-b from-[#1c1c1c] to-[#2b1120] rounded-[20px] border border-white/5 text-[#f8c9ec] flex flex-col justify-center items-center relative cursor-pointer transition-all duration-300 ease-in-out"
+      onclick="setActive(this)">
+      <i data-feather="user" class="w-5 h-5 stroke-2"></i>
+      <span class="mt-2.5 text-base text-sm">Profile</span>
+    </div>
+    <div class="nav-button w-[110px] h-[100px] bg-gradient-to-b from-[#1c1c1c] to-[#2b1120] rounded-[20px] border border-white/5 text-[#f8c9ec] flex flex-col justify-center items-center relative cursor-pointer transition-all duration-300 ease-in-out"
+      onclick="setActive(this)">
+      <i data-feather="settings" class="w-5 h-5 stroke-2"></i>
+      <span class="mt-2.5 text-base text-sm">Settings</span>
+    </div>
+
+    <div class="nav-button w-[110px] h-[100px] bg-gradient-to-b from-[#1c1c1c] to-[#2b1120] rounded-[20px] border border-white/5 text-[#f8c9ec] flex flex-col justify-center items-center relative cursor-pointer transition-all duration-300 ease-in-out active"
+      onclick="setActive(this)">
+      <i data-feather="home" class="w-5 h-5 stroke-2"></i>
+      <span class="mt-2.5 text-base text-sm">Home</span>
+    </div>
+    <div class="nav-button w-[110px] h-[100px] bg-gradient-to-b from-[#1c1c1c] to-[#2b1120] rounded-[20px] border border-white/5 text-[#f8c9ec] flex flex-col justify-center items-center relative cursor-pointer transition-all duration-300 ease-in-out"
+      onclick="setActive(this)">
+      <i data-feather="user" class="w-5 h-5 stroke-2"></i>
+      <span class="mt-2.5 text-base text-sm">Profile</span>
+    </div>
+    <div class="nav-button w-[110px] h-[100px] bg-gradient-to-b from-[#1c1c1c] to-[#2b1120] rounded-[20px] border border-white/5 text-[#f8c9ec] flex flex-col justify-center items-center relative cursor-pointer transition-all duration-300 ease-in-out"
+      onclick="setActive(this)">
+      <i data-feather="settings" class="w-5 h-5 stroke-2"></i>
+      <span class="mt-2.5 text-base text-sm">Settings</span>
+    </div>
+  </div>
+
+  <script>
+    feather.replace();
+    function setActive(el) {
+      document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+      el.classList.add('active');
+    }
+  </script>
+
+</body>
+
+</html>
