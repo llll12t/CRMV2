@@ -43,6 +43,21 @@
         -webkit-backdrop-filter: blur(15px);
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
+    /* --- [NEW] CSS for Button Spinner --- */
+    .btn-spinner {
+      display: inline-block;
+      width: 1.25rem; /* 20px */
+      height: 1.25rem; /* 20px */
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
   </style>
 </head>
 
@@ -187,7 +202,7 @@
       </div>
       <div class="bg-yellow-400 rounded-full w-10 h-10 flex items-center justify-center text-white font-bold text-sm">+1
       </div>
-      <button id="checkinBtn" class="bg-thm-primary text-white font-bold py-2 px-6 text-sm rounded-full hover:bg-thm-primary-dark transition-colors">เช็คอิน</button>
+      <button id="checkinBtn" class="bg-thm-primary text-white font-bold py-2 px-6 text-sm rounded-full hover:bg-thm-primary-dark transition-colors flex items-center justify-center" style="min-width: 90px;">เช็คอิน</button>
     </div>
     <div>
       <div class="flex justify-between items-center mb-4">
@@ -218,7 +233,7 @@
           <div class="bg-yellow-400 text-black font-bold text-md px-3 py-1 rounded-full" id="eventPoint">0+</div>
         </div>
         <div class="text-sm text-gray-700 mb-6 leading-relaxed" id="eventDetailDesc"></div>
-        <button id="joinBtn" class="w-full bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark transition-colors disabled:bg-gray-400">เข้าร่วม</button>
+        <button id="joinBtn" class="w-full bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark transition-colors disabled:bg-gray-400 flex items-center justify-center" style="min-height: 40px;">เข้าร่วม</button>
       </div>
     </div>
   </template>
@@ -272,7 +287,10 @@
         <div><label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label><input id="profileEmail" readonly class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent cursor-not-allowed" /></div>
         <div><label class="block text-sm font-medium text-gray-700 mb-1">ที่อยู่</label><input id="profileAddress" readonly class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent cursor-not-allowed" /></div>
         <div><label class="block text-sm font-medium text-gray-700 mb-1">หมายเหตุ</label><input id="profileNote" readonly class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent cursor-not-allowed" /></div>
-        <div id="profileEditButtons" class="flex space-x-2 hidden"><button id="saveProfileBtn" class="flex-1 bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark">บันทึกข้อมูล</button><button id="cancelEditBtn" class="flex-1 border border-thm-primary text-thm-primary font-bold py-2 px-4 rounded-lg hover:bg-thm-accent">ยกเลิก</button></div>
+        <div id="profileEditButtons" class="flex space-x-2 hidden">
+          <button id="saveProfileBtn" class="flex-1 bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark flex items-center justify-center" style="min-height: 40px;">บันทึกข้อมูล</button>
+          <button id="cancelEditBtn" class="flex-1 border border-thm-primary text-thm-primary font-bold py-2 px-4 rounded-lg hover:bg-thm-accent">ยกเลิก</button>
+        </div>
       </div>
     </div>
   </template>
@@ -289,7 +307,7 @@
     <div class="bg-white/80 p-6 rounded-lg shadow-md space-y-4 mb-6">
       <input id="transferTo" placeholder="LINE ID เพื่อน / เบอร์โทรปลายทาง" type="text" class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent">
       <input id="transferAmount" placeholder="จำนวนพ้อยที่ต้องการโอน" type="number" class="w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent">
-      <button id="transferBtn" class="w-full bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark transition-colors">โอนพ้อย</button>
+      <button id="transferBtn" class="w-full bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark transition-colors flex items-center justify-center" style="min-height: 40px;">โอนพ้อย</button>
     </div>
   </template>
 
@@ -304,7 +322,7 @@
       <button id="scanBtn" class="w-full bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark transition-colors">สแกน QR Code</button>
       <div class="flex space-x-2">
         <input id="manualCode" type="text" placeholder="กรอกโค้ดที่นี่" class="flex-1 w-full bg-white border border-thm-accent rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-thm-primary focus:border-transparent">
-        <button id="enterBtn" class="bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark transition-colors">รับโค้ด</button>
+        <button id="enterBtn" class="bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark transition-colors flex items-center justify-center" style="min-width: 90px;">รับโค้ด</button>
       </div>
     </div>
   </template>
@@ -329,7 +347,7 @@
       </div>
       <div class="mt-6 flex justify-between space-x-4">
         <button id="shippingFormCancelBtn" class="flex-1 border border-thm-primary text-thm-primary font-bold py-2 px-4 rounded-lg hover:bg-thm-accent">ยกเลิก</button>
-        <button id="shippingFormConfirmBtn" class="flex-1 bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark">ยืนยันและแลกของ</button>
+        <button id="shippingFormConfirmBtn" class="flex-1 bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark flex items-center justify-center" style="min-height: 44px;">ยืนยันและแลกของ</button>
       </div>
     </div>
   </dialog>
@@ -352,6 +370,9 @@
     qrConfirmBtn = document.getElementById('qrDialogConfirmBtn'),
     qrCloseBtn = document.getElementById('qrDialogCloseBtn');
 
+    // --- [NEW] Spinner HTML constant
+    const spinnerHTML = '<div class="btn-spinner"></div>';
+
     // --- STYLES (TAILWIND REPLACEMENT) ---
     const LEVEL_STYLES = {
         'MEMBER': { text: 'Member', class: 'bg-transparent border border-[#1c1c1c] text-[#1c1c1c]'},
@@ -367,6 +388,22 @@
     };
 
     // --- COMMON UI FUNCTIONS ---
+    // --- [NEW] Reusable function to toggle button loading state ---
+    function setButtonLoading(button, isLoading) {
+      if (!button) return;
+      if (isLoading) {
+        button.setAttribute('data-original-html', button.innerHTML);
+        button.innerHTML = spinnerHTML;
+        button.disabled = true;
+      } else {
+        const originalHTML = button.getAttribute('data-original-html');
+        if (originalHTML) {
+          button.innerHTML = originalHTML;
+        }
+        button.disabled = false;
+      }
+    }
+
     function showAlert(title, message, cb) {
       alertT.textContent = title; alertM.textContent = message; alertDialog.showModal();
       const hide = () => { alertDialog.close(); alertBtn.removeEventListener('click', hide); cb && cb(); };
@@ -547,12 +584,15 @@
         if (checkinBox && !checkData.checkedInToday) {
           checkinBox.classList.remove('hidden'); todayDateEl.textContent = new Date().getDate().toString().padStart(2, "0");
           checkinBtn.onclick = async () => {
-            checkinBtn.disabled = true;
+            setButtonLoading(checkinBtn, true); // [MODIFIED]
             try {
               const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: "dailyCheckin", lineId: userState.lineId }) });
               const text = await res.text();
               showAlert('เช็คอินสำเร็จ', text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); checkinBox.classList.add('hidden'); initDashboard(); } });
-            } catch (e) { console.error("Check-in failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถเช็คอินได้'); } finally { checkinBtn.disabled = false; }
+            } catch (e) { console.error("Check-in failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถเช็คอินได้'); } 
+            finally { 
+              setButtonLoading(checkinBtn, false); // [MODIFIED]
+            }
           };
         } else if (checkinBox) { checkinBox.classList.add('hidden'); }
       } catch (e) { console.error("Error in initDashboard:", e); if (historyListEl) historyListEl.innerHTML = `<li class="text-center text-red-500 py-4">เกิดข้อผิดพลาด</li>`; }
@@ -659,8 +699,7 @@
         } else {
           joinBtn.onclick = async () => {
             if (!(await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`))) return;
-            joinBtn.disabled = true;
-            joinBtn.textContent = "กำลังดำเนินการ...";
+            setButtonLoading(joinBtn, true); // [MODIFIED]
             try {
               const res = await fetch(CONFIG.GAS_URL, {
                 method: "POST",
@@ -671,17 +710,22 @@
                 if (text.includes("สำเร็จ")) {
                   await fetchAndUpdateUserState();
                   joinBtn.textContent = "รับพ้อยต์แล้ว";
-                  joinBtn.disabled = true;
+                  joinBtn.disabled = true; // Still disabled, but text updated
                 } else {
-                  joinBtn.textContent = "รับพ้อยต์แล้ว";
+                  joinBtn.textContent = "รับพ้อยต์แล้ว"; // Or some other state
                   joinBtn.disabled = true;
                 }
               });
             } catch (e) {
               console.error("Join event failed:", e);
               showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมได้');
-              joinBtn.textContent = "เข้าร่วม";
-              joinBtn.disabled = false;
+            } finally {
+              // The button state is handled by the showAlert callback,
+              // but if the alert itself fails, we restore it here.
+              // In this case, we leave it as "รับพ้อยต์แล้ว" and disabled.
+              if (!joinBtn.textContent.includes("รับพ้อยต์แล้ว")) {
+                setButtonLoading(joinBtn, false); // [MODIFIED]
+              }
             }
           };
         }
@@ -690,11 +734,8 @@
     }
 
     async function initProfile() {
-      // [MODIFIED] Added skeleton elements
       const skeletonEl = document.getElementById('profileSkeleton');
       const contentEl = document.getElementById('profileContent');
-
-      // Show skeleton, hide content initially
       skeletonEl.classList.remove('hidden');
       contentEl.classList.add('hidden');
 
@@ -712,12 +753,10 @@
       
       if (uData.error) { 
         showAlert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้'); 
-        // Hide skeleton and show an error message or leave skeleton
         skeletonEl.innerHTML = '<div class="text-center text-red-500 py-8">เกิดข้อผิดพลาดในการโหลดโปรไฟล์</div>';
         return; 
       }
       
-      // Populate data
       dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/96';
       dnEl.textContent = userState.profile.displayName || 'ผู้ใช้ LINE';
       totalPointsEl.textContent = userState.totalPoints.toLocaleString();
@@ -754,17 +793,21 @@
       editBtn.onclick = () => toggleEditMode(true);
       cancelBtn.onclick = () => { Object.keys(initialData).forEach(k => document.getElementById(`profile${k.charAt(0).toUpperCase() + k.slice(1)}`).value = initialData[k]); toggleEditMode(false); };
       saveBtn.onclick = async () => {
-        saveBtn.disabled = true; cancelBtn.disabled = true;
+        setButtonLoading(saveBtn, true); // [MODIFIED]
+        cancelBtn.disabled = true;
         try {
           const body = { action: 'updateProfile', lineId: userState.lineId, name: nameEl.value, phone: phoneEl.value, email: emailEl.value, address: addressEl.value, note: noteEl.value };
           const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify(body) });
           const text = await res.text();
           showAlert("สถานะ", text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); toggleEditMode(false); } });
-        } catch (e) { console.error("Update profile failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถอัปเดตได้'); } finally { saveBtn.disabled = false; cancelBtn.disabled = false; }
+        } catch (e) { console.error("Update profile failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถอัปเดตได้'); } 
+        finally { 
+          setButtonLoading(saveBtn, false); // [MODIFIED]
+          cancelBtn.disabled = false; 
+        }
       };
       toggleEditMode(false);
 
-      // [MODIFIED] Hide skeleton and show content after everything is ready
       skeletonEl.classList.add('hidden');
       contentEl.classList.remove('hidden');
     }
@@ -798,7 +841,7 @@
                 </div>
                 <button
                     data-item-id="${item.id}" data-item-name="${item.name}" data-item-point="${item.point}" data-item-type="${item.type}"
-                    class="redeem-btn bg-thm-primary text-white font-bold py-1.5 px-3 text-sm rounded-lg hover:bg-thm-primary-dark transition-colors mt-2 disabled:bg-gray-400">แลกเลย</button>
+                    class="redeem-btn bg-thm-primary text-white font-bold py-1.5 px-3 text-sm rounded-lg hover:bg-thm-primary-dark transition-colors mt-2 disabled:bg-gray-400 flex items-center justify-center" style="min-height: 36px;">แลกเลย</button>
             </li>
         `).join('');
       document.querySelectorAll('.redeem-btn').forEach(btn => btn.addEventListener('click', handleRedeemClick));
@@ -843,20 +886,22 @@
           showAlert("ข้อมูลไม่ครบ", "กรุณากรอกชื่อ, เบอร์โทร, และที่อยู่ให้ครบถ้วน");
           return;
         }
-        dialog.close();
+        
+        setButtonLoading(confirmBtn, true); // [MODIFIED]
         const originalButton = document.querySelector(`.redeem-btn[data-item-id="${item.itemId}"]`);
         await executeRedemption(originalButton, {
           itemId: item.itemId, point: item.point,
           shippingInfo: { name: shippingName, phone: shippingPhone, address: shippingAddress }
         });
+        setButtonLoading(confirmBtn, false); // [MODIFIED]
+        dialog.close();
       };
       confirmBtn.onclick = handleConfirm;
       cancelBtn.onclick = () => dialog.close();
     }
 
     async function executeRedemption(buttonElement, payload) {
-      buttonElement.disabled = true;
-      buttonElement.textContent = "กำลังแลก...";
+      setButtonLoading(buttonElement, true); // [MODIFIED]
       try {
         const body = { action: 'redeemItem', lineId: userState.lineId, itemId: payload.itemId, point: payload.point, ...(payload.shippingInfo && { shippingInfo: payload.shippingInfo }) };
         const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify(body) });
@@ -864,17 +909,18 @@
         showAlert("สถานะการแลก", text, async () => {
           if (text.includes("สำเร็จ")) {
             await fetchAndUpdateUserState();
-            buttonElement.textContent = "แลกแล้ว";
-          } else {
-            buttonElement.disabled = false;
-            buttonElement.textContent = "แลกเลย";
+            buttonElement.innerHTML = "แลกแล้ว";
+            buttonElement.disabled = true; // Still disabled
           }
         });
       } catch (e) {
         console.error("Redemption failed:", e);
         showAlert('ข้อผิดพลาด', 'ไม่สามารถทำรายการแลกของได้ กรุณาลองใหม่');
-        buttonElement.disabled = false;
-        buttonElement.textContent = "แลกเลย";
+      } finally {
+        // Restore button only if it hasn't been set to "แลกแล้ว"
+        if (buttonElement.innerHTML.includes('spinner')) {
+            setButtonLoading(buttonElement, false); // [MODIFIED]
+        }
       }
     }
 
@@ -887,53 +933,79 @@
         if (to === userState.lineId) { showAlert("ข้อผิดพลาด", "ไม่สามารถโอนให้ตัวเอง"); return; }
         if (userState.points < amount) { showAlert("ไม่เพียงพอ", `แต้มของคุณ (${userState.points}) ไม่พอสำหรับโอน`); return; }
         if (!(await showConfirm("ยืนยัน", `โอน ${amount} พ้อยต์ให้ ${to}?`))) return;
-        transferBtn.disabled = true;
+        
+        setButtonLoading(transferBtn, true); // [MODIFIED]
         try {
           const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'transferPoints', from: userState.lineId, to, amount }) });
           const txt = await res.text();
           showAlert("สถานะ", txt, async () => { if (/สำเร็จ|เรียบร้อย/.test(txt)) { await fetchAndUpdateUserState(); toEl.value = ''; amountEl.value = ''; } });
         } catch (e) { showAlert("ข้อผิดพลาด", "ไม่สามารถโอนได้"); }
-        finally { transferBtn.disabled = false; }
+        finally { 
+          setButtonLoading(transferBtn, false); // [MODIFIED]
+        }
       };
     }
 
     async function initAddpoint() {
       const scanContainer = document.getElementById('scanContainer'), scanBtn = document.getElementById('scanBtn'), enterBtn = document.getElementById('enterBtn'), manualInput = document.getElementById('manualCode');
+      
       async function processCode(code) {
         if (!code) return;
-        const history = await getFreshOrCachedHistory();
-        if (history.some(item => (item.type === 'code' || item.type === 'event') && item.eventId === code)) {
-          showAlert('รับแล้ว', 'คุณเคยรับโค้ดนี้ไปแล้ว');
-          return;
-        }
+        setButtonLoading(enterBtn, true); // [MODIFIED] - Show loading on the "Enter" button
         try {
+          const history = await getFreshOrCachedHistory();
+          if (history.some(item => (item.type === 'code' || item.type === 'event') && item.eventId === code)) {
+            showAlert('รับแล้ว', 'คุณเคยรับโค้ดนี้ไปแล้ว');
+            return;
+          }
+        
           const res = await fetch(`${CONFIG.GAS_URL}?action=getCodeById&id=${code}`);
           const data = await res.json();
           if (data.error) { showAlert('ไม่พบโค้ด', data.error); return; }
-          scanContainer.innerHTML = `<div class="bg-white/80 p-6 rounded-lg shadow-md mb-4 text-center"><div class="font-bold text-lg mb-2 text-thm-primary-dark">${data.title}</div><div class="text-sm text-gray-700 mb-4">${data.desc}</div><div class="font-bold text-yellow-600 mb-4 text-xl">คุณจะได้รับ: ${data.point} พ้อยต์</div><button id="acceptBtn" class="w-full bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark">ยืนยันการรับพ้อยต์</button></div>`;
+          scanContainer.innerHTML = `<div class="bg-white/80 p-6 rounded-lg shadow-md mb-4 text-center"><div class="font-bold text-lg mb-2 text-thm-primary-dark">${data.title}</div><div class="text-sm text-gray-700 mb-4">${data.desc}</div><div class="font-bold text-yellow-600 mb-4 text-xl">คุณจะได้รับ: ${data.point} พ้อยต์</div><button id="acceptBtn" class="w-full bg-thm-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-thm-primary-dark flex items-center justify-center" style="min-height: 40px;">ยืนยันการรับพ้อยต์</button></div>`;
           document.getElementById('acceptBtn').addEventListener('click', () => joinCode(data));
-        } catch (e) { console.error("Error processing code:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถประมวลผลโค้ดได้'); }
+        } catch (e) { 
+          console.error("Error processing code:", e); 
+          showAlert('ข้อผิดพลาด', 'ไม่สามารถประมวลผลโค้ดได้'); 
+        } finally {
+            // Restore button only if it still exists (i.e. not replaced by the accept button)
+            const currentEnterBtn = document.getElementById('enterBtn');
+            if (currentEnterBtn) {
+                 setButtonLoading(currentEnterBtn, false); // [MODIFIED]
+            }
+        }
       }
+
       async function joinCode(codeData) {
         const { id: scannedCode, title: codeTitle, point: codePoint } = codeData;
-        if (!(await showConfirm('ยืนยัน', `รับพ้อยต์จาก "${codeTitle}" จำนวน ${codePoint} พ้อยต์?`))) return;
         const btn = document.getElementById("acceptBtn");
         if (!btn) return;
-        btn.disabled = true; btn.textContent = "กำลังดำเนินการ..."; let success = false;
+
+        if (!(await showConfirm('ยืนยัน', `รับพ้อยต์จาก "${codeTitle}" จำนวน ${codePoint} พ้อยต์?`))) return;
+        
+        setButtonLoading(btn, true); // [MODIFIED]
         try {
           const res = await fetch(CONFIG.GAS_URL, { method: "POST", body: JSON.stringify({ action: "joinCode", lineId: userState.lineId, id: scannedCode, title: codeTitle, point: codePoint }) });
           const text = await res.text();
           if (text.includes("สำเร็จ")) {
-            success = true; btn.textContent = "รับพ้อยต์แล้ว";
             showAlert("สำเร็จ", text, async () => { await fetchAndUpdateUserState(); window.location.hash = '#dashboard'; });
-          } else { showAlert("เกิดข้อผิดพลาด", text); window.location.hash = '#addpoint'; }
-        } catch (e) { console.error("Join code failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อได้'); }
-        finally { if (!success && btn) { btn.disabled = false; btn.textContent = "ยืนยันการรับพ้อยต์"; } }
+          } else { 
+            showAlert("เกิดข้อผิดพลาด", text); 
+            setButtonLoading(btn, false); // Restore if failed
+            window.location.hash = '#addpoint'; 
+          }
+        } catch (e) { 
+          console.error("Join code failed:", e); 
+          showAlert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อได้'); 
+          setButtonLoading(btn, false); // Restore on error
+        }
       }
+
       scanBtn.onclick = async () => {
         try { const result = await liff.scanCodeV2(); if (result && result.value) await processCode(result.value); }
         catch (e) { if (e.code !== 'USER_CANCEL') { console.error("Scan failed:", e); showAlert('สแกนไม่สำเร็จ', e.message || 'กรุณาลองใหม่'); } }
       };
+      
       enterBtn.onclick = () => { const codeValue = manualInput.value.trim(); if (codeValue) processCode(codeValue); else showAlert('ข้อมูลไม่ครบ', 'กรุณากรอกโค้ด'); };
     }
 
