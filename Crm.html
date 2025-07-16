@@ -451,7 +451,7 @@
         dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/40';
         dpEl.alt = `รูปโปรไฟล์ของ ${userState.profile.displayName}`;
       }
-      pointValEl.textContent = '...';
+      pointValEl.textContent = '';
       try {
         const [userRes, histRes, eventsRes, redeemRes, settingsRes] = await Promise.all([
           fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`),
