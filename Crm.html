@@ -388,7 +388,6 @@
     };
 
     // --- COMMON UI FUNCTIONS ---
-    // --- [NEW] Reusable function to toggle button loading state ---
     function setButtonLoading(button, isLoading) {
       if (!button) return;
       if (isLoading) {
@@ -488,7 +487,7 @@
         dpEl.src = userState.profile.pictureUrl || 'https://via.placeholder.com/40';
         dpEl.alt = `รูปโปรไฟล์ของ ${userState.profile.displayName}`;
       }
-      pointValEl.textContent = '';
+      pointValEl.textContent = '0';
       try {
         const [userRes, histRes, eventsRes, redeemRes, settingsRes] = await Promise.all([
           fetch(`${CONFIG.GAS_URL}?action=getUserInfo&lineId=${userState.lineId}`),
@@ -699,7 +698,7 @@
         } else {
           joinBtn.onclick = async () => {
             if (!(await showConfirm('ยืนยัน', `เข้าร่วม "${eventData.title}" และรับ ${eventData.point} พ้อยต์?`))) return;
-            setButtonLoading(joinBtn, true); // [MODIFIED]
+            setButtonLoading(joinBtn, true); 
             try {
               const res = await fetch(CONFIG.GAS_URL, {
                 method: "POST",
@@ -710,9 +709,9 @@
                 if (text.includes("สำเร็จ")) {
                   await fetchAndUpdateUserState();
                   joinBtn.textContent = "รับพ้อยต์แล้ว";
-                  joinBtn.disabled = true; // Still disabled, but text updated
+                  joinBtn.disabled = true; 
                 } else {
-                  joinBtn.textContent = "รับพ้อยต์แล้ว"; // Or some other state
+                  joinBtn.textContent = "รับพ้อยต์แล้ว"; 
                   joinBtn.disabled = true;
                 }
               });
@@ -720,11 +719,9 @@
               console.error("Join event failed:", e);
               showAlert('ข้อผิดพลาด', 'ไม่สามารถเข้าร่วมได้');
             } finally {
-              // The button state is handled by the showAlert callback,
-              // but if the alert itself fails, we restore it here.
-              // In this case, we leave it as "รับพ้อยต์แล้ว" and disabled.
+              
               if (!joinBtn.textContent.includes("รับพ้อยต์แล้ว")) {
-                setButtonLoading(joinBtn, false); // [MODIFIED]
+                setButtonLoading(joinBtn, false); 
               }
             }
           };
@@ -793,7 +790,7 @@
       editBtn.onclick = () => toggleEditMode(true);
       cancelBtn.onclick = () => { Object.keys(initialData).forEach(k => document.getElementById(`profile${k.charAt(0).toUpperCase() + k.slice(1)}`).value = initialData[k]); toggleEditMode(false); };
       saveBtn.onclick = async () => {
-        setButtonLoading(saveBtn, true); // [MODIFIED]
+        setButtonLoading(saveBtn, true); 
         cancelBtn.disabled = true;
         try {
           const body = { action: 'updateProfile', lineId: userState.lineId, name: nameEl.value, phone: phoneEl.value, email: emailEl.value, address: addressEl.value, note: noteEl.value };
@@ -802,7 +799,7 @@
           showAlert("สถานะ", text, async () => { if (text.includes("สำเร็จ")) { await fetchAndUpdateUserState(); toggleEditMode(false); } });
         } catch (e) { console.error("Update profile failed:", e); showAlert('ข้อผิดพลาด', 'ไม่สามารถอัปเดตได้'); } 
         finally { 
-          setButtonLoading(saveBtn, false); // [MODIFIED]
+          setButtonLoading(saveBtn, false); 
           cancelBtn.disabled = false; 
         }
       };
